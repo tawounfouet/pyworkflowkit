@@ -81,9 +81,7 @@ class WorkflowRun:
 
         if self.status is WorkflowRunStatus.PENDING:
             if self.started_at is not None or self.finished_at is not None:
-                raise ValueError(
-                    "PENDING WorkflowRun cannot have started_at or finished_at."
-                )
+                raise ValueError("PENDING WorkflowRun cannot have started_at or finished_at.")
         elif self.status is WorkflowRunStatus.RUNNING:
             if self.finished_at is not None:
                 raise ValueError("RUNNING WorkflowRun cannot have finished_at.")
@@ -131,9 +129,7 @@ class TaskRun:
 
         if self.status in {TaskRunStatus.PENDING, TaskRunStatus.READY}:
             if self.finished_at is not None:
-                raise ValueError(
-                    f"{self.status.value} TaskRun cannot have finished_at."
-                )
+                raise ValueError(f"{self.status.value} TaskRun cannot have finished_at.")
         elif self.status is TaskRunStatus.RUNNING:
             if self.finished_at is not None:
                 raise ValueError("RUNNING TaskRun cannot have finished_at.")
