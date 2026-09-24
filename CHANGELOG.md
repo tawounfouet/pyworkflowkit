@@ -15,6 +15,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Typed domain identifiers for workflow, task, run, attempt, event, artifact, and external-run identities.
 - Core lifecycle, failure, retry, skip, and event enums.
 - Immutable domain value objects: RetryPolicy, ArtifactReference, ExternalRunRef, WorkflowParameter, and TaskResult.
+- Immutable TaskDefinition and WorkflowDefinition models with local definition invariants.
+- DefinitionError, InvalidWorkflowDefinitionError, and DuplicateTaskDefinitionError.
 - Public PyWorkflowKitError exception root.
 
 ### Changed
