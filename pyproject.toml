@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyworkflowkit"
+version = "0.0.1"
+description = "Reliable workflows without running a workflow platform."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Thomas AWOUNFOUET" },
+]
+keywords = [
+  "workflow",
+  "dag",
+  "orchestration",
+  "runtime",
+  "python",
+  "task",
+  "executor",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "build",
+  "hypothesis",
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "ruff",
+]
+
+[project.urls]
+Repository = "https://github.com/tawounfouet/pyworkflowkit"
+Issues = "https://github.com/tawounfouet/pyworkflowkit/issues"
+Changelog = "https://github.com/tawounfouet/pyworkflowkit/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyworkflowkit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+  "B",
+  "E",
+  "F",
+  "I",
+  "SIM",
+  "UP",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+files = ["src"]
+
+[tool.coverage.run]
+branch = true
+source = ["pyworkflowkit"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 90
