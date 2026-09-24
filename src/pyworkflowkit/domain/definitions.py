@@ -55,13 +55,9 @@ class TaskDefinition:
 
         dependencies = tuple(self.depends_on)
         if len(dependencies) != len(set(dependencies)):
-            raise DefinitionError(
-                f"Task '{self.task_id}' declares duplicate dependencies."
-            )
+            raise DefinitionError(f"Task '{self.task_id}' declares duplicate dependencies.")
         if self.task_id in dependencies:
-            raise DefinitionError(
-                f"Task '{self.task_id}' cannot depend on itself."
-            )
+            raise DefinitionError(f"Task '{self.task_id}' cannot depend on itself.")
 
         for dependency_id in dependencies:
             validate_non_empty_identifier(
@@ -120,16 +116,11 @@ class WorkflowDefinition:
         seen_parameter_names: set[str] = set()
         for parameter in parameters:
             if not isinstance(parameter, WorkflowParameter):
-                raise TypeError(
-                    "parameters must contain only WorkflowParameter values."
-                )
+                raise TypeError("parameters must contain only WorkflowParameter values.")
             if parameter.name in seen_parameter_names:
                 raise InvalidWorkflowDefinitionError(
                     workflow_id=self.workflow_id,
-                    reason=(
-                        f"workflow declares duplicate parameter "
-                        f"'{parameter.name}'"
-                    ),
+                    reason=f"workflow declares duplicate parameter '{parameter.name}'",
                 )
             seen_parameter_names.add(parameter.name)
 

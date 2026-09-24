@@ -31,9 +31,7 @@ class DuplicateTaskDefinitionError(DefinitionError):
     ) -> None:
         self.workflow_id = workflow_id
         self.task_id = task_id
-        super().__init__(
-            f"Workflow '{workflow_id}' declares duplicate task '{task_id}'."
-        )
+        super().__init__(f"Workflow '{workflow_id}' declares duplicate task '{task_id}'.")
 
 
 __all__ = [
