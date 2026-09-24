@@ -46,22 +46,22 @@ def test_attempt_has_no_pending_or_ready_state() -> None:
 
 
 def test_terminal_status_sets_are_explicit() -> None:
-    assert WORKFLOW_TERMINAL_STATUSES == {
+    assert {
         WorkflowRunStatus.SUCCEEDED,
         WorkflowRunStatus.FAILED,
         WorkflowRunStatus.CANCELLED,
-    }
-    assert TASK_TERMINAL_STATUSES == {
+    } == WORKFLOW_TERMINAL_STATUSES
+    assert {
         TaskRunStatus.SUCCEEDED,
         TaskRunStatus.FAILED,
         TaskRunStatus.SKIPPED,
         TaskRunStatus.CANCELLED,
-    }
-    assert ATTEMPT_TERMINAL_STATUSES == {
+    } == TASK_TERMINAL_STATUSES
+    assert {
         TaskAttemptStatus.SUCCEEDED,
         TaskAttemptStatus.FAILED,
         TaskAttemptStatus.CANCELLED,
-    }
+    } == ATTEMPT_TERMINAL_STATUSES
 
 
 def test_policy_and_reason_enum_values_are_stable() -> None:

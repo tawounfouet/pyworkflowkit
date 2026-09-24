@@ -77,7 +77,7 @@ def test_retry_policy_is_frozen() -> None:
     policy = RetryPolicy()
 
     with pytest.raises(FrozenInstanceError):
-        setattr(policy, "max_attempts", 2)
+        policy.max_attempts = 2  # type: ignore[misc]
 
 
 def test_artifact_reference_accepts_lightweight_metadata_and_freezes_it() -> None:
