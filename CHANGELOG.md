@@ -9,9 +9,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 ### Added
 
 - Initial repository bootstrap.
-- Standards-based Python packaging with a `src/` layout.
+- Standards-based Python packaging with a src layout.
 - Pytest, Ruff, mypy, coverage, and package-build quality gates.
 - GitHub Actions CI baseline.
+- Typed domain identifiers for workflow, task, run, attempt, event, artifact, and external-run identities.
+- Core lifecycle, failure, retry, skip, and event enums.
+- Immutable domain value objects: RetryPolicy, ArtifactReference, ExternalRunRef, WorkflowParameter, and TaskResult.
+- Public PyWorkflowKitError exception root.
 
 ### Changed
 
