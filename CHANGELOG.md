@@ -17,6 +17,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Immutable domain value objects: RetryPolicy, ArtifactReference, ExternalRunRef, WorkflowParameter, and TaskResult.
 - Immutable TaskDefinition and WorkflowDefinition models with local definition invariants.
 - WorkflowRun, TaskRun, TaskAttempt, and immutable RuntimeEvent domain entities.
+- RunStateMachine as the single runtime state-transition authority.
+- DomainError, InvalidStateTransitionError, and TerminalStateError.
 - DefinitionError, InvalidWorkflowDefinitionError, and DuplicateTaskDefinitionError.
 - Public PyWorkflowKitError exception root.
 
