@@ -26,10 +26,14 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - MetadataStore and UnitOfWork ports with transactional MemoryMetadataStore.
 - Copy-on-write in-memory commit/rollback semantics and metadata contract tests.
 - Sequential Runner connecting planning, state transitions, execution, and metadata persistence.
-- Injectable Clock and RuntimeIdFactory ports with UTC/UUID default adapters.
+- Injectable Clock, Sleeper, and RuntimeIdFactory ports with UTC/sleep/UUID default adapters.
 - Deterministic RuntimeEventFactory with per-run monotonic event sequencing.
 - Atomic persisted state-transition plus RuntimeEvent UnitOfWork boundaries.
-- WORKFLOW_STARTED/SUCCEEDED/FAILED and TASK_READY/STARTED/SUCCEEDED/FAILED runtime evidence.
+- RetryEngine with NONE/FIXED/LINEAR/EXPONENTIAL backoff and retry-category allowlists.
+- Multi-attempt retry execution on the same TaskRun with TASK_RETRYING evidence.
+- FAIL_FAST propagation with DEPENDENCY_FAILED and FAIL_FAST_ABORT skip reasons.
+- TASK_SKIPPED events and terminal TASK_FAILED-only-after-retry-exhaustion semantics.
+- WORKFLOW_STARTED/SUCCEEDED/FAILED and TASK_READY/STARTED/RETRYING/SUCCEEDED/FAILED/SKIPPED runtime evidence.
 - Running TaskAttempt persistence at TASK_STARTED and explicit attempt updates on completion.
 - Single-attempt task execution with dependency output propagation.
 - Artifact and external-run-reference persistence from successful TaskResult values.
@@ -43,6 +47,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Public PyWorkflowKitError exception root.
 
 ### Changed
+
+- TaskExecutionError now carries a retry classification category.
+- Retryable failures create a new TaskAttempt while preserving the same TaskRun.
 
 ### Deprecated
 
