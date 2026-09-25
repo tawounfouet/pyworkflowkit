@@ -36,6 +36,7 @@ from pyworkflowkit.errors import (
     HandlerNotFoundError,
     InvalidHandlerError,
     InvalidWorkflowParametersError,
+    MetadataNotFoundError,
     TaskExecutionError,
     UnknownDependencyError,
 )
@@ -247,7 +248,7 @@ def test_runner_rejects_missing_required_parameter_before_creating_run() -> None
     with pytest.raises(InvalidWorkflowParametersError, match="required"):
         runner.run(workflow)
 
-    with pytest.raises(Exception):
+    with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("workflow-run-1"))
 
 
@@ -266,7 +267,7 @@ def test_runner_rejects_invalid_dag_before_creating_run() -> None:
     with pytest.raises(UnknownDependencyError):
         runner.run(workflow)
 
-    with pytest.raises(Exception):
+    with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("workflow-run-1"))
 
 
@@ -277,7 +278,7 @@ def test_runner_rejects_missing_handler_before_creating_run() -> None:
     with pytest.raises(HandlerNotFoundError):
         runner.run(workflow)
 
-    with pytest.raises(Exception):
+    with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("workflow-run-1"))
 
 
