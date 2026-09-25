@@ -10,17 +10,21 @@ from pyworkflowkit.errors import (
     DuplicateMetadataError,
     DuplicateTaskDefinitionError,
     ExecutorError,
+    ExecutorNotFoundError,
     GraphError,
     HandlerNotFoundError,
     InvalidExecutionPlanError,
     InvalidHandlerError,
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
+    InvalidWorkflowParametersError,
     MetadataNotFoundError,
     MetadataStoreError,
     PlanningError,
     PlanningInvariantError,
     PyWorkflowKitError,
+    RuntimeErrorBase,
+    RuntimeInvariantError,
     SelfDependencyError,
     TaskExecutionError,
     TerminalStateError,
@@ -190,3 +194,17 @@ def test_terminal_state_error_is_specialized_transition_error() -> None:
     assert isinstance(error, InvalidStateTransitionError)
     assert isinstance(error, DomainError)
     assert "terminal" in str(error)
+
+
+
+def test_runner_runtime_errors_expose_context() -> None:
+    missing_executor = ExecutorNotFoundError(executor_key="remote")
+    invalid_parameters = InvalidWorkflowParametersError(reason="missing source")
+    invariant = RuntimeInvariantError(reason="task not ready")
+
+    assert isinstance(missing_executor, ExecutorError)
+    assert missing_executor.executor_key == "remote"
+    assert isinstance(invalid_parameters, RuntimeErrorBase)
+    assert invalid_parameters.reason == "missing source"
+    assert isinstance(invariant, RuntimeErrorBase)
+    assert invariant.reason == "task not ready"
