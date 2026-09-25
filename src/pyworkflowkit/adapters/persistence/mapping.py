@@ -68,9 +68,7 @@ class PersistenceMapper:
             run_id=schema.run_id,
             task_id=schema.task_id,
             status=schema.status.value,
-            skip_reason=(
-                schema.skip_reason.value if schema.skip_reason is not None else None
-            ),
+            skip_reason=(schema.skip_reason.value if schema.skip_reason is not None else None),
             created_at=schema.created_at,
             started_at=schema.started_at,
             finished_at=schema.finished_at,
@@ -83,9 +81,7 @@ class PersistenceMapper:
             run_id=value.run_id,
             task_id=value.task_id,
             status=TaskRunStatus(value.status),
-            skip_reason=(
-                SkipReason(value.skip_reason) if value.skip_reason is not None else None
-            ),
+            skip_reason=(SkipReason(value.skip_reason) if value.skip_reason is not None else None),
             created_at=value.created_at,
             started_at=value.started_at,
             finished_at=value.finished_at,
@@ -185,9 +181,7 @@ class PersistenceMapper:
             size_bytes=value.size_bytes,
             metadata=dict(value.metadata),
         )
-        return TaskRunId(value.task_run_id), DomainSchemaMapper.artifact_from_schema(
-            schema
-        )
+        return TaskRunId(value.task_run_id), DomainSchemaMapper.artifact_from_schema(schema)
 
     @staticmethod
     def external_ref_to_row(
@@ -216,9 +210,7 @@ class PersistenceMapper:
             uri=value.uri,
             metadata=dict(value.metadata),
         )
-        return TaskRunId(value.task_run_id), DomainSchemaMapper.external_ref_from_schema(
-            schema
-        )
+        return TaskRunId(value.task_run_id), DomainSchemaMapper.external_ref_from_schema(schema)
 
 
 __all__ = ["PersistenceMapper"]
