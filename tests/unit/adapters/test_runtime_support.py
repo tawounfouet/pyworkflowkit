@@ -2,9 +2,9 @@
 
 from datetime import UTC
 
-from pyworkflowkit.adapters.runtime import SystemClock, UuidRuntimeIdFactory
+from pyworkflowkit.adapters.runtime import SystemClock, SystemSleeper, UuidRuntimeIdFactory
 from pyworkflowkit.domain.ids import RuntimeEventId, TaskId, TaskRunId, WorkflowRunId
-from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory
+from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
 
 
 def test_system_clock_satisfies_clock_protocol_and_returns_aware_utc() -> None:
@@ -40,3 +40,8 @@ def test_uuid_runtime_id_factory_satisfies_protocol_and_generates_unique_ids() -
     assert str(attempt_id)
     assert isinstance(event_id, str)
     assert RuntimeEventId(event_id) == event_id
+
+
+
+def test_system_sleeper_satisfies_sleeper_protocol() -> None:
+    assert isinstance(SystemSleeper(), Sleeper)
