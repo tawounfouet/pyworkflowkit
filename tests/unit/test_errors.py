@@ -29,8 +29,8 @@ from pyworkflowkit.errors import (
     PyWorkflowKitError,
     RuntimeErrorBase,
     RuntimeInvariantError,
-    SerializationError,
     SelfDependencyError,
+    SerializationError,
     TaskExecutionError,
     TerminalStateError,
     UnitOfWorkStateError,
@@ -231,7 +231,6 @@ def test_manifest_errors_expose_structured_context() -> None:
     assert isinstance(serialization, ManifestError)
     assert serialization.path == "parameters.value"
     assert serialization.value_type == "object"
-
 
 
 def test_serialization_error_exposes_boundary_context() -> None:
