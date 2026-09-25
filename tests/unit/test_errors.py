@@ -6,15 +6,20 @@ from pyworkflowkit.errors import (
     DefinitionError,
     DomainError,
     DuplicateDependencyError,
+    DuplicateHandlerRegistrationError,
     DuplicateTaskDefinitionError,
+    ExecutorError,
     GraphError,
+    HandlerNotFoundError,
     InvalidExecutionPlanError,
+    InvalidHandlerError,
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
     PlanningError,
     PlanningInvariantError,
     PyWorkflowKitError,
     SelfDependencyError,
+    TaskExecutionError,
     TerminalStateError,
     UnknownDependencyError,
 )
@@ -109,6 +114,27 @@ def test_planning_invariant_error_exposes_reason() -> None:
     assert isinstance(error, PlanningError)
     assert error.reason == "graph mismatch"
     assert "graph mismatch" in str(error)
+
+
+def test_executor_error_hierarchy_and_context() -> None:
+    duplicate = DuplicateHandlerRegistrationError(handler_ref="module:handler")
+    missing = HandlerNotFoundError(handler_ref="missing:handler")
+    invalid = InvalidHandlerError(task_id=TaskId("task"), reason="bad signature")
+    execution = TaskExecutionError(
+        task_id=TaskId("task"),
+        handler_ref="module:handler",
+        error_type="ValueError",
+        error_message="boom",
+    )
+
+    assert isinstance(duplicate, ExecutorError)
+    assert duplicate.handler_ref == "module:handler"
+    assert isinstance(missing, ExecutorError)
+    assert missing.handler_ref == "missing:handler"
+    assert invalid.task_id == TaskId("task")
+    assert invalid.reason == "bad signature"
+    assert execution.error_type == "ValueError"
+    assert execution.error_message == "boom"
 
 
 def test_invalid_state_transition_exposes_structured_context() -> None:
