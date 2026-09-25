@@ -248,7 +248,7 @@ class Runner:
                     if decision.next_attempt_number is None:
                         raise RuntimeInvariantError(
                             reason="retry decision is missing next_attempt_number"
-                        )
+                        ) from exc
 
                     self._persist_retry_failure(
                         attempt=current_attempt,
