@@ -230,9 +230,7 @@ class SerializationError(PyWorkflowKitError):
         self.path = path
         self.value_type = value_type
         self.reason = reason
-        super().__init__(
-            f"Serialization failed at '{path}' for {value_type}: {reason}."
-        )
+        super().__init__(f"Serialization failed at '{path}' for {value_type}: {reason}.")
 
 
 class MetadataStoreError(PyWorkflowKitError):
