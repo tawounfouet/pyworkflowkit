@@ -214,9 +214,7 @@ class ManifestSerializationError(ManifestError):
     def __init__(self, *, path: str, value_type: str) -> None:
         self.path = path
         self.value_type = value_type
-        super().__init__(
-            f"Manifest value at '{path}' is not JSON-portable: {value_type}."
-        )
+        super().__init__(f"Manifest value at '{path}' is not JSON-portable: {value_type}.")
 
 
 class MetadataStoreError(PyWorkflowKitError):
