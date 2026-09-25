@@ -62,9 +62,7 @@ def test_task_run_row_preserves_skip_reason() -> None:
         finished_at=NOW,
     )
 
-    restored = PersistenceMapper.task_run_from_row(
-        PersistenceMapper.task_run_to_row(task_run)
-    )
+    restored = PersistenceMapper.task_run_from_row(PersistenceMapper.task_run_to_row(task_run))
 
     assert restored.status is TaskRunStatus.SKIPPED
     assert restored.skip_reason is SkipReason.DEPENDENCY_FAILED
