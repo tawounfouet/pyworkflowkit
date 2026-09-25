@@ -214,7 +214,6 @@ def test_runner_runtime_errors_expose_context() -> None:
     assert invariant.reason == "task not ready"
 
 
-
 def test_manifest_errors_expose_structured_context() -> None:
     not_ready = ManifestNotReadyError(run_id="run-1", status="RUNNING")
     invariant = ManifestInvariantError(reason="missing terminal event")
