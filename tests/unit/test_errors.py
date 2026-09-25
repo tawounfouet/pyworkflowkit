@@ -2,13 +2,18 @@
 
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 from pyworkflowkit.errors import (
+    CycleDetectedError,
     DefinitionError,
     DomainError,
+    DuplicateDependencyError,
     DuplicateTaskDefinitionError,
+    GraphError,
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
     PyWorkflowKitError,
+    SelfDependencyError,
     TerminalStateError,
+    UnknownDependencyError,
 )
 
 
@@ -45,6 +50,46 @@ def test_duplicate_task_definition_exposes_structured_context() -> None:
     assert error.workflow_id == WorkflowId("workflow")
     assert error.task_id == TaskId("fetch")
     assert "fetch" in str(error)
+
+
+def test_unknown_dependency_error_exposes_graph_context() -> None:
+    error = UnknownDependencyError(
+        task_id=TaskId("transform"),
+        dependency_id=TaskId("fetch"),
+    )
+
+    assert isinstance(error, GraphError)
+    assert error.task_id == TaskId("transform")
+    assert error.dependency_id == TaskId("fetch")
+    assert "unknown task 'fetch'" in str(error)
+
+
+def test_self_dependency_error_exposes_task() -> None:
+    error = SelfDependencyError(task_id=TaskId("A"))
+
+    assert isinstance(error, GraphError)
+    assert error.task_id == TaskId("A")
+
+
+def test_duplicate_dependency_error_exposes_edge_context() -> None:
+    error = DuplicateDependencyError(
+        task_id=TaskId("B"),
+        dependency_id=TaskId("A"),
+    )
+
+    assert isinstance(error, GraphError)
+    assert error.task_id == TaskId("B")
+    assert error.dependency_id == TaskId("A")
+
+
+def test_cycle_error_normalizes_task_order() -> None:
+    error = CycleDetectedError(
+        task_ids=(TaskId("C"), TaskId("A"), TaskId("B")),
+    )
+
+    assert isinstance(error, GraphError)
+    assert error.task_ids == (TaskId("A"), TaskId("B"), TaskId("C"))
+    assert "A, B, C" in str(error)
 
 
 def test_invalid_state_transition_exposes_structured_context() -> None:

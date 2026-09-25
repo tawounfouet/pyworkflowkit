@@ -1,5 +1,7 @@
 """Public exception hierarchy for PyWorkflowKit."""
 
+from collections.abc import Iterable
+
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 
 
@@ -32,6 +34,61 @@ class DuplicateTaskDefinitionError(DefinitionError):
         self.workflow_id = workflow_id
         self.task_id = task_id
         super().__init__(f"Workflow '{workflow_id}' declares duplicate task '{task_id}'.")
+
+
+class GraphError(PyWorkflowKitError):
+    """Base class for dependency-graph errors."""
+
+
+class UnknownDependencyError(GraphError):
+    """Raised when a graph edge references a task absent from the workflow."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        dependency_id: TaskId,
+    ) -> None:
+        self.task_id = task_id
+        self.dependency_id = dependency_id
+        super().__init__(
+            f"Task '{task_id}' depends on unknown task '{dependency_id}'."
+        )
+
+
+class SelfDependencyError(GraphError):
+    """Raised when a task depends directly on itself."""
+
+    def __init__(self, *, task_id: TaskId) -> None:
+        self.task_id = task_id
+        super().__init__(f"Task '{task_id}' cannot depend on itself.")
+
+
+class DuplicateDependencyError(GraphError):
+    """Raised when the same directed dependency edge is declared more than once."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        dependency_id: TaskId,
+    ) -> None:
+        self.task_id = task_id
+        self.dependency_id = dependency_id
+        super().__init__(
+            f"Task '{task_id}' declares duplicate dependency '{dependency_id}'."
+        )
+
+
+class CycleDetectedError(GraphError):
+    """Raised when a dependency graph contains at least one directed cycle."""
+
+    def __init__(self, *, task_ids: Iterable[TaskId]) -> None:
+        self.task_ids = tuple(sorted(task_ids, key=str))
+        rendered = ", ".join(str(task_id) for task_id in self.task_ids)
+        super().__init__(
+            f"Workflow dependency graph contains a cycle involving tasks: {rendered}."
+        )
 
 
 class DomainError(PyWorkflowKitError):
@@ -83,11 +140,16 @@ class TerminalStateError(InvalidStateTransitionError):
 
 
 __all__ = [
+    "CycleDetectedError",
     "DefinitionError",
     "DomainError",
+    "DuplicateDependencyError",
     "DuplicateTaskDefinitionError",
+    "GraphError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
     "PyWorkflowKitError",
+    "SelfDependencyError",
     "TerminalStateError",
+    "UnknownDependencyError",
 ]
