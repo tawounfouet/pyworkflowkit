@@ -64,6 +64,7 @@ class LocalExecutor:
                 handler_ref=task.handler_ref,
                 error_type=type(exc).__name__,
                 error_message=str(exc),
+                error_category=type(exc).__name__,
             ) from exc
 
         return self._normalize_result(raw_result)
