@@ -28,9 +28,7 @@ class _MemoryState:
     task_runs: dict[TaskRunId, TaskRun] = field(default_factory=dict)
     task_attempts: dict[TaskAttemptId, TaskAttempt] = field(default_factory=dict)
     events: dict[RuntimeEventId, RuntimeEvent] = field(default_factory=dict)
-    artifacts: dict[ArtifactId, tuple[TaskRunId, ArtifactReference]] = field(
-        default_factory=dict
-    )
+    artifacts: dict[ArtifactId, tuple[TaskRunId, ArtifactReference]] = field(default_factory=dict)
     external_refs: dict[
         ExternalRunRefId,
         tuple[TaskRunId, ExternalRunRef],
@@ -81,9 +79,7 @@ class MemoryMetadataStore:
         return tuple(sorted(values, key=lambda attempt: attempt.attempt_number))
 
     def list_events(self, run_id: WorkflowRunId) -> tuple[RuntimeEvent, ...]:
-        values = (
-            event for event in self._state.events.values() if event.run_id == run_id
-        )
+        values = (event for event in self._state.events.values() if event.run_id == run_id)
         return tuple(sorted(values, key=_event_sort_key))
 
     def list_artifacts(self, task_run_id: TaskRunId) -> tuple[ArtifactReference, ...]:
@@ -103,9 +99,7 @@ class MemoryMetadataStore:
             for owner_task_run_id, external_ref in self._state.external_refs.values()
             if owner_task_run_id == task_run_id
         )
-        return tuple(
-            sorted(values, key=lambda external_ref: str(external_ref.external_ref_id))
-        )
+        return tuple(sorted(values, key=lambda external_ref: str(external_ref.external_ref_id)))
 
 
 class MemoryUnitOfWork:
@@ -195,9 +189,7 @@ class MemoryUnitOfWork:
             ):
                 raise DuplicateMetadataError(
                     entity_type="TaskAttemptNumber",
-                    entity_id=(
-                        f"{attempt.task_run_id}:{attempt.attempt_number}"
-                    ),
+                    entity_id=(f"{attempt.task_run_id}:{attempt.attempt_number}"),
                 )
 
         state.task_attempts[attempt.attempt_id] = _clone_task_attempt(attempt)
@@ -271,17 +263,14 @@ class MemoryUnitOfWork:
 
     def _require_state(self) -> _MemoryState:
         if not self._active or self._staged_state is None:
-            raise UnitOfWorkStateError(
-                reason="unit of work must be entered before use"
-            )
+            raise UnitOfWorkStateError(reason="unit of work must be entered before use")
         return self._staged_state
 
 
 def _clone_state(state: _MemoryState) -> _MemoryState:
     return _MemoryState(
         workflow_runs={
-            run_id: _clone_workflow_run(run)
-            for run_id, run in state.workflow_runs.items()
+            run_id: _clone_workflow_run(run) for run_id, run in state.workflow_runs.items()
         },
         task_runs={
             task_run_id: _clone_task_run(task_run)
