@@ -1,9 +1,9 @@
 """Build and serialize deterministic execution manifests."""
 
+import json
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from enum import Enum
-import json
 from math import isfinite
 from typing import cast
 
