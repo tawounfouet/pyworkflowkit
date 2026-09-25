@@ -185,6 +185,38 @@ class RuntimeInvariantError(RuntimeErrorBase):
         super().__init__(f"Runtime invariant violated: {reason}.")
 
 
+class ManifestError(PyWorkflowKitError):
+    """Base class for execution-manifest errors."""
+
+
+class ManifestNotReadyError(ManifestError):
+    """Raised when final evidence is requested for a non-terminal run."""
+
+    def __init__(self, *, run_id: str, status: str) -> None:
+        self.run_id = run_id
+        self.status = status
+        super().__init__(
+            f"Run '{run_id}' cannot produce a final manifest while status is {status}."
+        )
+
+
+class ManifestInvariantError(ManifestError):
+    """Raised when persisted runtime evidence is internally inconsistent."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Manifest invariant violated: {reason}.")
+
+
+class ManifestSerializationError(ManifestError):
+    """Raised when runtime evidence cannot be represented as portable JSON."""
+
+    def __init__(self, *, path: str, value_type: str) -> None:
+        self.path = path
+        self.value_type = value_type
+        super().__init__(f"Manifest value at '{path}' is not JSON-portable: {value_type}.")
+
+
 class MetadataStoreError(PyWorkflowKitError):
     """Base class for runtime metadata persistence errors."""
 
@@ -279,6 +311,10 @@ __all__ = [
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
     "InvalidWorkflowParametersError",
+    "ManifestError",
+    "ManifestInvariantError",
+    "ManifestNotReadyError",
+    "ManifestSerializationError",
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",

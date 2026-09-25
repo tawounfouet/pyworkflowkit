@@ -18,6 +18,10 @@ from pyworkflowkit.errors import (
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
     InvalidWorkflowParametersError,
+    ManifestError,
+    ManifestInvariantError,
+    ManifestNotReadyError,
+    ManifestSerializationError,
     MetadataNotFoundError,
     MetadataStoreError,
     PlanningError,
@@ -208,3 +212,21 @@ def test_runner_runtime_errors_expose_context() -> None:
     assert invalid_parameters.reason == "missing source"
     assert isinstance(invariant, RuntimeErrorBase)
     assert invariant.reason == "task not ready"
+
+
+def test_manifest_errors_expose_structured_context() -> None:
+    not_ready = ManifestNotReadyError(run_id="run-1", status="RUNNING")
+    invariant = ManifestInvariantError(reason="missing terminal event")
+    serialization = ManifestSerializationError(
+        path="parameters.value",
+        value_type="object",
+    )
+
+    assert isinstance(not_ready, ManifestError)
+    assert not_ready.run_id == "run-1"
+    assert not_ready.status == "RUNNING"
+    assert isinstance(invariant, ManifestError)
+    assert invariant.reason == "missing terminal event"
+    assert isinstance(serialization, ManifestError)
+    assert serialization.path == "parameters.value"
+    assert serialization.value_type == "object"
