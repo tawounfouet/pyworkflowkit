@@ -530,8 +530,7 @@ def test_runner_does_not_retry_non_matching_error_category() -> None:
     assert calls == 1
     assert len(store.list_task_attempts(task_run.task_run_id)) == 1
     assert RuntimeEventType.TASK_RETRYING not in tuple(
-        event.event_type
-        for event in store.list_events(WorkflowRunId("workflow-run-1"))
+        event.event_type for event in store.list_events(WorkflowRunId("workflow-run-1"))
     )
 
 
@@ -597,7 +596,6 @@ def test_runner_emits_failure_events_after_persisting_failed_attempt() -> None:
     assert events[4].payload["failed_task_id"] == "A"
 
 
-
 def test_runner_fail_fast_marks_descendants_dependency_failed() -> None:
     def failing() -> None:
         raise RuntimeError("boom")
@@ -639,8 +637,7 @@ def test_runner_fail_fast_marks_descendants_dependency_failed() -> None:
         TaskId("C"),
     )
     assert all(
-        event.payload["reason"] == SkipReason.DEPENDENCY_FAILED.value
-        for event in skipped_events
+        event.payload["reason"] == SkipReason.DEPENDENCY_FAILED.value for event in skipped_events
     )
 
 
