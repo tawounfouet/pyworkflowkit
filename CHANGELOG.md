@@ -20,6 +20,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - RunStateMachine as the single runtime state-transition authority.
 - GraphNode, GraphEdge, and deterministic DependencyGraph structural model.
 - WorkflowDefinition-to-DependencyGraph construction and DAG validation.
+- Deterministic ExecutionPlanner with layered topological ExecutionGroups.
+- Runtime ReadyTaskResolver separated from static planning.
+- Planning errors for invalid plans and violated planning preconditions.
 - Graph errors for unknown, self, duplicate, and cyclic dependencies.
 - DomainError, InvalidStateTransitionError, and TerminalStateError.
 - DefinitionError, InvalidWorkflowDefinitionError, and DuplicateTaskDefinitionError.
