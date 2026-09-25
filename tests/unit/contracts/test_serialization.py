@@ -1,6 +1,6 @@
 """Tests for strict boundary schemas and explicit domain mappings."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -185,5 +185,5 @@ def test_runtime_event_schema_round_trip_preserves_sequence_and_context() -> Non
     assert decoded.occurred_at.tzinfo is UTC
 
 
-def timezone_plus_two():
-    return UTC if False else __import__("datetime").timezone(timedelta(hours=2))
+def timezone_plus_two() -> timezone:
+    return timezone(timedelta(hours=2))
