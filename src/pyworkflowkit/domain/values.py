@@ -49,6 +49,8 @@ class RetryPolicy:
             raise TypeError("max_attempts must be an integer.")
         if self.max_attempts < 1:
             raise ValueError("max_attempts must be greater than or equal to 1.")
+        if not isinstance(self.backoff_strategy, BackoffStrategy):
+            raise TypeError("backoff_strategy must be a BackoffStrategy.")
 
         _validate_non_negative_number(self.delay_seconds, field_name="delay_seconds")
         if self.max_delay_seconds is not None:
