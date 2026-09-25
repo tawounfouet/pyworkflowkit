@@ -119,9 +119,7 @@ class Runner:
                 graph=graph,
                 task_runs_by_task_id=persisted_runs,
             ):
-                raise RuntimeInvariantError(
-                    reason=f"planned task '{task_id}' is not runtime-ready"
-                )
+                raise RuntimeInvariantError(reason=f"planned task '{task_id}' is not runtime-ready")
 
             task_ready_at = self._clock.now()
             self._state_machine.mark_task_ready(task_run)
@@ -228,9 +226,7 @@ class Runner:
                 )
             except ExecutorError as exc:
                 failed_at = self._clock.now()
-                error_type, error_message, error_category = _normalize_executor_error(
-                    exc
-                )
+                error_type, error_message, error_category = _normalize_executor_error(exc)
                 self._state_machine.fail_attempt(
                     current_attempt,
                     at=failed_at,
@@ -315,9 +311,7 @@ class Runner:
         unknown = tuple(sorted(set(supplied) - set(declared)))
         if unknown:
             rendered = ", ".join(unknown)
-            raise InvalidWorkflowParametersError(
-                reason=f"unknown workflow parameters: {rendered}"
-            )
+            raise InvalidWorkflowParametersError(reason=f"unknown workflow parameters: {rendered}")
 
         resolved: dict[str, object] = {}
         for parameter in workflow.parameters:
@@ -498,9 +492,7 @@ class Runner:
         error_category: str,
     ) -> None:
         if attempt.finished_at is None:
-            raise RuntimeInvariantError(
-                reason="terminal failure requires a finished TaskAttempt"
-            )
+            raise RuntimeInvariantError(reason="terminal failure requires a finished TaskAttempt")
         finished_at = attempt.finished_at
 
         self._state_machine.fail_task(task_run, at=finished_at)
