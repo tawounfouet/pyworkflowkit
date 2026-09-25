@@ -186,17 +186,13 @@ class ExecutionPlan:
                 reason="each task must appear exactly once in the execution plan"
             )
 
-        flattened_group_task_ids = tuple(
-            task_id for group in groups for task_id in group.task_ids
-        )
+        flattened_group_task_ids = tuple(task_id for group in groups for task_id in group.task_ids)
         if flattened_group_task_ids != planned_task_ids:
             raise InvalidExecutionPlanError(
                 reason="execution groups must match planned task ordering exactly"
             )
 
-        group_by_task_id = {
-            task_id: group.index for group in groups for task_id in group.task_ids
-        }
+        group_by_task_id = {task_id: group.index for group in groups for task_id in group.task_ids}
         for task in tasks:
             if group_by_task_id[task.task_id] != task.group_index:
                 raise InvalidExecutionPlanError(
@@ -324,9 +320,7 @@ class ReadyTaskResolver:
         for task_id in graph.task_ids:
             task_run = task_runs_by_task_id.get(task_id)
             if task_run is None:
-                raise PlanningInvariantError(
-                    reason=f"missing TaskRun for graph task '{task_id}'"
-                )
+                raise PlanningInvariantError(reason=f"missing TaskRun for graph task '{task_id}'")
             self._ensure_mapping_identity(task_id, task_run)
             if self.is_ready(
                 task_run=task_run,
