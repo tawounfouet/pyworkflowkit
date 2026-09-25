@@ -55,8 +55,7 @@ def _portable_json_value(value: object, *, path: str) -> object:
         return normalized
     if isinstance(value, (list, tuple)):
         return [
-            _portable_json_value(item, path=f"{path}[{index}]")
-            for index, item in enumerate(value)
+            _portable_json_value(item, path=f"{path}[{index}]") for index, item in enumerate(value)
         ]
     raise SerializationError(
         path=path,
