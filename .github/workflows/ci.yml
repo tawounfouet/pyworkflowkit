@@ -89,3 +89,31 @@ jobs:
 
       - name: Import smoke
         run: python -c "import pyworkflowkit; print(pyworkflowkit.__version__)"
+
+
+  acceptance:
+    name: V0.1 reference acceptance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Reference workflows
+        run: pytest tests/reference -q
+
+      - name: Hello-world example
+        run: |
+          python examples/00_hello_world.py > /tmp/pyworkflowkit-manifest.json
+          python -c "import json; json.load(open('/tmp/pyworkflowkit-manifest.json', encoding='utf-8'))"
