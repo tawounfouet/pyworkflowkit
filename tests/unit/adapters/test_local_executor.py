@@ -156,6 +156,7 @@ def test_local_executor_wraps_handler_exception_and_preserves_cause() -> None:
     assert error.handler_ref == "tests:handler"
     assert error.error_type == "HandlerFailure"
     assert error.error_message == "boom"
+    assert error.error_category == "HandlerFailure"
     assert isinstance(error.__cause__, HandlerFailure)
 
 

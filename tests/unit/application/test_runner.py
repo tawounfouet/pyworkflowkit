@@ -11,7 +11,9 @@ from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import (
+    BackoffStrategy,
     RuntimeEventType,
+    SkipReason,
     TaskAttemptStatus,
     TaskRunStatus,
     WorkflowRunStatus,
@@ -43,7 +45,7 @@ from pyworkflowkit.errors import (
     UnknownDependencyError,
 )
 from pyworkflowkit.ports.executor import RunContext
-from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory
+from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
 
 NOW = datetime(2026, 9, 25, 19, 0, tzinfo=UTC)
 
@@ -51,6 +53,14 @@ NOW = datetime(2026, 9, 25, 19, 0, tzinfo=UTC)
 class FixedClock:
     def now(self) -> datetime:
         return NOW
+
+
+class RecordingSleeper:
+    def __init__(self) -> None:
+        self.calls: list[float] = []
+
+    def sleep(self, seconds: float) -> None:
+        self.calls.append(seconds)
 
 
 class DeterministicIdFactory:
@@ -113,6 +123,8 @@ def make_workflow(
 def make_runtime(
     workflow: WorkflowDefinition,
     handlers: Mapping[str, object],
+    *,
+    sleeper: Sleeper | None = None,
 ) -> tuple[Runner, MemoryMetadataStore]:
     del workflow
     store = MemoryMetadataStore()
@@ -126,9 +138,11 @@ def make_runtime(
         executor=LocalExecutor(),
         clock=FixedClock(),
         id_factory=DeterministicIdFactory(),
+        sleeper=sleeper or RecordingSleeper(),
     )
     assert isinstance(FixedClock(), Clock)
     assert isinstance(DeterministicIdFactory(), RuntimeIdFactory)
+    assert isinstance(RecordingSleeper(), Sleeper)
     return runner, store
 
 
@@ -369,7 +383,8 @@ def test_runner_persists_failure_and_reraises_execution_error() -> None:
 
     runs = {task.task_id: task for task in store.list_task_runs(run.run_id)}
     assert runs[TaskId("A")].status is TaskRunStatus.FAILED
-    assert runs[TaskId("B")].status is TaskRunStatus.PENDING
+    assert runs[TaskId("B")].status is TaskRunStatus.SKIPPED
+    assert runs[TaskId("B")].skip_reason is SkipReason.DEPENDENCY_FAILED
 
     attempts = store.list_task_attempts(runs[TaskId("A")].task_run_id)
     assert len(attempts) == 1
@@ -378,13 +393,86 @@ def test_runner_persists_failure_and_reraises_execution_error() -> None:
     assert attempts[0].error_message == "boom"
 
 
-def test_runner_does_not_apply_retry_policy_yet() -> None:
+def test_runner_retries_same_task_run_then_succeeds() -> None:
+    calls = 0
+
+    def flaky() -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise TimeoutError("temporary")
+        return "ok"
+
+    workflow = make_workflow(
+        make_task(
+            "A",
+            retry_policy=RetryPolicy(max_attempts=2),
+        )
+    )
+    runner, store = make_runtime(workflow, {"handlers:A": flaky})
+
+    run = runner.run(workflow)
+
+    task_run = store.list_task_runs(run.run_id)[0]
+    attempts = store.list_task_attempts(task_run.task_run_id)
+    assert calls == 2
+    assert task_run.status is TaskRunStatus.SUCCEEDED
+    assert tuple(attempt.status for attempt in attempts) == (
+        TaskAttemptStatus.FAILED,
+        TaskAttemptStatus.SUCCEEDED,
+    )
+    assert tuple(attempt.task_run_id for attempt in attempts) == (
+        task_run.task_run_id,
+        task_run.task_run_id,
+    )
+    assert tuple(event.event_type for event in store.list_events(run.run_id)) == (
+        RuntimeEventType.WORKFLOW_STARTED,
+        RuntimeEventType.TASK_READY,
+        RuntimeEventType.TASK_STARTED,
+        RuntimeEventType.TASK_RETRYING,
+        RuntimeEventType.TASK_SUCCEEDED,
+        RuntimeEventType.WORKFLOW_SUCCEEDED,
+    )
+
+
+def test_runner_applies_retry_backoff_through_sleeper() -> None:
+    calls = 0
+    sleeper = RecordingSleeper()
+
+    def flaky() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise TimeoutError("temporary")
+
+    workflow = make_workflow(
+        make_task(
+            "A",
+            retry_policy=RetryPolicy(
+                max_attempts=2,
+                backoff_strategy=BackoffStrategy.FIXED,
+                delay_seconds=2.5,
+            ),
+        )
+    )
+    runner, _ = make_runtime(
+        workflow,
+        {"handlers:A": flaky},
+        sleeper=sleeper,
+    )
+
+    runner.run(workflow)
+
+    assert sleeper.calls == [2.5]
+
+
+def test_runner_exhausts_retries_before_terminal_task_failure() -> None:
     calls = 0
 
     def failing() -> None:
         nonlocal calls
         calls += 1
-        raise RuntimeError("still failing")
+        raise TimeoutError("still failing")
 
     workflow = make_workflow(
         make_task(
@@ -398,8 +486,52 @@ def test_runner_does_not_apply_retry_policy_yet() -> None:
         runner.run(workflow)
 
     task_run = store.list_task_runs(WorkflowRunId("workflow-run-1"))[0]
+    attempts = store.list_task_attempts(task_run.task_run_id)
+    events = store.list_events(WorkflowRunId("workflow-run-1"))
+
+    assert calls == 3
+    assert task_run.status is TaskRunStatus.FAILED
+    assert len(attempts) == 3
+    assert all(attempt.status is TaskAttemptStatus.FAILED for attempt in attempts)
+    assert tuple(event.event_type for event in events) == (
+        RuntimeEventType.WORKFLOW_STARTED,
+        RuntimeEventType.TASK_READY,
+        RuntimeEventType.TASK_STARTED,
+        RuntimeEventType.TASK_RETRYING,
+        RuntimeEventType.TASK_RETRYING,
+        RuntimeEventType.TASK_FAILED,
+        RuntimeEventType.WORKFLOW_FAILED,
+    )
+
+
+def test_runner_does_not_retry_non_matching_error_category() -> None:
+    calls = 0
+
+    def failing() -> None:
+        nonlocal calls
+        calls += 1
+        raise ValueError("not retryable")
+
+    workflow = make_workflow(
+        make_task(
+            "A",
+            retry_policy=RetryPolicy(
+                max_attempts=3,
+                retryable_error_categories=frozenset({"TimeoutError"}),
+            ),
+        )
+    )
+    runner, store = make_runtime(workflow, {"handlers:A": failing})
+
+    with pytest.raises(TaskExecutionError):
+        runner.run(workflow)
+
+    task_run = store.list_task_runs(WorkflowRunId("workflow-run-1"))[0]
     assert calls == 1
     assert len(store.list_task_attempts(task_run.task_run_id)) == 1
+    assert RuntimeEventType.TASK_RETRYING not in tuple(
+        event.event_type for event in store.list_events(WorkflowRunId("workflow-run-1"))
+    )
 
 
 def test_runner_emits_canonical_single_task_success_event_sequence() -> None:
@@ -462,3 +594,86 @@ def test_runner_emits_failure_events_after_persisting_failed_attempt() -> None:
     assert tuple(event.event_sequence for event in events) == (1, 2, 3, 4, 5)
     assert events[3].payload["error_type"] == "ValueError"
     assert events[4].payload["failed_task_id"] == "A"
+
+
+def test_runner_fail_fast_marks_descendants_dependency_failed() -> None:
+    def failing() -> None:
+        raise RuntimeError("boom")
+
+    workflow = make_workflow(
+        make_task("C", "B"),
+        make_task("B", "A"),
+        make_task("A"),
+    )
+    runner, store = make_runtime(
+        workflow,
+        {
+            "handlers:A": failing,
+            "handlers:B": lambda: None,
+            "handlers:C": lambda: None,
+        },
+    )
+
+    with pytest.raises(TaskExecutionError):
+        runner.run(workflow)
+
+    runs = {
+        task_run.task_id: task_run
+        for task_run in store.list_task_runs(WorkflowRunId("workflow-run-1"))
+    }
+    assert runs[TaskId("A")].status is TaskRunStatus.FAILED
+    assert runs[TaskId("B")].status is TaskRunStatus.SKIPPED
+    assert runs[TaskId("B")].skip_reason is SkipReason.DEPENDENCY_FAILED
+    assert runs[TaskId("C")].status is TaskRunStatus.SKIPPED
+    assert runs[TaskId("C")].skip_reason is SkipReason.DEPENDENCY_FAILED
+
+    skipped_events = tuple(
+        event
+        for event in store.list_events(WorkflowRunId("workflow-run-1"))
+        if event.event_type is RuntimeEventType.TASK_SKIPPED
+    )
+    assert tuple(event.task_id for event in skipped_events) == (
+        TaskId("B"),
+        TaskId("C"),
+    )
+    assert all(
+        event.payload["reason"] == SkipReason.DEPENDENCY_FAILED.value for event in skipped_events
+    )
+
+
+def test_runner_fail_fast_aborts_independent_undispatched_task() -> None:
+    def failing() -> None:
+        raise RuntimeError("boom")
+
+    workflow = make_workflow(
+        make_task("B", "A"),
+        make_task("C"),
+        make_task("A"),
+    )
+    runner, store = make_runtime(
+        workflow,
+        {
+            "handlers:A": failing,
+            "handlers:B": lambda: None,
+            "handlers:C": lambda: None,
+        },
+    )
+
+    with pytest.raises(TaskExecutionError):
+        runner.run(workflow)
+
+    runs = {
+        task_run.task_id: task_run
+        for task_run in store.list_task_runs(WorkflowRunId("workflow-run-1"))
+    }
+    assert runs[TaskId("B")].skip_reason is SkipReason.DEPENDENCY_FAILED
+    assert runs[TaskId("C")].skip_reason is SkipReason.FAIL_FAST_ABORT
+
+    events = store.list_events(WorkflowRunId("workflow-run-1"))
+    terminal_types = tuple(event.event_type for event in events[-4:])
+    assert terminal_types == (
+        RuntimeEventType.TASK_FAILED,
+        RuntimeEventType.TASK_SKIPPED,
+        RuntimeEventType.TASK_SKIPPED,
+        RuntimeEventType.WORKFLOW_FAILED,
+    )
