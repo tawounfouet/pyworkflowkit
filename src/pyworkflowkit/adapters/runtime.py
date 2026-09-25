@@ -1,6 +1,7 @@
 """Default runtime support adapters."""
 
 from datetime import UTC, datetime
+from time import sleep
 from uuid import uuid4
 
 from pyworkflowkit.domain.ids import (
@@ -10,7 +11,7 @@ from pyworkflowkit.domain.ids import (
     TaskRunId,
     WorkflowRunId,
 )
-from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory
+from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
 
 
 class SystemClock:
@@ -18,6 +19,15 @@ class SystemClock:
 
     def now(self) -> datetime:
         return datetime.now(UTC)
+
+
+class SystemSleeper:
+    """Blocking wall-clock sleeper used for synchronous retry backoff."""
+
+    def sleep(self, seconds: float) -> None:
+        if seconds < 0:
+            raise ValueError("seconds must be non-negative")
+        sleep(seconds)
 
 
 class UuidRuntimeIdFactory:
@@ -55,7 +65,8 @@ class UuidRuntimeIdFactory:
 
 
 assert isinstance(SystemClock(), Clock)
+assert isinstance(SystemSleeper(), Sleeper)
 assert isinstance(UuidRuntimeIdFactory(), RuntimeIdFactory)
 
 
-__all__ = ["SystemClock", "UuidRuntimeIdFactory"]
+__all__ = ["SystemClock", "SystemSleeper", "UuidRuntimeIdFactory"]
