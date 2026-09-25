@@ -23,7 +23,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Deterministic ExecutionPlanner with layered topological ExecutionGroups.
 - Runtime ReadyTaskResolver separated from static planning.
 - Executor port, capabilities, RunContext, explicit HandlerRegistry, and synchronous LocalExecutor.
+- MetadataStore and UnitOfWork ports with transactional MemoryMetadataStore.
+- Copy-on-write in-memory commit/rollback semantics and metadata contract tests.
 - Executor contract tests and structured execution/handler errors.
+- MetadataStore errors for not-found, duplicate, and invalid UnitOfWork state.
 - Planning errors for invalid plans and violated planning preconditions.
 - Graph errors for unknown, self, duplicate, and cyclic dependencies.
 - DomainError, InvalidStateTransitionError, and TerminalStateError.
