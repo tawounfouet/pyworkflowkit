@@ -51,9 +51,7 @@ class UnknownDependencyError(GraphError):
     ) -> None:
         self.task_id = task_id
         self.dependency_id = dependency_id
-        super().__init__(
-            f"Task '{task_id}' depends on unknown task '{dependency_id}'."
-        )
+        super().__init__(f"Task '{task_id}' depends on unknown task '{dependency_id}'.")
 
 
 class SelfDependencyError(GraphError):
@@ -75,9 +73,7 @@ class DuplicateDependencyError(GraphError):
     ) -> None:
         self.task_id = task_id
         self.dependency_id = dependency_id
-        super().__init__(
-            f"Task '{task_id}' declares duplicate dependency '{dependency_id}'."
-        )
+        super().__init__(f"Task '{task_id}' declares duplicate dependency '{dependency_id}'.")
 
 
 class CycleDetectedError(GraphError):
@@ -86,9 +82,7 @@ class CycleDetectedError(GraphError):
     def __init__(self, *, task_ids: Iterable[TaskId]) -> None:
         self.task_ids = tuple(sorted(task_ids, key=str))
         rendered = ", ".join(str(task_id) for task_id in self.task_ids)
-        super().__init__(
-            f"Workflow dependency graph contains a cycle involving tasks: {rendered}."
-        )
+        super().__init__(f"Workflow dependency graph contains a cycle involving tasks: {rendered}.")
 
 
 class DomainError(PyWorkflowKitError):

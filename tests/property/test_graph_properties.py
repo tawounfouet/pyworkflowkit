@@ -28,13 +28,9 @@ def dag_definitions(
         else st.just(set())
     )
 
-    dependencies_by_task: dict[TaskId, list[TaskId]] = {
-        task_id: [] for task_id in task_ids
-    }
+    dependencies_by_task: dict[TaskId, list[TaskId]] = {task_id: [] for task_id in task_ids}
     for upstream_index, downstream_index in selected_edges:
-        dependencies_by_task[task_ids[downstream_index]].append(
-            task_ids[upstream_index]
-        )
+        dependencies_by_task[task_ids[downstream_index]].append(task_ids[upstream_index])
 
     tasks = tuple(
         TaskDefinition(

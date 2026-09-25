@@ -97,11 +97,7 @@ class DAGValidator:
         if len(processed) != len(graph.task_ids):
             remaining = tuple(
                 sorted(
-                    (
-                        task_id
-                        for task_id in graph.task_ids
-                        if in_degree[task_id] > 0
-                    ),
+                    (task_id for task_id in graph.task_ids if in_degree[task_id] > 0),
                     key=str,
                 )
             )

@@ -75,9 +75,7 @@ class DependencyGraph:
         self._edges = canonical_edges
         self._nodes_by_id = {node.task_id: node for node in canonical_nodes}
 
-        upstream_by_id: dict[TaskId, list[TaskId]] = {
-            task_id: [] for task_id in self._nodes_by_id
-        }
+        upstream_by_id: dict[TaskId, list[TaskId]] = {task_id: [] for task_id in self._nodes_by_id}
         downstream_by_id: dict[TaskId, list[TaskId]] = {
             task_id: [] for task_id in self._nodes_by_id
         }
