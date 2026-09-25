@@ -7,6 +7,7 @@ from pyworkflowkit.errors import (
     DomainError,
     DuplicateDependencyError,
     DuplicateHandlerRegistrationError,
+    DuplicateMetadataError,
     DuplicateTaskDefinitionError,
     ExecutorError,
     GraphError,
@@ -15,12 +16,15 @@ from pyworkflowkit.errors import (
     InvalidHandlerError,
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
+    MetadataNotFoundError,
+    MetadataStoreError,
     PlanningError,
     PlanningInvariantError,
     PyWorkflowKitError,
     SelfDependencyError,
     TaskExecutionError,
     TerminalStateError,
+    UnitOfWorkStateError,
     UnknownDependencyError,
 )
 
@@ -135,6 +139,27 @@ def test_executor_error_hierarchy_and_context() -> None:
     assert invalid.reason == "bad signature"
     assert execution.error_type == "ValueError"
     assert execution.error_message == "boom"
+
+
+def test_metadata_store_errors_expose_structured_context() -> None:
+    missing = MetadataNotFoundError(
+        entity_type="WorkflowRun",
+        entity_id="run-1",
+    )
+    duplicate = DuplicateMetadataError(
+        entity_type="TaskAttempt",
+        entity_id="attempt-1",
+    )
+    state = UnitOfWorkStateError(reason="not active")
+
+    assert isinstance(missing, MetadataStoreError)
+    assert missing.entity_type == "WorkflowRun"
+    assert missing.entity_id == "run-1"
+    assert isinstance(duplicate, MetadataStoreError)
+    assert duplicate.entity_type == "TaskAttempt"
+    assert duplicate.entity_id == "attempt-1"
+    assert isinstance(state, MetadataStoreError)
+    assert state.reason == "not active"
 
 
 def test_invalid_state_transition_exposes_structured_context() -> None:

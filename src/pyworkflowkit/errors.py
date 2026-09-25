@@ -155,6 +155,36 @@ class TaskExecutionError(ExecutorError):
         )
 
 
+class MetadataStoreError(PyWorkflowKitError):
+    """Base class for runtime metadata persistence errors."""
+
+
+class MetadataNotFoundError(MetadataStoreError):
+    """Raised when required runtime metadata does not exist."""
+
+    def __init__(self, *, entity_type: str, entity_id: str) -> None:
+        self.entity_type = entity_type
+        self.entity_id = entity_id
+        super().__init__(f"{entity_type} '{entity_id}' was not found.")
+
+
+class DuplicateMetadataError(MetadataStoreError):
+    """Raised when a persistence identity or uniqueness invariant is duplicated."""
+
+    def __init__(self, *, entity_type: str, entity_id: str) -> None:
+        self.entity_type = entity_type
+        self.entity_id = entity_id
+        super().__init__(f"{entity_type} '{entity_id}' already exists.")
+
+
+class UnitOfWorkStateError(MetadataStoreError):
+    """Raised when a UnitOfWork lifecycle operation is invalid."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"UnitOfWork state is invalid: {reason}.")
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -217,11 +247,15 @@ __all__ = [
     "InvalidHandlerError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
+    "MetadataNotFoundError",
+    "MetadataStoreError",
+    "DuplicateMetadataError",
     "PlanningError",
     "PlanningInvariantError",
     "PyWorkflowKitError",
     "SelfDependencyError",
     "TaskExecutionError",
     "TerminalStateError",
+    "UnitOfWorkStateError",
     "UnknownDependencyError",
 ]
