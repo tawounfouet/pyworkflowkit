@@ -18,6 +18,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Immutable TaskDefinition and WorkflowDefinition models with local definition invariants.
 - WorkflowRun, TaskRun, TaskAttempt, and immutable RuntimeEvent domain entities.
 - RunStateMachine as the single runtime state-transition authority.
+- GraphNode, GraphEdge, and deterministic DependencyGraph structural model.
+- WorkflowDefinition-to-DependencyGraph construction and DAG validation.
+- Graph errors for unknown, self, duplicate, and cyclic dependencies.
 - DomainError, InvalidStateTransitionError, and TerminalStateError.
 - DefinitionError, InvalidWorkflowDefinitionError, and DuplicateTaskDefinitionError.
 - Public PyWorkflowKitError exception root.
