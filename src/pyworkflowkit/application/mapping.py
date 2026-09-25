@@ -109,8 +109,7 @@ class DomainSchemaMapper:
             version=value.version,
             tasks=tuple(cls.task_definition_to_schema(task) for task in value.tasks),
             parameters=tuple(
-                cls.workflow_parameter_to_schema(parameter)
-                for parameter in value.parameters
+                cls.workflow_parameter_to_schema(parameter) for parameter in value.parameters
             ),
             failure_policy=value.failure_policy,
             description=value.description,
@@ -126,8 +125,7 @@ class DomainSchemaMapper:
             version=value.version,
             tasks=tuple(cls.task_definition_from_schema(task) for task in value.tasks),
             parameters=tuple(
-                cls.workflow_parameter_from_schema(parameter)
-                for parameter in value.parameters
+                cls.workflow_parameter_from_schema(parameter) for parameter in value.parameters
             ),
             failure_policy=value.failure_policy,
             description=value.description,
@@ -223,9 +221,7 @@ class DomainSchemaMapper:
             run_id=str(value.run_id),
             occurred_at=value.occurred_at,
             event_sequence=value.event_sequence,
-            task_run_id=(
-                str(value.task_run_id) if value.task_run_id is not None else None
-            ),
+            task_run_id=(str(value.task_run_id) if value.task_run_id is not None else None),
             task_id=str(value.task_id) if value.task_id is not None else None,
             attempt_number=value.attempt_number,
             payload=dict(value.payload),
@@ -239,9 +235,7 @@ class DomainSchemaMapper:
             run_id=WorkflowRunId(value.run_id),
             occurred_at=value.occurred_at,
             event_sequence=value.event_sequence,
-            task_run_id=(
-                TaskRunId(value.task_run_id) if value.task_run_id is not None else None
-            ),
+            task_run_id=(TaskRunId(value.task_run_id) if value.task_run_id is not None else None),
             task_id=TaskId(value.task_id) if value.task_id is not None else None,
             attempt_number=value.attempt_number,
             payload=dict(value.payload),
