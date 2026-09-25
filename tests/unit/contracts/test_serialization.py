@@ -41,9 +41,7 @@ def test_workflow_definition_domain_schema_round_trip() -> None:
                     backoff_strategy=BackoffStrategy.EXPONENTIAL,
                     delay_seconds=2.0,
                     max_delay_seconds=10.0,
-                    retryable_error_categories=frozenset(
-                        {"TimeoutError", "ConnectionError"}
-                    ),
+                    retryable_error_categories=frozenset({"TimeoutError", "ConnectionError"}),
                 ),
                 tags=frozenset({"io", "source"}),
             ),
