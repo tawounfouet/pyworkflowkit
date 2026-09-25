@@ -1,14 +1,17 @@
 """Synchronous same-process LocalExecutor."""
 
 from inspect import Parameter, Signature, signature
+from typing import cast
 
 from pyworkflowkit.domain.definitions import TaskDefinition
 from pyworkflowkit.domain.values import TaskResult
 from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
 from pyworkflowkit.ports.executor import (
+    ContextHandler,
     ExecutorCapabilities,
     RunContext,
     TaskHandler,
+    ZeroArgumentHandler,
 )
 
 
@@ -51,7 +54,10 @@ class LocalExecutor:
         )
 
         try:
-            raw_result = handler() if invocation_arity == 0 else handler(context)
+            if invocation_arity == 0:
+                raw_result = cast(ZeroArgumentHandler, handler)()
+            else:
+                raw_result = cast(ContextHandler, handler)(context)
         except Exception as exc:
             raise TaskExecutionError(
                 task_id=task.task_id,

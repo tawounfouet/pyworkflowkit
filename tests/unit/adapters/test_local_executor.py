@@ -15,7 +15,11 @@ from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
 from pyworkflowkit.ports.executor import Executor, RunContext
 
 
-def task(*, executor_key: str = "local", handler_ref: str | None = "tests:handler") -> TaskDefinition:
+def task(
+    *,
+    executor_key: str = "local",
+    handler_ref: str | None = "tests:handler",
+) -> TaskDefinition:
     return TaskDefinition(
         task_id=TaskId("task"),
         executor_key=executor_key,

@@ -6,7 +6,13 @@ from types import MappingProxyType
 from typing import Protocol, TypeAlias, runtime_checkable
 
 from pyworkflowkit.domain.definitions import TaskDefinition
-from pyworkflowkit.domain.ids import TaskAttemptId, TaskId, TaskRunId, WorkflowRunId
+from pyworkflowkit.domain.ids import (
+    TaskAttemptId,
+    TaskId,
+    TaskRunId,
+    WorkflowRunId,
+    validate_non_empty_identifier,
+)
 from pyworkflowkit.domain.values import TaskResult
 
 
@@ -36,8 +42,19 @@ class RunContext:
     dependency_outputs: Mapping[TaskId, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        validate_non_empty_identifier(
+            str(self.workflow_run_id),
+            field_name="workflow_run_id",
+        )
+        validate_non_empty_identifier(str(self.task_run_id), field_name="task_run_id")
+        validate_non_empty_identifier(str(self.attempt_id), field_name="attempt_id")
+        validate_non_empty_identifier(str(self.task_id), field_name="task_id")
+
+        if isinstance(self.attempt_number, bool) or not isinstance(self.attempt_number, int):
+            raise TypeError("attempt_number must be an integer.")
         if self.attempt_number < 1:
             raise ValueError("attempt_number must be greater than or equal to 1.")
+
         object.__setattr__(
             self,
             "workflow_parameters",

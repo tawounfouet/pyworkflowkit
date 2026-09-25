@@ -1,7 +1,5 @@
 """Contract tests shared by the built-in LocalExecutor implementation."""
 
-from collections.abc import Callable
-
 import pytest
 
 from pyworkflowkit.adapters.executors.local import LocalExecutor
@@ -46,7 +44,8 @@ def test_executor_returns_task_result(
     definition: TaskDefinition,
     run_context: RunContext,
 ) -> None:
-    handler: Callable[[], object] = lambda: "result"
+    def handler() -> object:
+        return "result"
 
     result = executor.execute(
         task=definition,
