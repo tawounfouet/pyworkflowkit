@@ -4,10 +4,7 @@ from collections.abc import Sequence
 from types import TracebackType
 from typing import Protocol, Self, runtime_checkable
 
-from pyworkflowkit.domain.ids import (
-    TaskRunId,
-    WorkflowRunId,
-)
+from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef
 
@@ -40,10 +37,13 @@ class UnitOfWork(Protocol):
         """Stage replacement state for an existing task run."""
 
     def add_task_attempt(self, attempt: TaskAttempt) -> None:
-        """Stage one immutable historical attempt identity."""
+        """Stage a newly created task attempt."""
+
+    def save_task_attempt(self, attempt: TaskAttempt) -> None:
+        """Stage replacement state for an existing task attempt."""
 
     def add_event(self, event: RuntimeEvent) -> None:
-        """Stage one runtime event."""
+        """Stage one immutable runtime event."""
 
     def add_artifact(
         self,

@@ -11,6 +11,7 @@ from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import (
+    RuntimeEventType,
     TaskAttemptStatus,
     TaskRunStatus,
     WorkflowRunStatus,
@@ -18,6 +19,7 @@ from pyworkflowkit.domain.enums import (
 from pyworkflowkit.domain.ids import (
     ArtifactId,
     ExternalRunRefId,
+    RuntimeEventId,
     TaskAttemptId,
     TaskId,
     TaskRunId,
@@ -70,6 +72,14 @@ class DeterministicIdFactory:
         attempt_number: int,
     ) -> TaskAttemptId:
         return TaskAttemptId(f"{task_run_id}:attempt-{attempt_number}")
+
+    def new_runtime_event_id(
+        self,
+        *,
+        run_id: WorkflowRunId,
+        event_sequence: int,
+    ) -> RuntimeEventId:
+        return RuntimeEventId(f"{run_id}:event-{event_sequence}")
 
 
 def make_task(
@@ -390,3 +400,66 @@ def test_runner_does_not_apply_retry_policy_yet() -> None:
     task_run = store.list_task_runs(WorkflowRunId("workflow-run-1"))[0]
     assert calls == 1
     assert len(store.list_task_attempts(task_run.task_run_id)) == 1
+
+
+
+def test_runner_emits_canonical_single_task_success_event_sequence() -> None:
+    workflow = make_workflow(make_task("A"))
+    runner, store = make_runtime(workflow, {"handlers:A": lambda: "done"})
+
+    run = runner.run(workflow)
+    events = store.list_events(run.run_id)
+
+    assert tuple(event.event_sequence for event in events) == (1, 2, 3, 4, 5)
+    assert tuple(event.event_type for event in events) == (
+        RuntimeEventType.WORKFLOW_STARTED,
+        RuntimeEventType.TASK_READY,
+        RuntimeEventType.TASK_STARTED,
+        RuntimeEventType.TASK_SUCCEEDED,
+        RuntimeEventType.WORKFLOW_SUCCEEDED,
+    )
+    assert events[0].task_id is None
+    assert events[1].task_id == TaskId("A")
+    assert events[2].attempt_number == 1
+    assert events[3].attempt_number == 1
+    assert events[4].task_id is None
+
+
+def test_runner_persists_running_attempt_before_handler_executes() -> None:
+    observed_statuses: list[TaskAttemptStatus] = []
+    workflow = make_workflow(make_task("A"))
+    runner, store = make_runtime(workflow, {})
+
+    registry = runner._handler_registry  # type: ignore[attr-defined]
+
+    def handler(context: RunContext) -> None:
+        attempts = store.list_task_attempts(context.task_run_id)
+        observed_statuses.extend(attempt.status for attempt in attempts)
+
+    registry.register("handlers:A", handler)
+    runner.run(workflow)
+
+    assert observed_statuses == [TaskAttemptStatus.RUNNING]
+
+
+def test_runner_emits_failure_events_after_persisting_failed_attempt() -> None:
+    def failing() -> None:
+        raise ValueError("boom")
+
+    workflow = make_workflow(make_task("A"))
+    runner, store = make_runtime(workflow, {"handlers:A": failing})
+
+    with pytest.raises(TaskExecutionError):
+        runner.run(workflow)
+
+    events = store.list_events(WorkflowRunId("workflow-run-1"))
+    assert tuple(event.event_type for event in events) == (
+        RuntimeEventType.WORKFLOW_STARTED,
+        RuntimeEventType.TASK_READY,
+        RuntimeEventType.TASK_STARTED,
+        RuntimeEventType.TASK_FAILED,
+        RuntimeEventType.WORKFLOW_FAILED,
+    )
+    assert tuple(event.event_sequence for event in events) == (1, 2, 3, 4, 5)
+    assert events[3].payload["error_type"] == "ValueError"
+    assert events[4].payload["failed_task_id"] == "A"

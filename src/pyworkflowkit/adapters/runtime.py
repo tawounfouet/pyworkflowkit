@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from pyworkflowkit.domain.ids import (
+    RuntimeEventId,
     TaskAttemptId,
     TaskId,
     TaskRunId,
@@ -42,6 +43,15 @@ class UuidRuntimeIdFactory:
     ) -> TaskAttemptId:
         del task_run_id, attempt_number
         return TaskAttemptId(str(uuid4()))
+
+    def new_runtime_event_id(
+        self,
+        *,
+        run_id: WorkflowRunId,
+        event_sequence: int,
+    ) -> RuntimeEventId:
+        del run_id, event_sequence
+        return RuntimeEventId(str(uuid4()))
 
 
 assert isinstance(SystemClock(), Clock)

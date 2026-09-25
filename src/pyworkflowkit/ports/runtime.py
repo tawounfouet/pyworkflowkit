@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 
 from pyworkflowkit.domain.ids import (
+    RuntimeEventId,
     TaskAttemptId,
     TaskId,
     TaskRunId,
@@ -21,7 +22,7 @@ class Clock(Protocol):
 
 @runtime_checkable
 class RuntimeIdFactory(Protocol):
-    """Factory for runtime aggregate/entity identities."""
+    """Factory for runtime aggregate/entity/event identities."""
 
     def new_workflow_run_id(self) -> WorkflowRunId:
         """Create a new WorkflowRun identity."""
@@ -41,6 +42,14 @@ class RuntimeIdFactory(Protocol):
         attempt_number: int,
     ) -> TaskAttemptId:
         """Create a TaskAttempt identity."""
+
+    def new_runtime_event_id(
+        self,
+        *,
+        run_id: WorkflowRunId,
+        event_sequence: int,
+    ) -> RuntimeEventId:
+        """Create a RuntimeEvent identity."""
 
 
 __all__ = ["Clock", "RuntimeIdFactory"]

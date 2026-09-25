@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore
-from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus
+from pyworkflowkit.domain.enums import RuntimeEventType, TaskAttemptStatus, TaskRunStatus
 from pyworkflowkit.domain.ids import (
     RuntimeEventId,
     TaskAttemptId,
@@ -113,3 +113,30 @@ def test_contract_attempt_and_event_history_are_queryable(
 
     assert len(store.list_task_attempts(TaskRunId("task-run"))) == 1
     assert len(store.list_events(WorkflowRunId("run"))) == 1
+
+
+
+def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
+    with store.unit_of_work() as uow:
+        uow.add_workflow_run(make_run())
+        uow.add_task_run(make_task_run())
+        uow.add_task_attempt(
+            TaskAttempt(
+                attempt_id=TaskAttemptId("attempt"),
+                task_run_id=TaskRunId("task-run"),
+                attempt_number=1,
+                started_at=NOW,
+            )
+        )
+        uow.commit()
+
+    updated = store.list_task_attempts(TaskRunId("task-run"))[0]
+    updated.status = TaskAttemptStatus.SUCCEEDED
+    updated.finished_at = NOW
+
+    with store.unit_of_work() as uow:
+        uow.save_task_attempt(updated)
+        uow.commit()
+
+    persisted = store.list_task_attempts(TaskRunId("task-run"))[0]
+    assert persisted.status is TaskAttemptStatus.SUCCEEDED

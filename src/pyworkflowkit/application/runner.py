@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 
+from pyworkflowkit.application.events import RuntimeEventFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.planning import (
     DAGValidator,
@@ -11,9 +12,9 @@ from pyworkflowkit.application.planning import (
 )
 from pyworkflowkit.application.state_machine import RunStateMachine
 from pyworkflowkit.domain.definitions import WorkflowDefinition
-from pyworkflowkit.domain.enums import TaskRunStatus
+from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus
 from pyworkflowkit.domain.ids import TaskId
-from pyworkflowkit.domain.runtime import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.domain.values import TaskResult
 from pyworkflowkit.errors import (
     ExecutorError,
@@ -74,6 +75,10 @@ class Runner:
             parameters=resolved_parameters,
             created_at=self._clock.now(),
         )
+        event_factory = RuntimeEventFactory(
+            run_id=run.run_id,
+            id_factory=self._id_factory,
+        )
         task_runs_by_task_id = self._create_task_runs(
             run=run,
             plan_task_ids=plan.task_ids,
@@ -83,8 +88,15 @@ class Runner:
             task_runs_by_task_id=task_runs_by_task_id,
         )
 
-        self._state_machine.start_workflow(run, at=self._clock.now())
-        self._save_workflow_run(run)
+        workflow_started_at = self._clock.now()
+        self._state_machine.start_workflow(run, at=workflow_started_at)
+        self._persist_workflow_transition(
+            run=run,
+            event=event_factory.create(
+                event_type=RuntimeEventType.WORKFLOW_STARTED,
+                occurred_at=workflow_started_at,
+            ),
+        )
 
         task_definitions = {task.task_id: task for task in workflow.tasks}
         outputs_by_task_id: dict[TaskId, object] = {}
@@ -101,13 +113,20 @@ class Runner:
             ):
                 raise RuntimeInvariantError(reason=f"planned task '{task_id}' is not runtime-ready")
 
+            task_ready_at = self._clock.now()
             self._state_machine.mark_task_ready(task_run)
-            self._save_task_run(task_run)
+            self._persist_task_transition(
+                task_run=task_run,
+                event=event_factory.create(
+                    event_type=RuntimeEventType.TASK_READY,
+                    occurred_at=task_ready_at,
+                    task_run_id=task_run.task_run_id,
+                    task_id=task_id,
+                ),
+            )
 
             started_at = self._clock.now()
             self._state_machine.start_task(task_run, at=started_at)
-            self._save_task_run(task_run)
-
             attempt = TaskAttempt(
                 attempt_id=self._id_factory.new_task_attempt_id(
                     task_run_id=task_run.task_run_id,
@@ -117,6 +136,18 @@ class Runner:
                 attempt_number=1,
                 started_at=started_at,
             )
+            self._persist_task_start(
+                task_run=task_run,
+                attempt=attempt,
+                event=event_factory.create(
+                    event_type=RuntimeEventType.TASK_STARTED,
+                    occurred_at=started_at,
+                    task_run_id=task_run.task_run_id,
+                    task_id=task_id,
+                    attempt_number=1,
+                ),
+            )
+
             task_definition = task_definitions[task_id]
             context = RunContext(
                 workflow_run_id=run.run_id,
@@ -143,6 +174,7 @@ class Runner:
                     task_run=task_run,
                     attempt=attempt,
                     error=exc,
+                    event_factory=event_factory,
                 )
                 raise
 
@@ -150,6 +182,13 @@ class Runner:
                 task_run=task_run,
                 attempt=attempt,
                 result=result,
+                event=event_factory.create(
+                    event_type=RuntimeEventType.TASK_SUCCEEDED,
+                    occurred_at=self._clock.now(),
+                    task_run_id=task_run.task_run_id,
+                    task_id=task_id,
+                    attempt_number=1,
+                ),
             )
             outputs_by_task_id[task_id] = result.output
 
@@ -161,8 +200,15 @@ class Runner:
                 reason="workflow exhausted its plan before all tasks succeeded"
             )
 
-        self._state_machine.succeed_workflow(run, at=self._clock.now())
-        self._save_workflow_run(run)
+        workflow_finished_at = self._clock.now()
+        self._state_machine.succeed_workflow(run, at=workflow_finished_at)
+        self._persist_workflow_transition(
+            run=run,
+            event=event_factory.create(
+                event_type=RuntimeEventType.WORKFLOW_SUCCEEDED,
+                occurred_at=workflow_finished_at,
+            ),
+        )
         return self._metadata_store.get_workflow_run(run.run_id)
 
     def _resolve_parameters(
@@ -246,14 +292,39 @@ class Runner:
             for task_run in self._metadata_store.list_task_runs(run.run_id)
         }
 
-    def _save_workflow_run(self, run: WorkflowRun) -> None:
+    def _persist_workflow_transition(
+        self,
+        *,
+        run: WorkflowRun,
+        event: RuntimeEvent,
+    ) -> None:
         with self._metadata_store.unit_of_work() as uow:
             uow.save_workflow_run(run)
+            uow.add_event(event)
             uow.commit()
 
-    def _save_task_run(self, task_run: TaskRun) -> None:
+    def _persist_task_transition(
+        self,
+        *,
+        task_run: TaskRun,
+        event: RuntimeEvent,
+    ) -> None:
         with self._metadata_store.unit_of_work() as uow:
             uow.save_task_run(task_run)
+            uow.add_event(event)
+            uow.commit()
+
+    def _persist_task_start(
+        self,
+        *,
+        task_run: TaskRun,
+        attempt: TaskAttempt,
+        event: RuntimeEvent,
+    ) -> None:
+        with self._metadata_store.unit_of_work() as uow:
+            uow.save_task_run(task_run)
+            uow.add_task_attempt(attempt)
+            uow.add_event(event)
             uow.commit()
 
     def _persist_execution_success(
@@ -262,14 +333,16 @@ class Runner:
         task_run: TaskRun,
         attempt: TaskAttempt,
         result: TaskResult,
+        event: RuntimeEvent,
     ) -> None:
-        finished_at = self._clock.now()
+        finished_at = event.occurred_at
         self._state_machine.succeed_attempt(attempt, at=finished_at)
         self._state_machine.succeed_task(task_run, at=finished_at)
 
         with self._metadata_store.unit_of_work() as uow:
-            uow.add_task_attempt(attempt)
+            uow.save_task_attempt(attempt)
             uow.save_task_run(task_run)
+            uow.add_event(event)
             for artifact in result.artifacts:
                 uow.add_artifact(
                     task_run_id=task_run.task_run_id,
@@ -289,6 +362,7 @@ class Runner:
         task_run: TaskRun,
         attempt: TaskAttempt,
         error: ExecutorError,
+        event_factory: RuntimeEventFactory,
     ) -> None:
         finished_at = self._clock.now()
         error_type, error_message = _normalize_executor_error(error)
@@ -302,10 +376,26 @@ class Runner:
         self._state_machine.fail_task(task_run, at=finished_at)
         self._state_machine.fail_workflow(run, at=finished_at)
 
+        task_failed = event_factory.create(
+            event_type=RuntimeEventType.TASK_FAILED,
+            occurred_at=finished_at,
+            task_run_id=task_run.task_run_id,
+            task_id=task_run.task_id,
+            attempt_number=attempt.attempt_number,
+            payload={"error_type": error_type},
+        )
+        workflow_failed = event_factory.create(
+            event_type=RuntimeEventType.WORKFLOW_FAILED,
+            occurred_at=finished_at,
+            payload={"failed_task_id": str(task_run.task_id)},
+        )
+
         with self._metadata_store.unit_of_work() as uow:
-            uow.add_task_attempt(attempt)
+            uow.save_task_attempt(attempt)
             uow.save_task_run(task_run)
             uow.save_workflow_run(run)
+            uow.add_event(task_failed)
+            uow.add_event(workflow_failed)
             uow.commit()
 
 
