@@ -214,12 +214,8 @@ def test_manifest_is_deterministic_across_repeated_reconstruction() -> None:
     builder = RunManifestBuilder(metadata_store=store)
     serializer = RunManifestSerializer()
 
-    first = serializer.to_json(
-        builder.build(workflow=definition, run_id=run.run_id)
-    )
-    second = serializer.to_json(
-        builder.build(workflow=definition, run_id=run.run_id)
-    )
+    first = serializer.to_json(builder.build(workflow=definition, run_id=run.run_id))
+    second = serializer.to_json(builder.build(workflow=definition, run_id=run.run_id))
 
     assert first == second
     assert '"generated_at"' not in first
