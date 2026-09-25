@@ -66,9 +66,7 @@ class RunManifestBuilder:
             sorted(
                 self._metadata_store.list_events(run_id),
                 key=lambda event: (
-                    event.event_sequence
-                    if event.event_sequence is not None
-                    else 2**63 - 1,
+                    event.event_sequence if event.event_sequence is not None else 2**63 - 1,
                     str(event.event_id),
                 ),
             )
@@ -76,9 +74,7 @@ class RunManifestBuilder:
         self._validate_events(run=run, events=events)
 
         sensitive_parameters = frozenset(
-            parameter.name
-            for parameter in workflow.parameters
-            if parameter.sensitive
+            parameter.name for parameter in workflow.parameters if parameter.sensitive
         )
 
         return RunManifest(
@@ -128,9 +124,7 @@ class RunManifestBuilder:
             task_run_id=str(task_run.task_run_id),
             task_id=str(task_run.task_id),
             status=task_run.status.value,
-            skip_reason=(
-                task_run.skip_reason.value if task_run.skip_reason is not None else None
-            ),
+            skip_reason=(task_run.skip_reason.value if task_run.skip_reason is not None else None),
             created_at=_iso_datetime(task_run.created_at),
             started_at=_iso_datetime(task_run.started_at),
             finished_at=_iso_datetime(task_run.finished_at),
@@ -175,10 +169,7 @@ class RunManifestBuilder:
         for task_run in task_runs:
             if task_run.status not in TASK_TERMINAL_STATUSES:
                 raise ManifestInvariantError(
-                    reason=(
-                        f"task '{task_run.task_id}' is not terminal: "
-                        f"{task_run.status.value}"
-                    )
+                    reason=(f"task '{task_run.task_id}' is not terminal: {task_run.status.value}")
                 )
 
     @staticmethod
@@ -239,17 +230,13 @@ class RunManifestBuilder:
     @staticmethod
     def _event_manifest(event: RuntimeEvent) -> ManifestEvent:
         if event.event_sequence is None:
-            raise ManifestInvariantError(
-                reason=f"event '{event.event_id}' has no event_sequence"
-            )
+            raise ManifestInvariantError(reason=f"event '{event.event_id}' has no event_sequence")
         return ManifestEvent(
             event_id=str(event.event_id),
             event_sequence=event.event_sequence,
             event_type=event.event_type.value,
             occurred_at=_iso_datetime_required(event.occurred_at),
-            task_run_id=(
-                str(event.task_run_id) if event.task_run_id is not None else None
-            ),
+            task_run_id=(str(event.task_run_id) if event.task_run_id is not None else None),
             task_id=str(event.task_id) if event.task_id is not None else None,
             attempt_number=event.attempt_number,
             payload={
@@ -425,8 +412,7 @@ def _to_json_value(value: object, *, path: str) -> JsonValue:
         return normalized
     if isinstance(value, (list, tuple)):
         return tuple(
-            _to_json_value(item, path=f"{path}[{index}]")
-            for index, item in enumerate(value)
+            _to_json_value(item, path=f"{path}[{index}]") for index, item in enumerate(value)
         )
     raise ManifestSerializationError(
         path=path,
@@ -435,18 +421,12 @@ def _to_json_value(value: object, *, path: str) -> JsonValue:
 
 
 def _plain_mapping(values: Mapping[str, JsonValue]) -> dict[str, object]:
-    return {
-        key: _plain_json_value(value)
-        for key, value in values.items()
-    }
+    return {key: _plain_json_value(value) for key, value in values.items()}
 
 
 def _plain_json_value(value: JsonValue) -> object:
     if isinstance(value, Mapping):
-        return {
-            key: _plain_json_value(nested_value)
-            for key, nested_value in value.items()
-        }
+        return {key: _plain_json_value(nested_value) for key, nested_value in value.items()}
     if isinstance(value, tuple):
         return [_plain_json_value(item) for item in value]
     return value
