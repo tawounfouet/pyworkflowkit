@@ -143,6 +143,7 @@ def test_executor_error_hierarchy_and_context() -> None:
     assert invalid.reason == "bad signature"
     assert execution.error_type == "ValueError"
     assert execution.error_message == "boom"
+    assert execution.error_category == "ValueError"
 
 
 def test_metadata_store_errors_expose_structured_context() -> None:
