@@ -217,6 +217,22 @@ class ManifestSerializationError(ManifestError):
         super().__init__(f"Manifest value at '{path}' is not JSON-portable: {value_type}.")
 
 
+class SerializationError(PyWorkflowKitError):
+    """Raised when a boundary value cannot be serialized portably."""
+
+    def __init__(
+        self,
+        *,
+        path: str,
+        value_type: str,
+        reason: str,
+    ) -> None:
+        self.path = path
+        self.value_type = value_type
+        self.reason = reason
+        super().__init__(f"Serialization failed at '{path}' for {value_type}: {reason}.")
+
+
 class MetadataStoreError(PyWorkflowKitError):
     """Base class for runtime metadata persistence errors."""
 
@@ -323,6 +339,7 @@ __all__ = [
     "PyWorkflowKitError",
     "RuntimeErrorBase",
     "RuntimeInvariantError",
+    "SerializationError",
     "SelfDependencyError",
     "TaskExecutionError",
     "TerminalStateError",

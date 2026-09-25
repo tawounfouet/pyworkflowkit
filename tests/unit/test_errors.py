@@ -30,6 +30,7 @@ from pyworkflowkit.errors import (
     RuntimeErrorBase,
     RuntimeInvariantError,
     SelfDependencyError,
+    SerializationError,
     TaskExecutionError,
     TerminalStateError,
     UnitOfWorkStateError,
@@ -230,3 +231,15 @@ def test_manifest_errors_expose_structured_context() -> None:
     assert isinstance(serialization, ManifestError)
     assert serialization.path == "parameters.value"
     assert serialization.value_type == "object"
+
+
+def test_serialization_error_exposes_boundary_context() -> None:
+    error = SerializationError(
+        path="workflow_run.parameters.value",
+        value_type="object",
+        reason="value is not representable as portable JSON",
+    )
+
+    assert error.path == "workflow_run.parameters.value"
+    assert error.value_type == "object"
+    assert error.reason == "value is not representable as portable JSON"
