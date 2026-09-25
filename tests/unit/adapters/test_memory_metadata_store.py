@@ -94,10 +94,9 @@ def test_uncommitted_context_exit_rolls_back() -> None:
 def test_exception_exit_rolls_back() -> None:
     store = MemoryMetadataStore()
 
-    with pytest.raises(RuntimeError, match="boom"):
-        with store.unit_of_work() as uow:
-            uow.add_workflow_run(workflow_run())
-            raise RuntimeError("boom")
+    with pytest.raises(RuntimeError, match="boom"), store.unit_of_work() as uow:
+        uow.add_workflow_run(workflow_run())
+        raise RuntimeError("boom")
 
     with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("run-1"))
@@ -145,9 +144,11 @@ def test_save_workflow_run_replaces_persisted_snapshot_only_after_commit() -> No
 def test_save_task_run_requires_existing_identity() -> None:
     store = MemoryMetadataStore()
 
-    with store.unit_of_work() as uow:
-        with pytest.raises(MetadataNotFoundError, match="TaskRun"):
-            uow.save_task_run(task_run())
+    with store.unit_of_work() as uow, pytest.raises(
+        MetadataNotFoundError,
+        match="TaskRun",
+    ):
+        uow.save_task_run(task_run())
 
 
 def test_duplicate_workflow_run_is_rejected() -> None:
@@ -163,17 +164,21 @@ def test_duplicate_workflow_run_is_rejected() -> None:
 def test_task_run_requires_parent_workflow_run() -> None:
     store = MemoryMetadataStore()
 
-    with store.unit_of_work() as uow:
-        with pytest.raises(MetadataNotFoundError, match="WorkflowRun"):
-            uow.add_task_run(task_run())
+    with store.unit_of_work() as uow, pytest.raises(
+        MetadataNotFoundError,
+        match="WorkflowRun",
+    ):
+        uow.add_task_run(task_run())
 
 
 def test_attempt_requires_parent_task_run() -> None:
     store = MemoryMetadataStore()
 
-    with store.unit_of_work() as uow:
-        with pytest.raises(MetadataNotFoundError, match="TaskRun"):
-            uow.add_task_attempt(attempt())
+    with store.unit_of_work() as uow, pytest.raises(
+        MetadataNotFoundError,
+        match="TaskRun",
+    ):
+        uow.add_task_attempt(attempt())
 
 
 def test_duplicate_attempt_number_per_task_run_is_rejected() -> None:
@@ -248,9 +253,11 @@ def test_event_for_unknown_run_is_rejected() -> None:
         occurred_at=NOW,
     )
 
-    with store.unit_of_work() as uow:
-        with pytest.raises(MetadataNotFoundError, match="WorkflowRun"):
-            uow.add_event(event)
+    with store.unit_of_work() as uow, pytest.raises(
+        MetadataNotFoundError,
+        match="WorkflowRun",
+    ):
+        uow.add_event(event)
 
 
 def test_artifact_and_external_ref_are_associated_with_task_run() -> None:
@@ -291,12 +298,14 @@ def test_artifact_requires_parent_task_run() -> None:
         uri="file:///tmp/report.csv",
     )
 
-    with store.unit_of_work() as uow:
-        with pytest.raises(MetadataNotFoundError, match="TaskRun"):
-            uow.add_artifact(
-                task_run_id=TaskRunId("missing"),
-                artifact=artifact,
-            )
+    with store.unit_of_work() as uow, pytest.raises(
+        MetadataNotFoundError,
+        match="TaskRun",
+    ):
+        uow.add_artifact(
+            task_run_id=TaskRunId("missing"),
+            artifact=artifact,
+        )
 
 
 def test_unit_of_work_must_be_entered_before_use() -> None:
@@ -322,6 +331,5 @@ def test_nested_enter_on_same_unit_of_work_is_rejected() -> None:
     store = MemoryMetadataStore()
     uow = store.unit_of_work()
 
-    with uow:
-        with pytest.raises(UnitOfWorkStateError, match="already active"):
-            uow.__enter__()
+    with uow, pytest.raises(UnitOfWorkStateError, match="already active"):
+        uow.__enter__()

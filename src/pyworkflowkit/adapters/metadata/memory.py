@@ -1,7 +1,6 @@
 """Transactional in-memory metadata store."""
 
 from dataclasses import dataclass, field
-from types import MappingProxyType
 from types import TracebackType
 from typing import Self
 
