@@ -109,6 +109,14 @@ class ExecutorError(PyWorkflowKitError):
     """Base class for workload-execution errors."""
 
 
+class ExecutorNotFoundError(ExecutorError):
+    """Raised when the Runner has no executor for a requested executor key."""
+
+    def __init__(self, *, executor_key: str) -> None:
+        self.executor_key = executor_key
+        super().__init__(f"Executor '{executor_key}' is not available.")
+
+
 class DuplicateHandlerRegistrationError(ExecutorError):
     """Raised when a handler reference is registered more than once."""
 
@@ -153,6 +161,26 @@ class TaskExecutionError(ExecutorError):
         super().__init__(
             f"Task '{task_id}' handler '{rendered_ref}' failed with {error_type}: {error_message}"
         )
+
+
+class RuntimeErrorBase(PyWorkflowKitError):
+    """Base class for workflow runtime orchestration errors."""
+
+
+class InvalidWorkflowParametersError(RuntimeErrorBase):
+    """Raised when supplied workflow parameters do not match the definition."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Workflow parameters are invalid: {reason}.")
+
+
+class RuntimeInvariantError(RuntimeErrorBase):
+    """Raised when Runner state violates an internal runtime invariant."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Runtime invariant violated: {reason}.")
 
 
 class MetadataStoreError(PyWorkflowKitError):
@@ -241,18 +269,22 @@ __all__ = [
     "DuplicateHandlerRegistrationError",
     "DuplicateTaskDefinitionError",
     "ExecutorError",
+    "ExecutorNotFoundError",
     "GraphError",
     "HandlerNotFoundError",
     "InvalidExecutionPlanError",
     "InvalidHandlerError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
+    "InvalidWorkflowParametersError",
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",
     "PlanningError",
     "PlanningInvariantError",
     "PyWorkflowKitError",
+    "RuntimeErrorBase",
+    "RuntimeInvariantError",
     "SelfDependencyError",
     "TaskExecutionError",
     "TerminalStateError",

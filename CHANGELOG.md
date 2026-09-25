@@ -25,8 +25,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Executor port, capabilities, RunContext, explicit HandlerRegistry, and synchronous LocalExecutor.
 - MetadataStore and UnitOfWork ports with transactional MemoryMetadataStore.
 - Copy-on-write in-memory commit/rollback semantics and metadata contract tests.
+- Sequential Runner connecting planning, state transitions, execution, and metadata persistence.
+- Injectable Clock and RuntimeIdFactory ports with UTC/UUID default adapters.
+- Single-attempt task execution with dependency output propagation.
+- Artifact and external-run-reference persistence from successful TaskResult values.
 - Executor contract tests and structured execution/handler errors.
 - MetadataStore errors for not-found, duplicate, and invalid UnitOfWork state.
+- Runtime errors for invalid workflow parameters and violated Runner invariants.
 - Planning errors for invalid plans and violated planning preconditions.
 - Graph errors for unknown, self, duplicate, and cyclic dependencies.
 - DomainError, InvalidStateTransitionError, and TerminalStateError.
