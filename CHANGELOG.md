@@ -27,6 +27,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Copy-on-write in-memory commit/rollback semantics and metadata contract tests.
 - Sequential Runner connecting planning, state transitions, execution, and metadata persistence.
 - Injectable Clock and RuntimeIdFactory ports with UTC/UUID default adapters.
+- Deterministic RuntimeEventFactory with per-run monotonic event sequencing.
+- Atomic persisted state-transition plus RuntimeEvent UnitOfWork boundaries.
+- WORKFLOW_STARTED/SUCCEEDED/FAILED and TASK_READY/STARTED/SUCCEEDED/FAILED runtime evidence.
+- Running TaskAttempt persistence at TASK_STARTED and explicit attempt updates on completion.
 - Single-attempt task execution with dependency output propagation.
 - Artifact and external-run-reference persistence from successful TaskResult values.
 - Executor contract tests and structured execution/handler errors.

@@ -5,7 +5,12 @@ from datetime import UTC, datetime
 import pytest
 
 from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore
-from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus, WorkflowRunStatus
+from pyworkflowkit.domain.enums import (
+    RuntimeEventType,
+    TaskAttemptStatus,
+    TaskRunStatus,
+    WorkflowRunStatus,
+)
 from pyworkflowkit.domain.ids import (
     ArtifactId,
     ExternalRunRefId,
@@ -347,3 +352,52 @@ def test_nested_enter_on_same_unit_of_work_is_rejected() -> None:
 
     with uow, pytest.raises(UnitOfWorkStateError, match="already active"):
         uow.__enter__()
+
+
+def test_save_task_attempt_updates_existing_attempt_snapshot() -> None:
+    store = MemoryMetadataStore()
+    seed_run_and_task(store)
+
+    running = attempt(1)
+    with store.unit_of_work() as uow:
+        uow.add_task_attempt(running)
+        uow.commit()
+
+    finished = store.list_task_attempts(TaskRunId("task-run-fetch"))[0]
+    finished.status = TaskAttemptStatus.SUCCEEDED
+    finished.finished_at = NOW
+
+    with store.unit_of_work() as uow:
+        uow.save_task_attempt(finished)
+        uow.commit()
+
+    persisted = store.list_task_attempts(TaskRunId("task-run-fetch"))[0]
+    assert persisted.status is TaskAttemptStatus.SUCCEEDED
+    assert persisted.finished_at == NOW
+
+
+def test_duplicate_event_sequence_per_run_is_rejected() -> None:
+    store = MemoryMetadataStore()
+    seed_run_and_task(store)
+
+    first = RuntimeEvent(
+        event_id=RuntimeEventId("event-1"),
+        event_type=RuntimeEventType.WORKFLOW_STARTED,
+        run_id=WorkflowRunId("run-1"),
+        occurred_at=NOW,
+        event_sequence=1,
+    )
+    duplicate_sequence = RuntimeEvent(
+        event_id=RuntimeEventId("event-2"),
+        event_type=RuntimeEventType.TASK_READY,
+        run_id=WorkflowRunId("run-1"),
+        occurred_at=NOW,
+        event_sequence=1,
+        task_run_id=TaskRunId("task-run-fetch"),
+        task_id=TaskId("fetch"),
+    )
+
+    with store.unit_of_work() as uow:
+        uow.add_event(first)
+        with pytest.raises(DuplicateMetadataError, match="RuntimeEventSequence"):
+            uow.add_event(duplicate_sequence)

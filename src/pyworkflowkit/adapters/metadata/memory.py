@@ -194,6 +194,15 @@ class MemoryUnitOfWork:
 
         state.task_attempts[attempt.attempt_id] = _clone_task_attempt(attempt)
 
+    def save_task_attempt(self, attempt: TaskAttempt) -> None:
+        state = self._require_state()
+        if attempt.attempt_id not in state.task_attempts:
+            raise MetadataNotFoundError(
+                entity_type="TaskAttempt",
+                entity_id=str(attempt.attempt_id),
+            )
+        state.task_attempts[attempt.attempt_id] = _clone_task_attempt(attempt)
+
     def add_event(self, event: RuntimeEvent) -> None:
         state = self._require_state()
         if event.event_id in state.events:
@@ -206,6 +215,16 @@ class MemoryUnitOfWork:
                 entity_type="WorkflowRun",
                 entity_id=str(event.run_id),
             )
+        if event.event_sequence is not None:
+            for existing in state.events.values():
+                if (
+                    existing.run_id == event.run_id
+                    and existing.event_sequence == event.event_sequence
+                ):
+                    raise DuplicateMetadataError(
+                        entity_type="RuntimeEventSequence",
+                        entity_id=f"{event.run_id}:{event.event_sequence}",
+                    )
         state.events[event.event_id] = event
 
     def add_artifact(
