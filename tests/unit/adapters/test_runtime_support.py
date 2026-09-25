@@ -42,6 +42,5 @@ def test_uuid_runtime_id_factory_satisfies_protocol_and_generates_unique_ids() -
     assert RuntimeEventId(event_id) == event_id
 
 
-
 def test_system_sleeper_satisfies_sleeper_protocol() -> None:
     assert isinstance(SystemSleeper(), Sleeper)
