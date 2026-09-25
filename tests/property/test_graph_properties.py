@@ -1,11 +1,15 @@
-"""Property tests for dependency-graph structural invariants."""
+"""Property tests for dependency-graph and execution-plan invariants."""
 
 from collections.abc import Iterable
 
 from hypothesis import given
 from hypothesis import strategies as st
 
-from pyworkflowkit.application.planning import DAGValidator, build_dependency_graph
+from pyworkflowkit.application.planning import (
+    DAGValidator,
+    ExecutionPlanner,
+    build_dependency_graph,
+)
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 
@@ -66,3 +70,32 @@ def test_graph_adjacency_is_consistent_for_generated_dags(
     for edge in graph.edges:
         assert edge.upstream_task_id in graph.upstream_of(edge.downstream_task_id)
         assert edge.downstream_task_id in graph.downstream_of(edge.upstream_task_id)
+
+
+@given(dag_definitions())
+def test_execution_plan_contains_every_task_exactly_once(
+    definition: WorkflowDefinition,
+) -> None:
+    graph = build_dependency_graph(definition)
+    DAGValidator().validate(definition, graph)
+
+    plan = ExecutionPlanner().build_plan(definition, graph)
+
+    assert len(plan.task_ids) == len(graph.task_ids)
+    assert set(plan.task_ids) == set(graph.task_ids)
+
+
+@given(dag_definitions())
+def test_execution_plan_respects_every_edge_order(
+    definition: WorkflowDefinition,
+) -> None:
+    graph = build_dependency_graph(definition)
+    DAGValidator().validate(definition, graph)
+
+    plan = ExecutionPlanner().build_plan(definition, graph)
+    position_by_task = {task.task_id: task.position for task in plan.tasks}
+    group_by_task = {task.task_id: task.group_index for task in plan.tasks}
+
+    for edge in graph.edges:
+        assert position_by_task[edge.upstream_task_id] < position_by_task[edge.downstream_task_id]
+        assert group_by_task[edge.upstream_task_id] < group_by_task[edge.downstream_task_id]

@@ -85,6 +85,26 @@ class CycleDetectedError(GraphError):
         super().__init__(f"Workflow dependency graph contains a cycle involving tasks: {rendered}.")
 
 
+class PlanningError(PyWorkflowKitError):
+    """Base class for static planning and runtime-readiness errors."""
+
+
+class InvalidExecutionPlanError(PlanningError):
+    """Raised when an ExecutionPlan value violates its own invariants."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Execution plan is invalid: {reason}.")
+
+
+class PlanningInvariantError(PlanningError):
+    """Raised when planning inputs violate a required precondition."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Planning invariant violated: {reason}.")
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -140,8 +160,11 @@ __all__ = [
     "DuplicateDependencyError",
     "DuplicateTaskDefinitionError",
     "GraphError",
+    "InvalidExecutionPlanError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
+    "PlanningError",
+    "PlanningInvariantError",
     "PyWorkflowKitError",
     "SelfDependencyError",
     "TerminalStateError",

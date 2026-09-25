@@ -8,8 +8,11 @@ from pyworkflowkit.errors import (
     DuplicateDependencyError,
     DuplicateTaskDefinitionError,
     GraphError,
+    InvalidExecutionPlanError,
     InvalidStateTransitionError,
     InvalidWorkflowDefinitionError,
+    PlanningError,
+    PlanningInvariantError,
     PyWorkflowKitError,
     SelfDependencyError,
     TerminalStateError,
@@ -90,6 +93,22 @@ def test_cycle_error_normalizes_task_order() -> None:
     assert isinstance(error, GraphError)
     assert error.task_ids == (TaskId("A"), TaskId("B"), TaskId("C"))
     assert "A, B, C" in str(error)
+
+
+def test_invalid_execution_plan_error_exposes_reason() -> None:
+    error = InvalidExecutionPlanError(reason="duplicate task")
+
+    assert isinstance(error, PlanningError)
+    assert error.reason == "duplicate task"
+    assert "duplicate task" in str(error)
+
+
+def test_planning_invariant_error_exposes_reason() -> None:
+    error = PlanningInvariantError(reason="graph mismatch")
+
+    assert isinstance(error, PlanningError)
+    assert error.reason == "graph mismatch"
+    assert "graph mismatch" in str(error)
 
 
 def test_invalid_state_transition_exposes_structured_context() -> None:
