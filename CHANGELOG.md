@@ -33,6 +33,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Multi-attempt retry execution on the same TaskRun with TASK_RETRYING evidence.
 - FAIL_FAST propagation with DEPENDENCY_FAILED and FAIL_FAST_ABORT skip reasons.
 - TASK_SKIPPED events and terminal TASK_FAILED-only-after-retry-exhaustion semantics.
+- Immutable RunManifest values and deterministic RunManifestBuilder reconstruction.
+- Canonical RunManifest JSON serialization with schema version 1.
+- Sensitive workflow parameter redaction in final execution evidence.
+- Workflow/task/attempt/event manifest invariants for terminal runs.
 - WORKFLOW_STARTED/SUCCEEDED/FAILED and TASK_READY/STARTED/RETRYING/SUCCEEDED/FAILED/SKIPPED runtime evidence.
 - Running TaskAttempt persistence at TASK_STARTED and explicit attempt updates on completion.
 - Single-attempt task execution with dependency output propagation.
