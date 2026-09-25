@@ -354,7 +354,6 @@ def test_nested_enter_on_same_unit_of_work_is_rejected() -> None:
         uow.__enter__()
 
 
-
 def test_save_task_attempt_updates_existing_attempt_snapshot() -> None:
     store = MemoryMetadataStore()
     seed_run_and_task(store)

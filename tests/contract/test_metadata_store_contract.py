@@ -115,7 +115,6 @@ def test_contract_attempt_and_event_history_are_queryable(
     assert len(store.list_events(WorkflowRunId("run"))) == 1
 
 
-
 def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
         uow.add_workflow_run(make_run())

@@ -54,11 +54,7 @@ class RuntimeEventFactory:
     ) -> RuntimeEvent:
         """Create the next event while enforcing workflow/task event context."""
         if event_type in _WORKFLOW_EVENT_TYPES:
-            if (
-                task_run_id is not None
-                or task_id is not None
-                or attempt_number is not None
-            ):
+            if task_run_id is not None or task_id is not None or attempt_number is not None:
                 raise ValueError("workflow events cannot carry task context")
         elif event_type in _TASK_EVENT_TYPES:
             if task_run_id is None or task_id is None:

@@ -402,7 +402,6 @@ def test_runner_does_not_apply_retry_policy_yet() -> None:
     assert len(store.list_task_attempts(task_run.task_run_id)) == 1
 
 
-
 def test_runner_emits_canonical_single_task_success_event_sequence() -> None:
     workflow = make_workflow(make_task("A"))
     runner, store = make_runtime(workflow, {"handlers:A": lambda: "done"})
