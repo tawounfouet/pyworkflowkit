@@ -105,6 +105,56 @@ class PlanningInvariantError(PlanningError):
         super().__init__(f"Planning invariant violated: {reason}.")
 
 
+class ExecutorError(PyWorkflowKitError):
+    """Base class for workload-execution errors."""
+
+
+class DuplicateHandlerRegistrationError(ExecutorError):
+    """Raised when a handler reference is registered more than once."""
+
+    def __init__(self, *, handler_ref: str) -> None:
+        self.handler_ref = handler_ref
+        super().__init__(f"Handler reference '{handler_ref}' is already registered.")
+
+
+class HandlerNotFoundError(ExecutorError):
+    """Raised when an explicit handler reference cannot be resolved."""
+
+    def __init__(self, *, handler_ref: str) -> None:
+        self.handler_ref = handler_ref
+        super().__init__(f"Handler reference '{handler_ref}' is not registered.")
+
+
+class InvalidHandlerError(ExecutorError):
+    """Raised when a handler cannot satisfy the executor contract."""
+
+    def __init__(self, *, task_id: TaskId, reason: str) -> None:
+        self.task_id = task_id
+        self.reason = reason
+        super().__init__(f"Handler for task '{task_id}' is invalid: {reason}.")
+
+
+class TaskExecutionError(ExecutorError):
+    """Raised when a task handler raises an ordinary Python exception."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        handler_ref: str | None,
+        error_type: str,
+        error_message: str,
+    ) -> None:
+        self.task_id = task_id
+        self.handler_ref = handler_ref
+        self.error_type = error_type
+        self.error_message = error_message
+        rendered_ref = handler_ref or "<direct-handler>"
+        super().__init__(
+            f"Task '{task_id}' handler '{rendered_ref}' failed with {error_type}: {error_message}"
+        )
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -158,15 +208,20 @@ __all__ = [
     "DefinitionError",
     "DomainError",
     "DuplicateDependencyError",
+    "DuplicateHandlerRegistrationError",
     "DuplicateTaskDefinitionError",
+    "ExecutorError",
     "GraphError",
+    "HandlerNotFoundError",
     "InvalidExecutionPlanError",
+    "InvalidHandlerError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
     "PlanningError",
     "PlanningInvariantError",
     "PyWorkflowKitError",
     "SelfDependencyError",
+    "TaskExecutionError",
     "TerminalStateError",
     "UnknownDependencyError",
 ]
