@@ -250,7 +250,6 @@ def test_task_result_freezes_metadata_and_preserves_references() -> None:
     assert result.external_refs == (external_ref,)
 
 
-
 def test_retry_policy_rejects_invalid_backoff_strategy_type() -> None:
     with pytest.raises(TypeError, match="BackoffStrategy"):
         RetryPolicy(backoff_strategy="FIXED")  # type: ignore[arg-type]
