@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- Strict Pydantic v2 serialization contracts for definitions and runtime evidence.
+- Explicit Domain ↔ Schema mappers without Pydantic dependencies in domain objects.
+- Neutral persistence Row DTOs for runtime entities, artifacts, and external references.
+- Explicit Domain ↔ Row persistence mappings with UTC normalization.
+- Canonical schema JSON codec with extra-field rejection and no implicit string fallback.
+- SerializationError with structured path/type/reason context.
+
 ### Changed
 
 ### Deprecated
