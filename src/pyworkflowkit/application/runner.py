@@ -99,9 +99,7 @@ class Runner:
                 graph=graph,
                 task_runs_by_task_id=persisted_runs,
             ):
-                raise RuntimeInvariantError(
-                    reason=f"planned task '{task_id}' is not runtime-ready"
-                )
+                raise RuntimeInvariantError(reason=f"planned task '{task_id}' is not runtime-ready")
 
             self._state_machine.mark_task_ready(task_run)
             self._save_task_run(task_run)
@@ -177,9 +175,7 @@ class Runner:
         unknown = tuple(sorted(set(supplied) - set(declared)))
         if unknown:
             rendered = ", ".join(unknown)
-            raise InvalidWorkflowParametersError(
-                reason=f"unknown workflow parameters: {rendered}"
-            )
+            raise InvalidWorkflowParametersError(reason=f"unknown workflow parameters: {rendered}")
 
         resolved: dict[str, object] = {}
         for parameter in workflow.parameters:

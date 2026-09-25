@@ -196,7 +196,6 @@ def test_terminal_state_error_is_specialized_transition_error() -> None:
     assert "terminal" in str(error)
 
 
-
 def test_runner_runtime_errors_expose_context() -> None:
     missing_executor = ExecutorNotFoundError(executor_key="remote")
     invalid_parameters = InvalidWorkflowParametersError(reason="missing source")

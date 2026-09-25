@@ -168,9 +168,7 @@ def test_runner_executes_linear_workflow_and_passes_dependency_output() -> None:
 
     assert calls == ["A", "B"]
     assert run.status is WorkflowRunStatus.SUCCEEDED
-    assert {
-        task.task_id: task.status for task in store.list_task_runs(run.run_id)
-    } == {
+    assert {task.task_id: task.status for task in store.list_task_runs(run.run_id)} == {
         TaskId("A"): TaskRunStatus.SUCCEEDED,
         TaskId("B"): TaskRunStatus.SUCCEEDED,
     }
