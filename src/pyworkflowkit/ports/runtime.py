@@ -21,6 +21,14 @@ class Clock(Protocol):
 
 
 @runtime_checkable
+class Sleeper(Protocol):
+    """Abstract backoff waiting away from the Runner."""
+
+    def sleep(self, seconds: float) -> None:
+        """Block for a non-negative duration in seconds."""
+
+
+@runtime_checkable
 class RuntimeIdFactory(Protocol):
     """Factory for runtime aggregate/entity/event identities."""
 
@@ -52,4 +60,4 @@ class RuntimeIdFactory(Protocol):
         """Create a RuntimeEvent identity."""
 
 
-__all__ = ["Clock", "RuntimeIdFactory"]
+__all__ = ["Clock", "RuntimeIdFactory", "Sleeper"]
