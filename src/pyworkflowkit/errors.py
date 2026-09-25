@@ -152,11 +152,13 @@ class TaskExecutionError(ExecutorError):
         handler_ref: str | None,
         error_type: str,
         error_message: str,
+        error_category: str | None = None,
     ) -> None:
         self.task_id = task_id
         self.handler_ref = handler_ref
         self.error_type = error_type
         self.error_message = error_message
+        self.error_category = error_category or error_type
         rendered_ref = handler_ref or "<direct-handler>"
         super().__init__(
             f"Task '{task_id}' handler '{rendered_ref}' failed with {error_type}: {error_message}"
