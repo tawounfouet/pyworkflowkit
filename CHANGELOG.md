@@ -8,6 +8,20 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.1.0a1 - 2026-09-25
+
+### Added
+
 - Initial repository bootstrap.
 - Standards-based Python packaging with a src layout.
 - Pytest, Ruff, mypy, coverage, and package-build quality gates.
