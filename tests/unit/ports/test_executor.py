@@ -10,15 +10,63 @@ from pyworkflowkit.domain.ids import (
     TaskRunId,
     WorkflowRunId,
 )
-from pyworkflowkit.ports.executor import ExecutorCapabilities, RunContext
+from pyworkflowkit.ports.executor import (
+    CancellationCapability,
+    ExecutorCapabilities,
+    RunContext,
+    TimeoutCapability,
+)
 
 
-def test_executor_capabilities_default_to_conservative_false() -> None:
+def test_executor_capabilities_default_to_conservative_local_contract() -> None:
     capabilities = ExecutorCapabilities()
 
     assert capabilities.supports_parallelism is False
+    assert capabilities.timeout is TimeoutCapability.NONE
+    assert capabilities.cancellation is CancellationCapability.NONE
+    assert capabilities.max_concurrency == 1
+    assert capabilities.supports_timeout is False
+    assert capabilities.supports_cancellation is False
     assert capabilities.supports_hard_timeout is False
     assert capabilities.supports_hard_cancellation is False
+
+
+def test_executor_capabilities_expose_strength_and_compatibility_views() -> None:
+    capabilities = ExecutorCapabilities(
+        supports_parallelism=True,
+        timeout=TimeoutCapability.HARD,
+        cancellation=CancellationCapability.COOPERATIVE,
+        max_concurrency=8,
+    )
+
+    assert capabilities.supports_timeout is True
+    assert capabilities.supports_hard_timeout is True
+    assert capabilities.supports_cancellation is True
+    assert capabilities.supports_hard_cancellation is False
+
+
+def test_non_parallel_executor_rejects_multiple_concurrency_slots() -> None:
+    with pytest.raises(ValueError, match="max_concurrency=1"):
+        ExecutorCapabilities(
+            supports_parallelism=False,
+            max_concurrency=2,
+        )
+
+
+@pytest.mark.parametrize("max_concurrency", [0, -1])
+def test_executor_capabilities_reject_non_positive_max_concurrency(
+    max_concurrency: int,
+) -> None:
+    with pytest.raises(ValueError, match="max_concurrency"):
+        ExecutorCapabilities(
+            supports_parallelism=True,
+            max_concurrency=max_concurrency,
+        )
+
+
+def test_executor_capabilities_reject_boolean_max_concurrency() -> None:
+    with pytest.raises(TypeError, match="max_concurrency"):
+        ExecutorCapabilities(max_concurrency=True)
 
 
 def test_run_context_defensively_copies_mappings() -> None:
