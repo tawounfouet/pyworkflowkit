@@ -373,10 +373,7 @@ class Runner:
 
             attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
             scheduled_retry = pending_retry_attempt(attempts)
-            is_retry_wait = (
-                task_run.status is TaskRunStatus.RUNNING
-                and scheduled_retry is not None
-            )
+            is_retry_wait = task_run.status is TaskRunStatus.RUNNING and scheduled_retry is not None
             if (
                 task_run.status not in {TaskRunStatus.PENDING, TaskRunStatus.READY}
                 and not is_retry_wait
