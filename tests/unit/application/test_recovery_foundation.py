@@ -285,8 +285,6 @@ def test_task_run_id_is_stable_idempotency_key_across_attempts() -> None:
     assert metadata.attempt_count == 2
 
 
-
-
 def test_future_retry_wait_is_active_not_ambiguous_running_work() -> None:
     store = MemoryMetadataStore()
     eligible_at = NOW + timedelta(minutes=10)
@@ -352,6 +350,7 @@ def test_retry_wait_with_external_ref_still_requires_reconciliation() -> None:
     assert assessment.liveness is RecoveryLiveness.STALE_CANDIDATE
     assert assessment.resume_eligibility is ResumeEligibility.REQUIRES_RECONCILIATION
     assert assessment.unresolved_external_run_ref_count == 1
+
 
 def test_find_stale_candidates_excludes_recent_and_terminal_runs() -> None:
     store = MemoryMetadataStore()
