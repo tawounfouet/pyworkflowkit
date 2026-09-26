@@ -62,10 +62,8 @@ def make_task_run() -> TaskRun:
         created_at=NOW,
     )
 
-
 def test_sqlalchemy_store_satisfies_metadata_store_protocol(store: MetadataStore) -> None:
     assert isinstance(store, MetadataStore)
-
 
 def test_sqlalchemy_contract_commit_and_round_trip(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
@@ -79,7 +77,6 @@ def test_sqlalchemy_contract_commit_and_round_trip(store: MetadataStore) -> None
     assert tuple(run.run_id for run in store.list_workflow_runs()) == (WorkflowRunId("run"),)
     assert len(store.list_task_runs(WorkflowRunId("run"))) == 1
 
-
 def test_sqlalchemy_contract_rollback_keeps_data_invisible(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
         uow.add_workflow_run(make_run())
@@ -87,7 +84,6 @@ def test_sqlalchemy_contract_rollback_keeps_data_invisible(store: MetadataStore)
 
     with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("run"))
-
 
 def test_sqlalchemy_contract_attempt_event_and_update(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
@@ -131,7 +127,6 @@ def test_sqlalchemy_contract_attempt_event_and_update(store: MetadataStore) -> N
 
     assert store.list_task_attempts(TaskRunId("task-run"))[0].status is TaskAttemptStatus.SUCCEEDED
     assert store.list_events(WorkflowRunId("run"))[0].event_type is RuntimeEventType.TASK_STARTED
-
 
 
 def test_sqlalchemy_contract_task_output_checkpoint_round_trip(
