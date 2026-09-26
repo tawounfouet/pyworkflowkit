@@ -23,6 +23,7 @@ from pyworkflowkit.errors import (
     ExecutionHandleNotFoundError,
     ExecutorSerializationError,
     ExecutorShutdownError,
+    InvalidHandlerError,
     TaskExecutionError,
 )
 from pyworkflowkit.ports.executor import (
@@ -369,7 +370,7 @@ def test_process_executor_rejects_task_for_another_executor() -> None:
             handler_ref="handlers:wrong",
             executor_key="thread",
         )
-        with pytest.raises(Exception, match="executor key is 'process'"):
+        with pytest.raises(InvalidHandlerError, match="executor key is 'process'"):
             executor.submit(
                 task=task,
                 handler=_return_pid,
