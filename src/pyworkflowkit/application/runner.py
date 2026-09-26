@@ -380,6 +380,14 @@ class Runner:
                     task_runs_by_task_id=persisted_runs,
                 )
 
+            dependency_outputs = self._dependency_outputs_for_resume(
+                run_id=run_id,
+                task_id=task_id,
+                graph=graph,
+                task_runs_by_task_id=persisted_runs,
+                outputs_by_task_id=outputs_by_task_id,
+            )
+
             if task_run.status is TaskRunStatus.PENDING:
                 ready_at = self._clock.now()
                 self._state_machine.mark_task_ready(task_run)
@@ -393,14 +401,6 @@ class Runner:
                         payload={"recovery": "resume"},
                     ),
                 )
-
-            dependency_outputs = self._dependency_outputs_for_resume(
-                run_id=run_id,
-                task_id=task_id,
-                graph=graph,
-                task_runs_by_task_id=self._load_task_runs_by_task_id(run),
-                outputs_by_task_id=outputs_by_task_id,
-            )
 
             attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
             next_attempt_number = max(
