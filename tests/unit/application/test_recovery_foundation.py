@@ -60,6 +60,7 @@ def _persist_run(
     run_started_at: datetime | None = OLD,
     task_status: TaskRunStatus = TaskRunStatus.RUNNING,
     task_started_at: datetime | None = OLD,
+    task_finished_at: datetime | None = None,
     attempt_status: TaskAttemptStatus | None = TaskAttemptStatus.RUNNING,
     attempt_started_at: datetime | None = OLD,
     attempt_finished_at: datetime | None = None,
@@ -73,7 +74,9 @@ def _persist_run(
         WorkflowRunStatus.FAILED,
         WorkflowRunStatus.CANCELLED,
     } else None
-    task_finished = NOW if task_status in {
+    task_finished = (
+        task_finished_at if task_finished_at is not None else NOW
+    ) if task_status in {
         TaskRunStatus.SUCCEEDED,
         TaskRunStatus.FAILED,
         TaskRunStatus.SKIPPED,
@@ -229,6 +232,7 @@ def test_external_ref_from_terminal_task_is_evidence_not_resume_blocker() -> Non
     _persist_run(
         store,
         task_status=TaskRunStatus.SUCCEEDED,
+        task_finished_at=OLD + timedelta(minutes=1),
         attempt_status=TaskAttemptStatus.SUCCEEDED,
         attempt_finished_at=OLD + timedelta(minutes=1),
         external=True,
