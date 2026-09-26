@@ -48,9 +48,7 @@ class LogContext:
         }
         values.update(self.fields)
         return {
-            key: redact_value(value, key=key)
-            for key, value in values.items()
-            if value is not None
+            key: redact_value(value, key=key) for key, value in values.items() if value is not None
         }
 
 
