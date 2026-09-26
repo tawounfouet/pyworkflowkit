@@ -52,10 +52,7 @@ def pending_retry_attempt(attempts: tuple[TaskAttempt, ...]) -> TaskAttempt | No
     if not attempts:
         return None
     latest = max(attempts, key=lambda attempt: attempt.attempt_number)
-    if (
-        latest.status is TaskAttemptStatus.FAILED
-        and latest.retry_eligible_at is not None
-    ):
+    if latest.status is TaskAttemptStatus.FAILED and latest.retry_eligible_at is not None:
         return latest
     return None
 
