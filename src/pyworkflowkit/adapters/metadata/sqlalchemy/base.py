@@ -1,9 +1,9 @@
 """SQLAlchemy persistence base types shared by relational adapters."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, JSON, MetaData
+from sqlalchemy import JSON, DateTime, MetaData
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.types import TypeDecorator
@@ -33,15 +33,15 @@ class UTCDateTime(TypeDecorator[datetime]):
             return None
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("timezone-aware datetime required")
-        return value.astimezone(timezone.utc)
+        return value.astimezone(UTC)
 
     def process_result_value(self, value: datetime | None, dialect: Any) -> datetime | None:
         del dialect
         if value is None:
             return None
         if value.tzinfo is None or value.utcoffset() is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value.astimezone(timezone.utc)
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
 
 class Base(DeclarativeBase):
