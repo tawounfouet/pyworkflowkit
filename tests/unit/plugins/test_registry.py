@@ -28,9 +28,7 @@ def test_descriptor_defaults_to_current_plugin_api_version() -> None:
 
 
 def test_typed_registry_manually_registers_and_creates_plugin() -> None:
-    registry: PluginRegistry[Executor] = PluginRegistry(
-        plugin_type=PluginType.EXECUTOR
-    )
+    registry: PluginRegistry[Executor] = PluginRegistry(plugin_type=PluginType.EXECUTOR)
     descriptor = PluginDescriptor(
         name="local-alt",
         plugin_type=PluginType.EXECUTOR,
@@ -46,9 +44,7 @@ def test_typed_registry_manually_registers_and_creates_plugin() -> None:
 
 
 def test_duplicate_manual_registration_is_rejected() -> None:
-    registry: PluginRegistry[Executor] = PluginRegistry(
-        plugin_type=PluginType.EXECUTOR
-    )
+    registry: PluginRegistry[Executor] = PluginRegistry(plugin_type=PluginType.EXECUTOR)
     descriptor = PluginDescriptor(
         name="local-alt",
         plugin_type=PluginType.EXECUTOR,
@@ -60,9 +56,7 @@ def test_duplicate_manual_registration_is_rejected() -> None:
 
 
 def test_registry_rejects_wrong_plugin_type() -> None:
-    registry: PluginRegistry[Executor] = PluginRegistry(
-        plugin_type=PluginType.EXECUTOR
-    )
+    registry: PluginRegistry[Executor] = PluginRegistry(plugin_type=PluginType.EXECUTOR)
     descriptor = PluginDescriptor(
         name="wrong",
         plugin_type=PluginType.METADATA,
@@ -73,9 +67,7 @@ def test_registry_rejects_wrong_plugin_type() -> None:
 
 
 def test_missing_plugin_raises_public_error() -> None:
-    registry: PluginRegistry[Executor] = PluginRegistry(
-        plugin_type=PluginType.EXECUTOR
-    )
+    registry: PluginRegistry[Executor] = PluginRegistry(plugin_type=PluginType.EXECUTOR)
 
     with pytest.raises(PluginNotFoundError):
         registry.create("missing")
@@ -97,8 +89,7 @@ def test_catalog_keeps_registries_separate_and_sorted() -> None:
     )
 
     assert [
-        (descriptor.plugin_type.value, descriptor.name)
-        for descriptor in catalog.descriptors()
+        (descriptor.plugin_type.value, descriptor.name) for descriptor in catalog.descriptors()
     ] == [
         ("event", "alpha"),
         ("executor", "local-alt"),
