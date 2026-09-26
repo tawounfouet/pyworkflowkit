@@ -21,6 +21,12 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Explicit capacity configuration, invariant, and release errors.
 - M26 acceptance coverage for saturation, release, active-attempt tracking, and concurrent acquisition safety.
 
+- Immutable ExecutionHandle identities for submitted TaskAttempt executions.
+- AttemptCompletion terminal outcomes carrying exactly one TaskResult or ExecutorError.
+- Thread-safe FIFO CompletionQueue for worker-to-coordinator completion transfer.
+- Blocking, non-blocking, and drain completion-consumption APIs.
+- M27 acceptance coverage proving completion transfer without worker-owned state transitions.
+
 
 ### Changed
 
