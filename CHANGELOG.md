@@ -8,6 +8,20 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.3.0 - 2026-09-26
+
+### Added
+
 - Strict Pydantic v2 serialization contracts for definitions and runtime evidence.
 - Explicit Domain ↔ Schema mappers without Pydantic dependencies in domain objects.
 - Neutral persistence Row DTOs for runtime entities, artifacts, and external references.
