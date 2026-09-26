@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import pickle
+from contextlib import suppress
 from dataclasses import dataclass
 from multiprocessing import get_all_start_methods, get_context
 from multiprocessing.connection import Connection
@@ -430,9 +431,7 @@ class ProcessExecutor:
         send_connection.close()
 
         try:
-            if task.timeout_seconds is None:
-                message = receive_connection.recv()
-            elif receive_connection.poll(task.timeout_seconds):
+            if task.timeout_seconds is None or receive_connection.poll(task.timeout_seconds):
                 message = receive_connection.recv()
             else:
                 self._terminate_process(process)
@@ -645,10 +644,8 @@ class ProcessExecutor:
             with self._lock:
                 self._active.pop(handle.handle_id, None)
                 self._completed_handle_ids.add(handle.handle_id)
-            try:
+            with suppress(ValueError):
                 process.close()
-            except ValueError:
-                pass
 
         self._completion_queue.put(completion)
 
