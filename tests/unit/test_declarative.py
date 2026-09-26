@@ -31,7 +31,7 @@ def test_task_decorator_builds_explicit_dependency_metadata() -> None:
 
     assert definition.depends_on == (TaskId("fetch"),)
     assert definition.retry_policy.max_attempts == 2
-    assert definition.handler_ref.endswith(":transform")
+    assert definition.handler_ref.endswith(".transform")
 
 
 def test_workflow_decoration_is_lazy_until_build() -> None:
