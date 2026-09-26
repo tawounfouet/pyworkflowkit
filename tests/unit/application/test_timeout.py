@@ -89,7 +89,7 @@ def test_thread_executor_rejects_hard_timeout_before_run_creation() -> None:
         timeout_mode=TimeoutMode.HARD,
     )
     workflow = _workflow(task)
-    runner, store, executor = _thread_runner(task, lambda: "done")
+    runner, _, executor = _thread_runner(task, lambda: "done")
 
     try:
         with pytest.raises(TimeoutCapabilityError, match="HARD"):
