@@ -309,10 +309,13 @@ class Runner:
             )
 
         existing_events = tuple(self._metadata_store.list_events(run_id))
-        next_sequence = max(
-            (event.event_sequence or 0 for event in existing_events),
-            default=0,
-        ) + 1
+        next_sequence = (
+            max(
+                (event.event_sequence or 0 for event in existing_events),
+                default=0,
+            )
+            + 1
+        )
         event_factory = RuntimeEventFactory(
             run_id=run_id,
             id_factory=self._id_factory,
@@ -334,8 +337,7 @@ class Runner:
         execution_task_ids = tuple(
             task_id
             for task_id in plan.task_ids
-            if task_runs_by_task_id[task_id].status
-            in {TaskRunStatus.PENDING, TaskRunStatus.READY}
+            if task_runs_by_task_id[task_id].status in {TaskRunStatus.PENDING, TaskRunStatus.READY}
         )
         handlers = self._preflight_resume_handlers(
             workflow=workflow,
@@ -358,8 +360,7 @@ class Runner:
                 raise ResumeError(
                     run_id=str(run_id),
                     reason=(
-                        f"task '{task_id}' remains in non-resumable status "
-                        f"{task_run.status.value}"
+                        f"task '{task_id}' remains in non-resumable status {task_run.status.value}"
                     ),
                 )
             if task_run.status is TaskRunStatus.PENDING:
@@ -403,10 +404,13 @@ class Runner:
                 )
 
             attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
-            next_attempt_number = max(
-                (attempt.attempt_number for attempt in attempts),
-                default=0,
-            ) + 1
+            next_attempt_number = (
+                max(
+                    (attempt.attempt_number for attempt in attempts),
+                    default=0,
+                )
+                + 1
+            )
             started_at = self._clock.now()
             self._state_machine.start_task(task_run, at=started_at)
             attempt = self._new_attempt(
@@ -445,8 +449,7 @@ class Runner:
 
         final_task_runs = self._load_task_runs_by_task_id(run)
         if any(
-            task_run.status is not TaskRunStatus.SUCCEEDED
-            for task_run in final_task_runs.values()
+            task_run.status is not TaskRunStatus.SUCCEEDED for task_run in final_task_runs.values()
         ):
             raise ResumeError(
                 run_id=str(run_id),
@@ -495,8 +498,7 @@ class Runner:
             )
 
         task_runs_by_run_id = {
-            str(task_run.task_run_id): task_run
-            for task_run in task_runs_by_task_id.values()
+            str(task_run.task_run_id): task_run for task_run in task_runs_by_task_id.values()
         }
         changed_attempts: list[TaskAttempt] = []
         changed_task_runs: list[TaskRun] = []
@@ -531,9 +533,7 @@ class Runner:
 
             attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
             running_attempts = tuple(
-                attempt
-                for attempt in attempts
-                if attempt.status is TaskAttemptStatus.RUNNING
+                attempt for attempt in attempts if attempt.status is TaskAttemptStatus.RUNNING
             )
             if len(running_attempts) != 1:
                 raise ResumeError(
@@ -691,10 +691,7 @@ class Runner:
         task_runs: list[TaskRun],
         events: list[RuntimeEvent],
     ) -> None:
-        unique_task_runs = {
-            task_run.task_run_id: task_run
-            for task_run in task_runs
-        }
+        unique_task_runs = {task_run.task_run_id: task_run for task_run in task_runs}
         with self._metadata_store.unit_of_work() as uow:
             for attempt in attempts:
                 uow.save_task_attempt(attempt)
@@ -759,9 +756,7 @@ class Runner:
             except MetadataNotFoundError as exc:
                 raise ResumeError(
                     run_id=str(run_id),
-                    reason=(
-                        f"dependency '{upstream_task_id}' has no durable output checkpoint"
-                    ),
+                    reason=(f"dependency '{upstream_task_id}' has no durable output checkpoint"),
                 ) from exc
         return outputs
 
