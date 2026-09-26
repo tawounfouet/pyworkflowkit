@@ -262,8 +262,10 @@ Package source is scanned for candidate committed credentials.
 
 ### Dependency review
 
-Pull requests use GitHub dependency review to surface newly introduced vulnerable
-dependency changes.
+Pull requests are wired to GitHub Dependency Review. The action requires the repository
+Dependency Graph to be enabled. Until that repository capability is available, the CI
+job emits an explicit warning and remains non-blocking; pip-audit remains the blocking
+dependency-vulnerability gate.
 
 ## What M36 does not provide
 
@@ -329,7 +331,7 @@ M36 is qualified by:
 - Bandit;
 - pip-audit;
 - detect-secrets;
-- dependency review;
+- dependency review configuration, with full enforcement when GitHub Dependency Graph is enabled;
 - Python 3.11 / 3.12 / 3.13;
 - Ruff;
 - strict mypy;
