@@ -120,6 +120,25 @@ class TaskAttemptRow(Base):
     )
 
 
+class TaskOutputCheckpointRow(Base):
+    __tablename__ = "task_output_checkpoints"
+    __table_args__ = (
+        {"schema": DB_SCHEMA},
+    )
+
+    task_run_id: Mapped[str] = mapped_column(
+        RuntimeIdType(),
+        ForeignKey(
+            f"{DB_SCHEMA}.task_runs.task_run_id",
+            onupdate="RESTRICT",
+            ondelete="CASCADE",
+            name="fk_task_output_checkpoints_task_run",
+        ),
+        primary_key=True,
+    )
+    output_json: Mapped[Any] = mapped_column(JSON_VALUE, nullable=True)
+
+
 class RuntimeEventRow(Base):
     __tablename__ = "runtime_events"
     __table_args__ = (
