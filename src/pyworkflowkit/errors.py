@@ -413,6 +413,27 @@ class RuntimeInvariantError(RuntimeErrorBase):
         super().__init__(f"Runtime invariant violated: {reason}.")
 
 
+class RecoveryError(RuntimeErrorBase):
+    """Base class for persisted-run recovery and reconciliation errors."""
+
+
+class ReconciliationError(RecoveryError):
+    """Raised when reconciliation cannot be safely performed."""
+
+    def __init__(self, *, run_id: str, reason: str) -> None:
+        self.run_id = run_id
+        self.reason = reason
+        super().__init__(f"Run '{run_id}' cannot be reconciled: {reason}.")
+
+
+class DuplicateReconciliationVerifierError(RecoveryError):
+    """Raised when a provider verifier is registered more than once."""
+
+    def __init__(self, *, provider: str) -> None:
+        self.provider = provider
+        super().__init__(f"External-run verifier for provider '{provider}' is already registered.")
+
+
 class ManifestError(PyWorkflowKitError):
     """Base class for execution-manifest errors."""
 
@@ -650,6 +671,7 @@ __all__ = [
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",
+    "DuplicateReconciliationVerifierError",
     "DuplicatePluginError",
     "PlanningError",
     "PlanningInvariantError",
@@ -661,6 +683,8 @@ __all__ = [
     "PyIngestKitAdapterError",
     "PyIngestKitRetryOwnershipError",
     "PyWorkflowKitError",
+    "ReconciliationError",
+    "RecoveryError",
     "RuntimeErrorBase",
     "RuntimeInvariantError",
     "SerializationError",
