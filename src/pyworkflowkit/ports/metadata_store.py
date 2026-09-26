@@ -81,6 +81,9 @@ class MetadataStore(Protocol):
     def get_task_run(self, task_run_id: TaskRunId) -> TaskRun:
         """Load a task run or raise a not-found error."""
 
+    def list_workflow_runs(self) -> Sequence[WorkflowRun]:
+        """Return persisted workflow runs in deterministic run-id order."""
+
     def list_task_runs(self, run_id: WorkflowRunId) -> Sequence[TaskRun]:
         """Return task runs belonging to one workflow run."""
 
