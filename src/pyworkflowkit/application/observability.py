@@ -54,6 +54,11 @@ class LogContext:
         }
 
 
+def _is_sensitive_key(key: str) -> bool:
+    normalized = key.lower().replace("-", "_")
+    return any(token in normalized for token in _SENSITIVE_TOKENS)
+
+
 def redact_mapping(values: Mapping[str, object]) -> dict[str, object]:
     """Recursively redact values whose key names look sensitive."""
 
