@@ -57,7 +57,6 @@ class RuntimeFactory:
             id_factory=UuidRuntimeIdFactory(),
             sleeper=SystemSleeper(),
             observability=observability,
-            clock=clock,
         )
 
         return RuntimeComponents(
@@ -67,6 +66,7 @@ class RuntimeFactory:
             handler_registry=registry,
             executor=executor,
             observability=observability,
+            clock=clock,
         )
 
     @staticmethod
