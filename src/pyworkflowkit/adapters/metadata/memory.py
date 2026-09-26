@@ -354,8 +354,10 @@ def _event_sort_key(event: RuntimeEvent) -> tuple[int, str]:
     return sequence, str(event.event_id)
 
 
-assert isinstance(MemoryMetadataStore(), MetadataStore)
-assert isinstance(MemoryUnitOfWork(MemoryMetadataStore()), UnitOfWork)
+if not isinstance(MemoryMetadataStore(), MetadataStore):
+    raise TypeError("MemoryMetadataStore must satisfy MetadataStore")
+if not isinstance(MemoryUnitOfWork(MemoryMetadataStore()), UnitOfWork):
+    raise TypeError("MemoryUnitOfWork must satisfy UnitOfWork")
 
 
 __all__ = ["MemoryMetadataStore", "MemoryUnitOfWork"]
