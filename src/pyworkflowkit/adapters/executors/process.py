@@ -560,10 +560,7 @@ class ProcessExecutor:
 
     def active_handles(self) -> tuple[ExecutionHandle, ...]:
         with self._lock:
-            return tuple(
-                self._handles[handle_id]
-                for handle_id in sorted(self._active)
-            )
+            return tuple(self._handles[handle_id] for handle_id in sorted(self._active))
 
     def shutdown(self, *, wait: bool = True) -> None:
         with self._lock:
