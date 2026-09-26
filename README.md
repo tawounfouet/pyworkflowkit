@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.5.0`; current development line `0.6.0a3`.
-> M37 detects stale candidates, M38 reconciles ambiguous external work, and M39 resumes
-> the same persisted WorkflowRun without replaying completed tasks.
+> **Status:** stable release `0.5.0`; current development line `0.6.0a4`.
+> M37 detects stale candidates, M38 reconciles ambiguous external work, M39 resumes the
+> same persisted WorkflowRun, and M40 makes retry backoff non-blocking in the concurrent runtime.
 
 ## What 0.5 provides
 
@@ -721,6 +721,136 @@ No new recovery-specific RuntimeEvent enum is introduced; existing events carry 
 M39 does not add a scheduler, background recovery daemon, heartbeat, lease, or distributed
 ownership protocol. Recovery remains an explicit runtime action.
 
+## Non-blocking retry in 0.6.0a4
+
+M40 replaces blocking retry sleeps in the concurrent/long-lived runtime with an explicit
+durable eligibility timestamp:
+
+```text
+Attempt N fails
+      ↓
+RetryEngine
+      ↓
+delay_seconds
+      ↓
+retry_eligible_at = failed_at + delay
+      ↓
+persist FAILED TaskAttempt + TASK_RETRYING
+      ↓
+ConcurrentRunner keeps coordinating other work
+      ↓
+retry deadline becomes due
+      ↓
+Attempt N+1
+```
+
+The retry decision still belongs to `RetryEngine`. M40 changes **when the coordinator
+dispatches the next attempt**, not the retry policy itself.
+
+### Runtime state
+
+No new lifecycle enum is introduced. Between attempts:
+
+```text
+TaskRun       = RUNNING
+Attempt N     = FAILED
+retry_eligible_at = T
+Attempt N+1   = not created yet
+```
+
+Once `T` is reached, the next `TaskAttempt` is created on the same `TaskRun`.
+
+### Concurrent coordination
+
+`ConcurrentRunner` no longer calls `Sleeper.sleep()` for retry backoff. It combines:
+
+```text
+active execution timeout deadlines
++
+pending retry deadlines
++
+cancellation polling
+```
+
+inside the existing completion-queue wait loop.
+
+That means an unrelated READY task can use capacity while another task is waiting for
+its retry eligibility:
+
+```text
+A attempt 1 FAILED
+      │
+      └──── retry waiting ─────────────┐
+                                      │
+B READY → RUNNING → SUCCEEDED          │
+                                      │
+                         deadline due ─┘
+                                      ↓
+                               A attempt 2
+```
+
+The in-process coordinator uses a monotonic deadline for reliable local waiting, while
+the persisted recovery contract uses the timezone-aware wall-clock
+`retry_eligible_at`.
+
+### Sequential runtime
+
+The simple sequential `Runner` deliberately keeps its blocking `Sleeper` behavior.
+It now persists `retry_eligible_at` before sleeping, so a process crash during that
+backoff remains recoverable.
+
+This keeps the sequential API simple while satisfying the M40 requirement specifically
+for the concurrent/long-lived runtime.
+
+### Recovery after a crash during backoff
+
+A durable retry wait is explicit recovery evidence:
+
+```text
+WorkflowRun RUNNING
+TaskRun A RUNNING
+Attempt 1 FAILED
+retry_eligible_at = T
+TASK_RETRYING persisted
+        ↓
+process exits
+```
+
+M37 interprets it as:
+
+```text
+now < T
+    → ACTIVE
+    → retry_wait_not_yet_eligible
+
+now >= T and durable evidence is stale
+    → STALE_CANDIDATE
+    → ELIGIBLE
+```
+
+M38 does not reconcile this state as ambiguous external work, because the runtime already
+knows why the `TaskRun` remains RUNNING.
+
+M39 can therefore resume the same run directly as Attempt N+1 once the retry is eligible.
+
+### Persistence
+
+M40 adds Alembic revision:
+
+```text
+0001_runtime_metadata
+        ↓
+0002_task_output_checkpoints
+        ↓
+0003_retry_eligible_at
+```
+
+The new `task_attempts.retry_eligible_at` column is nullable and keeps existing attempt
+history backward-compatible.
+
+M40 does **not** add a scheduler, background daemon, lease service, distributed timer,
+or new lifecycle status.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -900,5 +1030,6 @@ SubprocessExecutor, Observability Plugins, and Security Hardening before transve
 qualification promoted the line to **0.5.0 stable**.
 
 The 0.6 development line now contains **M37 — Recovery Foundation**,
-**M38 — Reconciliation**, and **M39 — Resume** at **0.6.0a3**.
-The next milestone is **M40 — Non-blocking Retry**.
+**M38 — Reconciliation**, **M39 — Resume**, and **M40 — Non-blocking Retry** at
+**0.6.0a4**. M40 is the final functional milestone of the line; the next step is
+transverse qualification for **0.6.0 stable**.
