@@ -254,8 +254,7 @@ def plugins_command(
         "plugins": plugins_payload,
     }
     human = "\n".join(
-        f"{plugin.plugin_type.value}:{plugin.name} -> {plugin.value}"
-        for plugin in discovered
+        f"{plugin.plugin_type.value}:{plugin.name} -> {plugin.value}" for plugin in discovered
     )
     _emit(payload, json_output=json_output, human=human or "<no plugins discovered>")
 
@@ -364,8 +363,7 @@ def _parse_plugin_enablements(
         type_name, separator, plugin_name = selector.partition(":")
         if not separator or not type_name or not plugin_name:
             raise ValueError(
-                "plugin selector must use type:name syntax "
-                "(executor, metadata, workload, or event)"
+                "plugin selector must use type:name syntax (executor, metadata, workload, or event)"
             )
         try:
             plugin_type = PluginType(type_name)
@@ -373,10 +371,7 @@ def _parse_plugin_enablements(
             raise ValueError(f"unknown plugin type '{type_name}'") from exc
         parsed.setdefault(plugin_type, []).append(plugin_name)
 
-    return {
-        plugin_type: tuple(sorted(set(names)))
-        for plugin_type, names in parsed.items()
-    }
+    return {plugin_type: tuple(sorted(set(names))) for plugin_type, names in parsed.items()}
 
 
 def _run_payload(run: WorkflowRun) -> dict[str, object]:
