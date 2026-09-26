@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -28,7 +29,7 @@ from pyworkflowkit.errors import (
     DuplicateReconciliationVerifierError,
     ReconciliationError,
 )
-from pyworkflowkit.ports.reconciliation import ExternalRunStatus
+from pyworkflowkit.ports.reconciliation import ExternalRunStatus, ExternalRunVerifier
 
 NOW = datetime(2026, 9, 27, 14, 0, tzinfo=UTC)
 OLD = NOW - timedelta(hours=2)
@@ -55,6 +56,15 @@ class RaisingVerifier:
     def verify(self, external_ref: ExternalRunRef) -> ExternalRunStatus:
         del external_ref
         raise RuntimeError("provider secret detail")
+
+
+@dataclass
+class InvalidVerifier:
+    provider: str
+
+    def verify(self, external_ref: ExternalRunRef) -> str:
+        del external_ref
+        return "succeeded"
 
 
 def _service(
@@ -204,6 +214,24 @@ def test_verifier_failure_is_isolated_without_copying_error_message() -> None:
     assert "secret" not in observation.reason
 
 
+def test_invalid_verifier_status_is_treated_as_unknown() -> None:
+    store = MemoryMetadataStore()
+    run_id, _ = _persist(store)
+    registry = ExternalRunVerifierRegistry()
+    registry.register(cast(ExternalRunVerifier, InvalidVerifier("remote")))
+
+    report = ReconciliationService(
+        metadata_store=store,
+        clock=FixedClock(),
+        verifier_registry=registry,
+        stale_after=timedelta(minutes=5),
+    ).reconcile(run_id)
+
+    observation = report.task_reconciliations[0].observations[0]
+    assert observation.status is ExternalRunStatus.UNKNOWN
+    assert observation.reason == "verifier_returned_invalid_status"
+
+
 def test_conflicting_external_statuses_require_manual_action() -> None:
     store = MemoryMetadataStore()
     run_id, _ = _persist(
@@ -284,6 +312,7 @@ def test_reconciliation_rejects_non_stale_run() -> None:
 def test_verifier_registry_rejects_duplicate_provider() -> None:
     registry = ExternalRunVerifierRegistry()
     registry.register(StaticVerifier("remote", {"ext-1": ExternalRunStatus.RUNNING}))
+    assert registry.providers == ("remote",)
 
     with pytest.raises(DuplicateReconciliationVerifierError):
         registry.register(StaticVerifier("remote", {"ext-1": ExternalRunStatus.SUCCEEDED}))
