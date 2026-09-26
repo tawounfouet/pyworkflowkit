@@ -82,6 +82,7 @@ class DomainSchemaMapper:
             retry_policy=cls.retry_policy_to_schema(value.retry_policy),
             executor_key=value.executor_key,
             timeout_seconds=value.timeout_seconds,
+            timeout_mode=value.timeout_mode,
             tags=tuple(sorted(value.tags)),
             description=value.description,
         )
@@ -95,6 +96,7 @@ class DomainSchemaMapper:
             retry_policy=cls.retry_policy_from_schema(value.retry_policy),
             executor_key=value.executor_key,
             timeout_seconds=value.timeout_seconds,
+            timeout_mode=value.timeout_mode,
             tags=frozenset(value.tags),
             description=value.description,
         )
