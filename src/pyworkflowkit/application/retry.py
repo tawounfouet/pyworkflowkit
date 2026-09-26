@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from pyworkflowkit.application.observability import log_runtime
-from pyworkflowkit.domain.enums import BackoffStrategy
+from pyworkflowkit.domain.enums import BackoffStrategy, TaskAttemptStatus
+from pyworkflowkit.domain.runtime import TaskAttempt
 from pyworkflowkit.domain.values import RetryPolicy
 from pyworkflowkit.errors import ExecutorError, TaskExecutionError
 
@@ -43,6 +44,20 @@ def retry_eligible_at(*, failed_at: datetime, decision: RetryDecision) -> dateti
     if not decision.should_retry:
         raise ValueError("retry eligibility requires a retry decision")
     return failed_at + timedelta(seconds=decision.delay_seconds)
+
+
+def pending_retry_attempt(attempts: tuple[TaskAttempt, ...]) -> TaskAttempt | None:
+    """Return the latest failed attempt carrying a durable retry schedule."""
+
+    if not attempts:
+        return None
+    latest = max(attempts, key=lambda attempt: attempt.attempt_number)
+    if (
+        latest.status is TaskAttemptStatus.FAILED
+        and latest.retry_eligible_at is not None
+    ):
+        return latest
+    return None
 
 
 class RetryEngine:
@@ -117,4 +132,9 @@ class RetryEngine:
         return float(delay)
 
 
-__all__ = ["RetryDecision", "RetryEngine", "retry_eligible_at"]
+__all__ = [
+    "RetryDecision",
+    "RetryEngine",
+    "pending_retry_attempt",
+    "retry_eligible_at",
+]
