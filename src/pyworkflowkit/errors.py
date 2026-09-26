@@ -117,6 +117,50 @@ class ExecutorNotFoundError(ExecutorError):
         super().__init__(f"Executor '{executor_key}' is not available.")
 
 
+class ExecutorShutdownError(ExecutorError):
+    """Raised when work is submitted after an executor has shut down."""
+
+    def __init__(self, *, executor_key: str) -> None:
+        self.executor_key = executor_key
+        super().__init__(f"Executor '{executor_key}' is shut down and cannot accept new work.")
+
+
+class ExecutionHandleNotFoundError(ExecutorError):
+    """Raised when an executor does not own a requested execution handle."""
+
+    def __init__(self, *, executor_key: str, handle_id: str) -> None:
+        self.executor_key = executor_key
+        self.handle_id = handle_id
+        super().__init__(f"Executor '{executor_key}' does not know execution handle '{handle_id}'.")
+
+
+class DuplicateExecutionSubmissionError(ExecutorError):
+    """Raised when the same TaskAttempt is submitted twice to one executor."""
+
+    def __init__(self, *, executor_key: str, attempt_id: str) -> None:
+        self.executor_key = executor_key
+        self.attempt_id = attempt_id
+        super().__init__(f"Executor '{executor_key}' already received task attempt '{attempt_id}'.")
+
+
+class ExecutorWorkerError(ExecutorError):
+    """Raised when a worker fails outside the normal handler-failure contract."""
+
+    def __init__(
+        self,
+        *,
+        executor_key: str,
+        error_type: str,
+        error_message: str,
+    ) -> None:
+        self.executor_key = executor_key
+        self.error_type = error_type
+        self.error_message = error_message
+        super().__init__(
+            f"Executor '{executor_key}' worker failed with {error_type}: {error_message}"
+        )
+
+
 class DuplicateHandlerRegistrationError(ExecutorError):
     """Raised when a handler reference is registered more than once."""
 
@@ -463,10 +507,14 @@ __all__ = [
     "DefinitionError",
     "DomainError",
     "DuplicateDependencyError",
+    "DuplicateExecutionSubmissionError",
     "DuplicateHandlerRegistrationError",
     "DuplicateTaskDefinitionError",
+    "ExecutionHandleNotFoundError",
     "ExecutorError",
     "ExecutorNotFoundError",
+    "ExecutorShutdownError",
+    "ExecutorWorkerError",
     "GraphError",
     "HandlerNotFoundError",
     "InvalidExecutionPlanError",
