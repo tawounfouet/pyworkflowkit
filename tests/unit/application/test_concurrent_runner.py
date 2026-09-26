@@ -234,8 +234,7 @@ def test_duplicate_ready_race_does_not_dispatch_join_task_twice() -> None:
     d_ready_events = [
         event
         for event in store.list_events(run.run_id)
-        if event.event_type is RuntimeEventType.TASK_READY
-        and event.task_id == TaskId("D")
+        if event.event_type is RuntimeEventType.TASK_READY and event.task_id == TaskId("D")
     ]
     assert len(d_ready_events) == 1
 
@@ -353,9 +352,7 @@ def test_two_running_siblings_can_fail_without_second_workflow_transition() -> N
         executor.shutdown()
 
     assert run.status is WorkflowRunStatus.FAILED
-    assert {
-        task.status for task in store.list_task_runs(run.run_id)
-    } == {TaskRunStatus.FAILED}
+    assert {task.status for task in store.list_task_runs(run.run_id)} == {TaskRunStatus.FAILED}
     workflow_failed_events = [
         event
         for event in store.list_events(run.run_id)
