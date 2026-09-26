@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from pyworkflowkit.adapters.metadata.sqlalchemy import models as orm_models
 from pyworkflowkit.adapters.metadata.sqlalchemy.mapping import SqlAlchemyRowMapper
 from pyworkflowkit.adapters.persistence.mapping import PersistenceMapper
+from pyworkflowkit.adapters.persistence.records import TaskOutputCheckpointRow
+from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef
@@ -80,6 +82,16 @@ class SqlAlchemyMetadataStore:
             for row in rows
         )
         return tuple(sorted(values, key=lambda value: value.attempt_number))
+
+    def get_task_output_checkpoint(self, task_run_id: TaskRunId) -> object:
+        with self._session_factory() as session:
+            row = session.get(orm_models.TaskOutputCheckpointRow, str(task_run_id))
+            if row is None:
+                raise MetadataNotFoundError(
+                    entity_type="TaskOutputCheckpoint",
+                    entity_id=str(task_run_id),
+                )
+            return SqlAlchemyRowMapper.task_output_from_orm(row).output
 
     def list_events(self, run_id: WorkflowRunId) -> tuple[RuntimeEvent, ...]:
         with self._session_factory() as session:
@@ -247,6 +259,31 @@ class SqlAlchemyUnitOfWork:
                 actual_sequence=record.event_sequence,
             )
         session.add(SqlAlchemyRowMapper.runtime_event_to_orm(record))
+        self._flush()
+
+    def add_task_output_checkpoint(
+        self,
+        *,
+        task_run_id: TaskRunId,
+        output: object,
+    ) -> None:
+        session = self._require_session()
+        if session.get(orm_models.TaskRunRow, str(task_run_id)) is None:
+            raise MetadataNotFoundError(entity_type="TaskRun", entity_id=str(task_run_id))
+        if session.get(orm_models.TaskOutputCheckpointRow, str(task_run_id)) is not None:
+            raise DuplicateMetadataError(
+                entity_type="TaskOutputCheckpoint",
+                entity_id=str(task_run_id),
+            )
+        normalized = normalize_portable_json_value(
+            output,
+            path=f"task_output_checkpoint.{task_run_id}",
+        )
+        record = TaskOutputCheckpointRow(
+            task_run_id=str(task_run_id),
+            output=normalized,
+        )
+        session.add(SqlAlchemyRowMapper.task_output_to_orm(record))
         self._flush()
 
     def add_artifact(
