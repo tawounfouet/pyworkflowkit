@@ -9,10 +9,12 @@ from pyworkflowkit.domain.definitions import TaskDefinition
 from pyworkflowkit.domain.values import TaskResult
 from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
 from pyworkflowkit.ports.executor import (
+    CancellationCapability,
     ContextHandler,
     ExecutorCapabilities,
     RunContext,
     TaskHandler,
+    TimeoutCapability,
     ZeroArgumentHandler,
 )
 
@@ -24,8 +26,9 @@ class LocalExecutor:
 
     _CAPABILITIES = ExecutorCapabilities(
         supports_parallelism=False,
-        supports_hard_timeout=False,
-        supports_hard_cancellation=False,
+        timeout=TimeoutCapability.NONE,
+        cancellation=CancellationCapability.NONE,
+        max_concurrency=1,
     )
 
     @property
