@@ -24,8 +24,8 @@ from pyworkflowkit.errors import (
     InvalidHandlerError,
     TaskExecutionError,
 )
+from pyworkflowkit.ports.executor import AsyncExecutor as AsyncExecutorPort
 from pyworkflowkit.ports.executor import (
-    AsyncExecutor as AsyncExecutorPort,
     CancellationCapability,
     RunContext,
     TimeoutCapability,
