@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -540,6 +540,139 @@ def test_resume_blocks_unresolved_reconciliation_without_mutation(
     assert store.get_task_run(a_run_id).status is TaskRunStatus.RUNNING
     assert store.get_task_run(b_run_id).status is TaskRunStatus.PENDING
     assert store.list_task_attempts(a_run_id)[0].status is TaskAttemptStatus.RUNNING
+
+
+def test_resume_overdue_retry_wait_creates_next_attempt_on_same_task_run() -> None:
+    store = MemoryMetadataStore()
+    task_run_id = TaskRunId("resume-run:A")
+    with store.unit_of_work() as uow:
+        uow.add_workflow_run(
+            WorkflowRun(
+                run_id=RUN_ID,
+                workflow_id=WorkflowId("workflow"),
+                workflow_version="1",
+                status=WorkflowRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
+            )
+        )
+        uow.add_task_run(
+            TaskRun(
+                task_run_id=task_run_id,
+                run_id=RUN_ID,
+                task_id=TaskId("A"),
+                status=TaskRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
+            )
+        )
+        uow.add_task_attempt(
+            TaskAttempt(
+                attempt_id=TaskAttemptId("resume-run:A:attempt-1"),
+                task_run_id=task_run_id,
+                attempt_number=1,
+                status=TaskAttemptStatus.FAILED,
+                started_at=OLD,
+                finished_at=OLD + timedelta(minutes=1),
+                error_type="RuntimeError",
+                error_message="temporary",
+                error_category="RuntimeError",
+                retry_eligible_at=OLD + timedelta(minutes=2),
+            )
+        )
+        uow.add_event(
+            RuntimeEvent(
+                event_id=RuntimeEventId("resume-run:event-1"),
+                event_type=RuntimeEventType.WORKFLOW_STARTED,
+                run_id=RUN_ID,
+                occurred_at=OLD,
+                event_sequence=1,
+            )
+        )
+        uow.add_event(
+            RuntimeEvent(
+                event_id=RuntimeEventId("resume-run:event-2"),
+                event_type=RuntimeEventType.TASK_RETRYING,
+                run_id=RUN_ID,
+                occurred_at=OLD + timedelta(minutes=1),
+                event_sequence=2,
+                task_run_id=task_run_id,
+                task_id=TaskId("A"),
+                attempt_number=1,
+                payload={
+                    "retry_eligible_at": (OLD + timedelta(minutes=2)).isoformat(),
+                    "next_attempt_number": 2,
+                },
+            )
+        )
+        uow.commit()
+
+    resumed = _runner(store, {"handlers:A": lambda: "ok"}).resume(
+        _workflow(_task("A")),
+        run_id=RUN_ID,
+        reconciliation=_empty_report(),
+    )
+
+    assert resumed.status is WorkflowRunStatus.SUCCEEDED
+    attempts = store.list_task_attempts(task_run_id)
+    assert tuple(attempt.attempt_number for attempt in attempts) == (1, 2)
+    assert attempts[0].status is TaskAttemptStatus.FAILED
+    assert attempts[1].status is TaskAttemptStatus.SUCCEEDED
+    assert attempts[1].task_run_id == task_run_id
+
+
+def test_resume_rejects_retry_wait_before_eligibility_without_mutation() -> None:
+    store = MemoryMetadataStore()
+    task_run_id = TaskRunId("resume-run:A")
+    eligible_at = NOW + timedelta(minutes=5)
+    with store.unit_of_work() as uow:
+        uow.add_workflow_run(
+            WorkflowRun(
+                run_id=RUN_ID,
+                workflow_id=WorkflowId("workflow"),
+                workflow_version="1",
+                status=WorkflowRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
+            )
+        )
+        uow.add_task_run(
+            TaskRun(
+                task_run_id=task_run_id,
+                run_id=RUN_ID,
+                task_id=TaskId("A"),
+                status=TaskRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
+            )
+        )
+        uow.add_task_attempt(
+            TaskAttempt(
+                attempt_id=TaskAttemptId("resume-run:A:attempt-1"),
+                task_run_id=task_run_id,
+                attempt_number=1,
+                status=TaskAttemptStatus.FAILED,
+                started_at=OLD,
+                finished_at=OLD + timedelta(minutes=1),
+                error_type="RuntimeError",
+                error_message="temporary",
+                error_category="RuntimeError",
+                retry_eligible_at=eligible_at,
+            )
+        )
+        uow.commit()
+
+    with pytest.raises(ResumeError, match="not eligible until"):
+        _runner(store, {"handlers:A": lambda: "must-not-run"}).resume(
+            _workflow(_task("A")),
+            run_id=RUN_ID,
+            reconciliation=_empty_report(),
+        )
+
+    attempts = store.list_task_attempts(task_run_id)
+    assert len(attempts) == 1
+    assert attempts[0].retry_eligible_at == eligible_at
+    assert store.get_task_run(task_run_id).status is TaskRunStatus.RUNNING
 
 
 def test_resume_rejects_workflow_definition_version_mismatch() -> None:

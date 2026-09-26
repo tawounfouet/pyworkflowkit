@@ -133,6 +133,7 @@ class RunStateMachine:
         attempt.error_type = None
         attempt.error_message = None
         attempt.error_category = None
+        attempt.retry_eligible_at = None
         attempt.error_metadata = MappingProxyType({})
 
     def fail_attempt(
@@ -162,7 +163,23 @@ class RunStateMachine:
         attempt.error_type = error_type
         attempt.error_message = error_message
         attempt.error_category = error_category
+        attempt.retry_eligible_at = None
         attempt.error_metadata = MappingProxyType(dict(error_metadata or {}))
+
+    def schedule_retry(self, attempt: TaskAttempt, *, eligible_at: datetime) -> None:
+        _ensure_aware_datetime(eligible_at, field_name="eligible_at")
+        if attempt.status is not TaskAttemptStatus.FAILED:
+            raise InvalidStateTransitionError(
+                entity_type="TaskAttempt",
+                entity_id=str(attempt.attempt_id),
+                current_status=attempt.status.value,
+                target_status="RETRY_WAIT",
+            )
+        if attempt.finished_at is None:
+            raise ValueError("FAILED TaskAttempt must have finished_at before retry scheduling.")
+        if eligible_at < attempt.finished_at:
+            raise ValueError("eligible_at cannot be earlier than attempt.finished_at.")
+        attempt.retry_eligible_at = eligible_at
 
     def cancel_attempt(self, attempt: TaskAttempt, *, at: datetime) -> None:
         _ensure_aware_datetime(at)
@@ -172,6 +189,7 @@ class RunStateMachine:
         )
         attempt.status = TaskAttemptStatus.CANCELLED
         attempt.finished_at = at
+        attempt.retry_eligible_at = None
 
     def _finish_workflow(
         self,

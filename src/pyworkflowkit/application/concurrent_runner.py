@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from queue import Empty
 from time import monotonic
 from typing import Protocol, runtime_checkable
@@ -21,6 +22,7 @@ from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.observability import LogContext, log_runtime
 from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
 from pyworkflowkit.application.planning import build_dependency_graph
+from pyworkflowkit.application.retry import retry_eligible_at
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import (
@@ -105,6 +107,8 @@ class _ActiveExecution:
 class _PendingRetry:
     task_id: TaskId
     next_attempt_number: int
+    eligible_at: datetime
+    eligible_monotonic: float
 
 
 class ConcurrentRunner(Runner):
@@ -265,16 +269,18 @@ class ConcurrentRunner(Runner):
                 if cancellation_controller.is_requested and not workflow_failed:
                     continue
 
-                if active:
+                if active or pending_retries:
                     try:
                         cancellation_poll_seconds = (
                             0.05
-                            if self._concurrent_executor.capabilities.supports_cancellation
+                            if pending_retries
+                            or self._concurrent_executor.capabilities.supports_cancellation
                             else None
                         )
                         completion = self._concurrent_executor.completion_queue.get(
                             timeout=self._completion_wait_timeout(
                                 active,
+                                pending_retries=pending_retries,
                                 cancellation_poll_seconds=cancellation_poll_seconds,
                             )
                         )
@@ -329,11 +335,6 @@ class ConcurrentRunner(Runner):
                     )
                     workflow_failed = workflow_failed or terminal_failure
                     continue
-
-                if pending_retries:
-                    raise RuntimeInvariantError(
-                        reason="retry is pending but no execution can acquire capacity"
-                    )
 
                 if workflow_failed:
                     return self._metadata_store.get_workflow_run(run.run_id)
@@ -523,6 +524,8 @@ class ConcurrentRunner(Runner):
                 continue
             task_run = task_runs_by_task_id[task_id]
             pending = pending_retries[task_id]
+            if pending.eligible_monotonic > monotonic():
+                continue
             attempt_id = self._id_factory.new_task_attempt_id(
                 task_run_id=task_run.task_run_id,
                 attempt_number=pending.next_attempt_number,
@@ -609,13 +612,15 @@ class ConcurrentRunner(Runner):
     def _completion_wait_timeout(
         active: Mapping[str, _ActiveExecution],
         *,
+        pending_retries: Mapping[TaskId, _PendingRetry],
         cancellation_poll_seconds: float | None = None,
     ) -> float | None:
-        deadlines = tuple(
+        deadlines = [
             execution.deadline_monotonic
             for execution in active.values()
             if not execution.timed_out and execution.deadline_monotonic is not None
-        )
+        ]
+        deadlines.extend(pending.eligible_monotonic for pending in pending_retries.values())
         deadline_wait = max(0.0, min(deadlines) - monotonic()) if deadlines else None
         if cancellation_poll_seconds is None:
             return deadline_wait
@@ -685,6 +690,14 @@ class ConcurrentRunner(Runner):
                     raise RuntimeInvariantError(
                         reason="timeout retry decision is missing next_attempt_number"
                     )
+                eligible_at = retry_eligible_at(
+                    failed_at=failed_at,
+                    decision=decision,
+                )
+                self._state_machine.schedule_retry(
+                    execution.attempt,
+                    eligible_at=eligible_at,
+                )
                 self._persist_retry_failure(
                     attempt=execution.attempt,
                     event=event_factory.create(
@@ -699,15 +712,16 @@ class ConcurrentRunner(Runner):
                             "timeout_mode": task_definition.timeout_mode.value,
                             "timeout_seconds": timeout_seconds,
                             "delay_seconds": decision.delay_seconds,
+                            "retry_eligible_at": eligible_at.isoformat(),
                             "next_attempt_number": decision.next_attempt_number,
                         },
                     ),
                 )
-                if decision.delay_seconds > 0:
-                    self._sleeper.sleep(decision.delay_seconds)
                 pending_retries[execution.task_id] = _PendingRetry(
                     task_id=execution.task_id,
                     next_attempt_number=decision.next_attempt_number,
+                    eligible_at=eligible_at,
+                    eligible_monotonic=monotonic() + decision.delay_seconds,
                 )
                 continue
 
@@ -805,6 +819,14 @@ class ConcurrentRunner(Runner):
         if decision.should_retry and not workflow_already_failed:
             if decision.next_attempt_number is None:
                 raise RuntimeInvariantError(reason="retry decision is missing next_attempt_number")
+            eligible_at = retry_eligible_at(
+                failed_at=failed_at,
+                decision=decision,
+            )
+            self._state_machine.schedule_retry(
+                execution.attempt,
+                eligible_at=eligible_at,
+            )
             self._persist_retry_failure(
                 attempt=execution.attempt,
                 event=event_factory.create(
@@ -817,15 +839,16 @@ class ConcurrentRunner(Runner):
                         "error_type": error_type,
                         "error_category": error_category,
                         "delay_seconds": decision.delay_seconds,
+                        "retry_eligible_at": eligible_at.isoformat(),
                         "next_attempt_number": decision.next_attempt_number,
                     },
                 ),
             )
-            if decision.delay_seconds > 0:
-                self._sleeper.sleep(decision.delay_seconds)
             pending_retries[execution.task_id] = _PendingRetry(
                 task_id=execution.task_id,
                 next_attempt_number=decision.next_attempt_number,
+                eligible_at=eligible_at,
+                eligible_monotonic=monotonic() + decision.delay_seconds,
             )
             return False
 

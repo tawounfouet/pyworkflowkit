@@ -44,6 +44,7 @@ class TaskAttemptRow:
     error_type: str | None
     error_message: str | None
     error_category: str | None
+    retry_eligible_at: datetime | None
     error_metadata: Mapping[str, object]
 
 

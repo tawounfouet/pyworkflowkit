@@ -115,6 +115,7 @@ class TaskAttemptRow(Base):
     error_type: Mapped[str | None] = mapped_column(Text)
     error_message: Mapped[str | None] = mapped_column(Text)
     error_category: Mapped[str | None] = mapped_column(Text)
+    retry_eligible_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     error_metadata_json: Mapped[dict[str, Any]] = mapped_column(
         JSON_VALUE, nullable=False, default=dict
     )

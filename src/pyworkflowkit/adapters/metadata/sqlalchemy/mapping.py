@@ -99,6 +99,7 @@ class SqlAlchemyRowMapper:
             error_type=value.error_type,
             error_message=value.error_message,
             error_category=value.error_category,
+            retry_eligible_at=value.retry_eligible_at,
             error_metadata_json=dict(value.error_metadata),
         )
 
@@ -114,6 +115,7 @@ class SqlAlchemyRowMapper:
             error_type=value.error_type,
             error_message=value.error_message,
             error_category=value.error_category,
+            retry_eligible_at=value.retry_eligible_at,
             error_metadata=dict(value.error_metadata_json or {}),
         )
 
@@ -130,6 +132,7 @@ class SqlAlchemyRowMapper:
         target.error_type = value.error_type
         target.error_message = value.error_message
         target.error_category = value.error_category
+        target.retry_eligible_at = value.retry_eligible_at
         target.error_metadata_json = dict(value.error_metadata)
 
     @staticmethod

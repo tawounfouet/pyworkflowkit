@@ -10,6 +10,7 @@ from pyworkflowkit.application.recovery import (
     RecoveryInspector,
     RecoveryLiveness,
 )
+from pyworkflowkit.application.retry import pending_retry_attempt
 from pyworkflowkit.domain.enums import TASK_TERMINAL_STATUSES, TaskAttemptStatus, TaskRunStatus
 from pyworkflowkit.domain.ids import WorkflowRunId
 from pyworkflowkit.domain.values import ExternalRunRef
@@ -154,6 +155,14 @@ class ReconciliationService:
                 if attempt.status is TaskAttemptStatus.RUNNING
             )
             external_refs = tuple(self._metadata_store.list_external_run_refs(task_run.task_run_id))
+
+            if (
+                task_run.status is TaskRunStatus.RUNNING
+                and not running_attempt_ids
+                and pending_retry_attempt(attempts) is not None
+                and not external_refs
+            ):
+                continue
 
             if task_run.status is not TaskRunStatus.RUNNING and not external_refs:
                 continue

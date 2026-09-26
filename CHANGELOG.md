@@ -8,6 +8,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M40 durable non-blocking retry eligibility through TaskAttempt.retry_eligible_at.
+- Alembic revision 0003_retry_eligible_at for SQLite and PostgreSQL metadata stores.
+- ConcurrentRunner retry-deadline coordination without blocking Sleeper calls.
+- Recovery classification for retry-waiting TaskRuns with explicit next retry eligibility.
+- Durable SQLite restart acceptance for retry wait → same TaskRun / next TaskAttempt resume.
 - M39 same-WorkflowRun resume semantics with durable task-output checkpoints.
 - WorkflowRuntime.resume_run() recovery facade.
 - Runner.resume() preserving completed TaskRuns and continuing existing event sequence.
@@ -32,7 +37,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The 0.6 development line advances to 0.6.0a3.
+- The 0.6 development line advances to 0.6.0a4.
+- ConcurrentRunner replaces retry sleeps with wall-clock retry_eligible_at evidence plus local monotonic deadlines, allowing unrelated READY work to continue during backoff.
+- Sequential Runner retains simple blocking execution while persisting retry eligibility before sleeping.
+- Recovery and reconciliation treat an explicit retry wait as known runtime intent rather than ambiguous RUNNING work.
 - Successful small TaskResult outputs are checkpointed only when representable as strict portable JSON.
 - Resume continues the same WorkflowRun and never re-executes already-SUCCEEDED tasks by default.
 - Reconciled external success/failure/cancellation is translated into explicit runtime state transitions before remaining work continues.

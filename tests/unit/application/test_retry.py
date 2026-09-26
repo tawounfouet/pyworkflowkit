@@ -1,10 +1,18 @@
 """Tests for RetryEngine decisions and backoff calculations."""
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
-from pyworkflowkit.application.retry import RetryDecision, RetryEngine
-from pyworkflowkit.domain.enums import BackoffStrategy
-from pyworkflowkit.domain.ids import TaskId
+from pyworkflowkit.application.retry import (
+    RetryDecision,
+    RetryEngine,
+    pending_retry_attempt,
+    retry_eligible_at,
+)
+from pyworkflowkit.domain.enums import BackoffStrategy, TaskAttemptStatus
+from pyworkflowkit.domain.ids import TaskAttemptId, TaskId, TaskRunId
+from pyworkflowkit.domain.runtime import TaskAttempt
 from pyworkflowkit.domain.values import RetryPolicy
 from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
 
@@ -119,3 +127,79 @@ def test_retry_backoff_respects_max_delay() -> None:
     )
 
     assert decision.delay_seconds == 5.0
+
+
+def test_retry_eligible_at_adds_decision_delay() -> None:
+    failed_at = datetime(2026, 9, 27, 0, 30, tzinfo=UTC)
+    decision = RetryDecision(
+        should_retry=True,
+        delay_seconds=2.5,
+        next_attempt_number=2,
+    )
+
+    assert retry_eligible_at(
+        failed_at=failed_at,
+        decision=decision,
+    ) == failed_at + timedelta(seconds=2.5)
+
+
+def test_retry_eligible_at_rejects_non_retry_decision() -> None:
+    with pytest.raises(ValueError, match="retry decision"):
+        retry_eligible_at(
+            failed_at=datetime(2026, 9, 27, 0, 30, tzinfo=UTC),
+            decision=RetryDecision(should_retry=False),
+        )
+
+
+def test_retry_eligible_at_rejects_naive_failed_at() -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        retry_eligible_at(
+            failed_at=datetime(2026, 9, 27, 0, 30),
+            decision=RetryDecision(
+                should_retry=True,
+                next_attempt_number=2,
+            ),
+        )
+
+
+def test_pending_retry_attempt_returns_latest_scheduled_failure() -> None:
+    now = datetime(2026, 9, 27, 0, 30, tzinfo=UTC)
+    first = TaskAttempt(
+        attempt_id=TaskAttemptId("attempt-1"),
+        task_run_id=TaskRunId("task-run"),
+        attempt_number=1,
+        status=TaskAttemptStatus.FAILED,
+        started_at=now,
+        finished_at=now,
+        error_type="RuntimeError",
+        error_message="temporary",
+        retry_eligible_at=now + timedelta(seconds=1),
+    )
+
+    assert pending_retry_attempt((first,)) is first
+
+
+def test_pending_retry_attempt_requires_latest_attempt_to_be_scheduled_failure() -> None:
+    now = datetime(2026, 9, 27, 0, 30, tzinfo=UTC)
+    first = TaskAttempt(
+        attempt_id=TaskAttemptId("attempt-1"),
+        task_run_id=TaskRunId("task-run"),
+        attempt_number=1,
+        status=TaskAttemptStatus.FAILED,
+        started_at=now,
+        finished_at=now,
+        error_type="RuntimeError",
+        error_message="temporary",
+        retry_eligible_at=now + timedelta(seconds=1),
+    )
+    second = TaskAttempt(
+        attempt_id=TaskAttemptId("attempt-2"),
+        task_run_id=TaskRunId("task-run"),
+        attempt_number=2,
+        status=TaskAttemptStatus.SUCCEEDED,
+        started_at=now,
+        finished_at=now,
+    )
+
+    assert pending_retry_attempt((first, second)) is None
+    assert pending_retry_attempt(()) is None

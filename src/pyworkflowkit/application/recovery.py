@@ -10,13 +10,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from pyworkflowkit.application.retry import pending_retry_attempt
 from pyworkflowkit.domain.enums import (
     WORKFLOW_TERMINAL_STATUSES,
     TaskAttemptStatus,
     TaskRunStatus,
     WorkflowRunStatus,
 )
-from pyworkflowkit.domain.ids import WorkflowRunId
+from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock
@@ -64,6 +65,8 @@ class RecoveryAssessment:
     resume_eligibility: ResumeEligibility
     running_task_run_ids: tuple[str, ...]
     running_attempt_ids: tuple[str, ...]
+    retry_waiting_task_run_ids: tuple[str, ...]
+    next_retry_eligible_at: datetime | None
     external_run_ref_count: int
     unresolved_external_run_ref_count: int
     idempotency: tuple[TaskIdempotencyMetadata, ...]
@@ -120,11 +123,27 @@ class RecoveryInspector:
             events=events,
         )
 
+        retry_waiting: dict[TaskRunId, TaskAttempt] = {}
+        for task_run in task_runs:
+            if task_run.status is not TaskRunStatus.RUNNING:
+                continue
+            scheduled_retry = pending_retry_attempt(attempts_by_task_run[task_run.task_run_id])
+            if scheduled_retry is not None:
+                retry_waiting[task_run.task_run_id] = scheduled_retry
+        retry_waiting_task_runs = tuple(sorted(str(task_run_id) for task_run_id in retry_waiting))
+        retry_eligible_times = tuple(
+            attempt.retry_eligible_at
+            for attempt in retry_waiting.values()
+            if attempt.retry_eligible_at is not None
+        )
+        next_retry_eligible_at = min(retry_eligible_times) if retry_eligible_times else None
+
         running_task_runs = tuple(
             sorted(
                 str(task_run.task_run_id)
                 for task_run in task_runs
                 if task_run.status is TaskRunStatus.RUNNING
+                and task_run.task_run_id not in retry_waiting
             )
         )
         running_attempts = tuple(
@@ -169,6 +188,7 @@ class RecoveryInspector:
             run=run,
             observed_at=observed_at,
             latest_evidence=latest_evidence,
+            next_retry_eligible_at=next_retry_eligible_at,
         )
         eligibility, eligibility_reasons = self._classify_resume_eligibility(
             liveness=liveness,
@@ -189,6 +209,8 @@ class RecoveryInspector:
             resume_eligibility=eligibility,
             running_task_run_ids=running_task_runs,
             running_attempt_ids=running_attempts,
+            retry_waiting_task_run_ids=retry_waiting_task_runs,
+            next_retry_eligible_at=next_retry_eligible_at,
             external_run_ref_count=external_ref_count,
             unresolved_external_run_ref_count=unresolved_external_ref_count,
             idempotency=idempotency,
@@ -220,14 +242,22 @@ class RecoveryInspector:
         run: WorkflowRun,
         observed_at: datetime,
         latest_evidence: datetime | None,
+        next_retry_eligible_at: datetime | None,
     ) -> tuple[RecoveryLiveness, tuple[str, ...]]:
         if run.status in WORKFLOW_TERMINAL_STATUSES:
             return RecoveryLiveness.TERMINAL, ("workflow_is_terminal",)
 
+        if next_retry_eligible_at is not None and next_retry_eligible_at > observed_at:
+            return RecoveryLiveness.ACTIVE, ("retry_wait_not_yet_eligible",)
+
         if latest_evidence is None:
             return RecoveryLiveness.UNKNOWN, ("missing_timestamp_evidence",)
 
-        age = observed_at - latest_evidence
+        effective_evidence = latest_evidence
+        if next_retry_eligible_at is not None and next_retry_eligible_at > effective_evidence:
+            effective_evidence = next_retry_eligible_at
+
+        age = observed_at - effective_evidence
         if age < timedelta(0):
             return RecoveryLiveness.UNKNOWN, ("latest_evidence_is_in_the_future",)
 

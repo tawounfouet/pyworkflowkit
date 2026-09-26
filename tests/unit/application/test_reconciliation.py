@@ -268,6 +268,48 @@ def test_running_local_work_without_external_reference_requires_manual_action() 
     assert item.reasons == ("local_running_work_has_no_external_reconciliation_evidence",)
 
 
+def test_retry_wait_without_external_work_needs_no_reconciliation() -> None:
+    store = MemoryMetadataStore()
+    run_id, task_run_id = _persist(
+        store,
+        task_status=TaskRunStatus.RUNNING,
+        attempt_status=TaskAttemptStatus.FAILED,
+        refs=(),
+    )
+    attempt = store.list_task_attempts(task_run_id)[0]
+    attempt.retry_eligible_at = OLD + timedelta(minutes=1)
+    with store.unit_of_work() as uow:
+        uow.save_task_attempt(attempt)
+        uow.commit()
+
+    report = _service(store).reconcile(run_id)
+
+    assert report.task_reconciliations == ()
+    assert report.requires_manual_action is False
+
+
+def test_retry_wait_with_external_work_still_reconciles_provider() -> None:
+    store = MemoryMetadataStore()
+    run_id, task_run_id = _persist(
+        store,
+        task_status=TaskRunStatus.RUNNING,
+        attempt_status=TaskAttemptStatus.FAILED,
+    )
+    attempt = store.list_task_attempts(task_run_id)[0]
+    attempt.retry_eligible_at = OLD + timedelta(minutes=1)
+    with store.unit_of_work() as uow:
+        uow.save_task_attempt(attempt)
+        uow.commit()
+
+    report = _service(
+        store,
+        StaticVerifier("remote", {"ext-1": ExternalRunStatus.RUNNING}),
+    ).reconcile(run_id)
+
+    assert len(report.task_reconciliations) == 1
+    assert report.task_reconciliations[0].disposition is ReconciliationDisposition.STILL_RUNNING
+
+
 def test_ready_task_without_external_work_needs_no_reconciliation() -> None:
     store = MemoryMetadataStore()
     run_id, _ = _persist(

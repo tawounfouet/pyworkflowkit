@@ -19,7 +19,11 @@ from pyworkflowkit.application.reconciliation import (
     ReconciliationDisposition,
     ReconciliationReport,
 )
-from pyworkflowkit.application.retry import RetryEngine
+from pyworkflowkit.application.retry import (
+    RetryEngine,
+    pending_retry_attempt,
+    retry_eligible_at,
+)
 from pyworkflowkit.application.state_machine import RunStateMachine
 from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
@@ -334,10 +338,20 @@ class Runner:
             return self._metadata_store.get_workflow_run(run_id)
 
         task_runs_by_task_id = self._load_task_runs_by_task_id(run)
+        retry_waiting_task_ids = frozenset(
+            task_id
+            for task_id, task_run in task_runs_by_task_id.items()
+            if task_run.status is TaskRunStatus.RUNNING
+            and pending_retry_attempt(
+                tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
+            )
+            is not None
+        )
         execution_task_ids = tuple(
             task_id
             for task_id in plan.task_ids
             if task_runs_by_task_id[task_id].status in {TaskRunStatus.PENDING, TaskRunStatus.READY}
+            or task_id in retry_waiting_task_ids
         )
         handlers = self._preflight_resume_handlers(
             workflow=workflow,
@@ -356,14 +370,36 @@ class Runner:
 
             if task_run.status is TaskRunStatus.SUCCEEDED:
                 continue
-            if task_run.status not in {TaskRunStatus.PENDING, TaskRunStatus.READY}:
+
+            attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
+            scheduled_retry = pending_retry_attempt(attempts)
+            is_retry_wait = task_run.status is TaskRunStatus.RUNNING and scheduled_retry is not None
+            if (
+                task_run.status not in {TaskRunStatus.PENDING, TaskRunStatus.READY}
+                and not is_retry_wait
+            ):
                 raise ResumeError(
                     run_id=str(run_id),
                     reason=(
                         f"task '{task_id}' remains in non-resumable status {task_run.status.value}"
                     ),
                 )
-            if task_run.status is TaskRunStatus.PENDING:
+            if task_run.status is TaskRunStatus.RUNNING and scheduled_retry is not None:
+                eligible_at = scheduled_retry.retry_eligible_at
+                if eligible_at is None:
+                    raise ResumeError(
+                        run_id=str(run_id),
+                        reason=f"task '{task_id}' retry wait is missing retry_eligible_at",
+                    )
+                if self._clock.now() < eligible_at:
+                    raise ResumeError(
+                        run_id=str(run_id),
+                        reason=(
+                            f"task '{task_id}' retry is not eligible until "
+                            f"{eligible_at.isoformat()}"
+                        ),
+                    )
+            elif task_run.status is TaskRunStatus.PENDING:
                 if not self._ready_resolver.is_ready(
                     task_run=task_run,
                     graph=graph,
@@ -403,7 +439,6 @@ class Runner:
                     ),
                 )
 
-            attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
             next_attempt_number = (
                 max(
                     (attempt.attempt_number for attempt in attempts),
@@ -412,7 +447,8 @@ class Runner:
                 + 1
             )
             started_at = self._clock.now()
-            self._state_machine.start_task(task_run, at=started_at)
+            if not is_retry_wait:
+                self._state_machine.start_task(task_run, at=started_at)
             attempt = self._new_attempt(
                 task_run=task_run,
                 attempt_number=next_attempt_number,
@@ -884,6 +920,14 @@ class Runner:
                             reason="retry decision is missing next_attempt_number"
                         ) from exc
 
+                    eligible_at = retry_eligible_at(
+                        failed_at=failed_at,
+                        decision=decision,
+                    )
+                    self._state_machine.schedule_retry(
+                        current_attempt,
+                        eligible_at=eligible_at,
+                    )
                     self._persist_retry_failure(
                         attempt=current_attempt,
                         event=event_factory.create(
@@ -896,6 +940,7 @@ class Runner:
                                 "error_type": error_type,
                                 "error_category": error_category,
                                 "delay_seconds": decision.delay_seconds,
+                                "retry_eligible_at": eligible_at.isoformat(),
                                 "next_attempt_number": decision.next_attempt_number,
                             },
                         ),

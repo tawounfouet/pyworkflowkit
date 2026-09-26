@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from pyworkflowkit.adapters.executors.thread import ThreadExecutor
 from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore
@@ -302,7 +302,7 @@ def test_retry_creates_new_attempt_without_losing_concurrent_runner_authority() 
     policy = RetryPolicy(
         max_attempts=2,
         backoff_strategy=BackoffStrategy.FIXED,
-        delay_seconds=0.25,
+        delay_seconds=0.05,
         retryable_error_categories=frozenset({"RuntimeError"}),
     )
     workflow = _workflow(_task("A", retry_policy=policy))
@@ -321,11 +321,70 @@ def test_retry_creates_new_attempt_without_losing_concurrent_runner_authority() 
 
     assert run.status is WorkflowRunStatus.SUCCEEDED
     assert calls == 2
-    assert sleeper.calls == [0.25]
+    assert sleeper.calls == []
+    assert attempts[0].retry_eligible_at == NOW + timedelta(seconds=0.05)
     assert [attempt.status for attempt in attempts] == [
         TaskAttemptStatus.FAILED,
         TaskAttemptStatus.SUCCEEDED,
     ]
+
+
+def test_retry_wait_does_not_block_other_ready_task_dispatch() -> None:
+    calls = 0
+    order: list[str] = []
+    sleeper = RecordingSleeper()
+
+    def unstable() -> str:
+        nonlocal calls
+        calls += 1
+        order.append(f"A{calls}")
+        if calls == 1:
+            raise RuntimeError("temporary")
+        return "ok"
+
+    def independent() -> str:
+        order.append("B")
+        return "independent"
+
+    policy = RetryPolicy(
+        max_attempts=2,
+        backoff_strategy=BackoffStrategy.FIXED,
+        delay_seconds=0.05,
+        retryable_error_categories=frozenset({"RuntimeError"}),
+    )
+    workflow = _workflow(
+        _task("A", retry_policy=policy),
+        _task("B"),
+    )
+    runner, store, executor = _runtime(
+        {
+            "handlers:A": unstable,
+            "handlers:B": independent,
+        },
+        max_workers=1,
+        global_limit=1,
+        sleeper=sleeper,
+    )
+    try:
+        run = runner.run(workflow)
+    finally:
+        executor.shutdown()
+
+    assert run.status is WorkflowRunStatus.SUCCEEDED
+    assert order == ["A1", "B", "A2"]
+    assert sleeper.calls == []
+
+    task_runs = {task.task_id: task for task in store.list_task_runs(run.run_id)}
+    attempts = store.list_task_attempts(task_runs[TaskId("A")].task_run_id)
+    assert len(attempts) == 2
+    assert attempts[0].retry_eligible_at == NOW + timedelta(seconds=0.05)
+
+    retry_event = next(
+        event
+        for event in store.list_events(run.run_id)
+        if event.event_type is RuntimeEventType.TASK_RETRYING
+    )
+    assert retry_event.payload["retry_eligible_at"] == (NOW + timedelta(seconds=0.05)).isoformat()
 
 
 def test_two_running_siblings_can_fail_without_second_workflow_transition() -> None:
