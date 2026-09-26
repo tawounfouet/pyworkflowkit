@@ -19,7 +19,7 @@ from pyworkflowkit.application.reconciliation import (
     ReconciliationDisposition,
     ReconciliationReport,
 )
-from pyworkflowkit.application.retry import RetryEngine
+from pyworkflowkit.application.retry import RetryEngine, retry_eligible_at
 from pyworkflowkit.application.state_machine import RunStateMachine
 from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
@@ -884,6 +884,14 @@ class Runner:
                             reason="retry decision is missing next_attempt_number"
                         ) from exc
 
+                    eligible_at = retry_eligible_at(
+                        failed_at=failed_at,
+                        decision=decision,
+                    )
+                    self._state_machine.schedule_retry(
+                        current_attempt,
+                        eligible_at=eligible_at,
+                    )
                     self._persist_retry_failure(
                         attempt=current_attempt,
                         event=event_factory.create(
@@ -896,6 +904,7 @@ class Runner:
                                 "error_type": error_type,
                                 "error_category": error_category,
                                 "delay_seconds": decision.delay_seconds,
+                                "retry_eligible_at": eligible_at.isoformat(),
                                 "next_attempt_number": decision.next_attempt_number,
                             },
                         ),
