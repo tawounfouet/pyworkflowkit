@@ -86,6 +86,10 @@ files = ["src"]
 [tool.coverage.run]
 branch = true
 source = ["pyworkflowkit"]
+omit = [
+  "src/pyworkflowkit/migrations/env.py",
+  "src/pyworkflowkit/migrations/versions/*",
+]
 
 [tool.coverage.report]
 show_missing = true
