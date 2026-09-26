@@ -146,3 +146,31 @@ def test_sqlalchemy_contract_task_output_checkpoint_round_trip(
         uow.commit()
 
     assert store.get_task_output_checkpoint(TaskRunId("task-run")) is None
+
+
+
+def test_sqlalchemy_contract_retry_eligibility_round_trips(
+    store: MetadataStore,
+) -> None:
+    eligible_at = NOW.replace(minute=(NOW.minute + 1) % 60)
+    with store.unit_of_work() as uow:
+        uow.add_workflow_run(make_run())
+        uow.add_task_run(make_task_run())
+        uow.add_task_attempt(
+            TaskAttempt(
+                attempt_id=TaskAttemptId("attempt-retry"),
+                task_run_id=TaskRunId("task-run"),
+                attempt_number=1,
+                status=TaskAttemptStatus.FAILED,
+                started_at=NOW,
+                finished_at=NOW,
+                error_type="RuntimeError",
+                error_message="temporary",
+                error_category="RuntimeError",
+                retry_eligible_at=eligible_at,
+            )
+        )
+        uow.commit()
+
+    persisted = store.list_task_attempts(TaskRunId("task-run"))[0]
+    assert persisted.retry_eligible_at == eligible_at
