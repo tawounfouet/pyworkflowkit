@@ -220,7 +220,26 @@ def test_external_work_requires_reconciliation_before_future_resume() -> None:
 
     assert assessment.resume_eligibility is ResumeEligibility.REQUIRES_RECONCILIATION
     assert assessment.external_run_ref_count == 1
+    assert assessment.unresolved_external_run_ref_count == 1
     assert "external_work_requires_reconciliation" in assessment.reasons
+
+
+def test_external_ref_from_terminal_task_is_evidence_not_resume_blocker() -> None:
+    store = MemoryMetadataStore()
+    _persist_run(
+        store,
+        task_status=TaskRunStatus.SUCCEEDED,
+        attempt_status=TaskAttemptStatus.SUCCEEDED,
+        attempt_finished_at=OLD + timedelta(minutes=1),
+        external=True,
+    )
+
+    assessment = _inspector(store).assess(WorkflowRunId("run"))
+
+    assert assessment.liveness is RecoveryLiveness.STALE_CANDIDATE
+    assert assessment.external_run_ref_count == 1
+    assert assessment.unresolved_external_run_ref_count == 0
+    assert assessment.resume_eligibility is ResumeEligibility.ELIGIBLE
 
 
 def test_task_run_id_is_stable_idempotency_key_across_attempts() -> None:
