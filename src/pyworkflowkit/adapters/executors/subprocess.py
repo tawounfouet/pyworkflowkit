@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
-from subprocess import DEVNULL, PIPE, Popen
+from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired
 from threading import Event, RLock, Thread
 from types import MappingProxyType
 from typing import cast
@@ -245,7 +245,7 @@ class SubprocessExecutor:
         return self._result_or_error(
             task=task,
             command=command,
-            returncode=process.returncode,
+            returncode=cast(int, process.returncode),
             stdout=stdout,
             stderr=stderr,
         )
@@ -461,7 +461,7 @@ class SubprocessExecutor:
                 result = self._result_or_error(
                     task=task,
                     command=command,
-                    returncode=process.returncode,
+                    returncode=cast(int, process.returncode),
                     stdout=stdout,
                     stderr=stderr,
                 )
@@ -533,7 +533,7 @@ class SubprocessExecutor:
         process.terminate()
         try:
             process.wait(timeout=self._terminate_grace_seconds)
-        except TimeoutError:
+        except TimeoutExpired:
             process.kill()
             process.wait()
 
