@@ -214,7 +214,25 @@ class ConcurrentRunner(Runner):
                     continue
 
                 if active:
-                    completion = self._thread_executor.completion_queue.get()
+                    try:
+                        completion = self._thread_executor.completion_queue.get(
+                            timeout=self._completion_wait_timeout(active)
+                        )
+                    except Empty:
+                        terminal_failure = self._expire_due_timeouts(
+                            run=run,
+                            graph=graph,
+                            plan_task_ids=plan.task_ids,
+                            task_runs_by_task_id=task_runs_by_task_id,
+                            task_definitions=task_definitions,
+                            active=active,
+                            pending_retries=pending_retries,
+                            event_factory=event_factory,
+                            workflow_already_failed=workflow_failed,
+                        )
+                        workflow_failed = workflow_failed or terminal_failure
+                        continue
+
                     execution = active.pop(completion.handle.handle_id, None)
                     if execution is None:
                         raise RuntimeInvariantError(
@@ -224,6 +242,9 @@ class ConcurrentRunner(Runner):
                             )
                         )
                     capacity.release(execution.lease)
+
+                    if execution.timed_out:
+                        continue
 
                     if cancellation_controller.is_requested and not workflow_failed:
                         self._apply_cancellation_completion(
@@ -434,9 +455,14 @@ class ConcurrentRunner(Runner):
         capacity: CapacityManager,
         cancellation: CancellationController,
     ) -> None:
+        active_task_ids = {
+            execution.task_id for execution in active.values() if not execution.timed_out
+        }
         for task_id in tuple(sorted(pending_retries, key=str)):
             if cancellation.is_requested:
                 return
+            if task_id in active_task_ids:
+                continue
             task_run = task_runs_by_task_id[task_id]
             pending = pending_retries[task_id]
             attempt_id = self._id_factory.new_task_attempt_id(
@@ -694,11 +720,12 @@ class ConcurrentRunner(Runner):
                     )
                 )
             capacity.release(execution.lease)
-            self._apply_cancellation_completion(
-                execution=execution,
-                completion=completion,
-                event_factory=event_factory,
-            )
+            if not execution.timed_out:
+                self._apply_cancellation_completion(
+                    execution=execution,
+                    completion=completion,
+                    event_factory=event_factory,
+                )
 
         unexpected_running = tuple(
             task_run.task_id
@@ -744,11 +771,12 @@ class ConcurrentRunner(Runner):
                     )
                 )
             capacity.release(execution.lease)
-            self._apply_cancellation_completion(
-                execution=execution,
-                completion=completion,
-                event_factory=event_factory,
-            )
+            if not execution.timed_out:
+                self._apply_cancellation_completion(
+                    execution=execution,
+                    completion=completion,
+                    event_factory=event_factory,
+                )
 
     def _persist_cancelled_task_runs(
         self,
