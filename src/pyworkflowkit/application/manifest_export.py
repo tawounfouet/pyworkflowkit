@@ -23,9 +23,7 @@ class RunManifestExporter:
         destination = Path(path)
         destination.parent.mkdir(parents=True, exist_ok=True)
 
-        temporary = destination.with_name(
-            f".{destination.name}.{uuid4().hex}.tmp"
-        )
+        temporary = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
         try:
             temporary.write_text(
                 self._serializer.to_json(manifest) + "\n",
