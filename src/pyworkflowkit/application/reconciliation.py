@@ -160,6 +160,7 @@ class ReconciliationService:
                 task_run.status is TaskRunStatus.RUNNING
                 and not running_attempt_ids
                 and pending_retry_attempt(attempts) is not None
+                and not external_refs
             ):
                 continue
 
