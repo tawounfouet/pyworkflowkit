@@ -913,7 +913,7 @@ class ConcurrentRunner(Runner):
 
         while active:
             completion = self._concurrent_executor.completion_queue.get()
-            execution = active.pop(completion.handle.handle_id, None)
+            execution = active.get(completion.handle.handle_id)
             if execution is None:
                 raise RuntimeInvariantError(
                     reason=(
@@ -921,6 +921,7 @@ class ConcurrentRunner(Runner):
                         f"not owned by cancelling run: '{completion.handle.handle_id}'"
                     )
                 )
+            del active[completion.handle.handle_id]
             capacity.release(execution.lease)
             if execution.timed_out:
                 continue
@@ -971,7 +972,7 @@ class ConcurrentRunner(Runner):
     ) -> None:
         while active:
             completion = self._concurrent_executor.completion_queue.get()
-            execution = active.pop(completion.handle.handle_id, None)
+            execution = active.get(completion.handle.handle_id)
             if execution is None:
                 raise RuntimeInvariantError(
                     reason=(
@@ -979,6 +980,7 @@ class ConcurrentRunner(Runner):
                         f"not owned by terminal run: '{completion.handle.handle_id}'"
                     )
                 )
+            del active[completion.handle.handle_id]
             capacity.release(execution.lease)
             if not execution.timed_out:
                 self._apply_cancellation_completion(
