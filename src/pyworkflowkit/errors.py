@@ -321,6 +321,24 @@ class PluginTypeMismatchError(PluginError):
         )
 
 
+class PluginCompatibilityError(PluginError):
+    """Raised when an explicitly enabled plugin is incompatible with the runtime."""
+
+    def __init__(self, *, plugin_name: str, reason: str) -> None:
+        self.plugin_name = plugin_name
+        self.reason = reason
+        super().__init__(f"Plugin '{plugin_name}' is incompatible: {reason}.")
+
+
+class PluginLoadError(PluginError):
+    """Raised when plugin code cannot satisfy the entry-point provider contract."""
+
+    def __init__(self, *, plugin_name: str, reason: str) -> None:
+        self.plugin_name = plugin_name
+        self.reason = reason
+        super().__init__(f"Plugin '{plugin_name}' failed to load: {reason}.")
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -396,7 +414,9 @@ __all__ = [
     "DuplicatePluginError",
     "PlanningError",
     "PlanningInvariantError",
+    "PluginCompatibilityError",
     "PluginError",
+    "PluginLoadError",
     "PluginNotFoundError",
     "PluginTypeMismatchError",
     "PyWorkflowKitError",

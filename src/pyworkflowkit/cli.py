@@ -24,6 +24,12 @@ from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.enums import WorkflowRunStatus
 from pyworkflowkit.domain.runtime import RuntimeEvent, WorkflowRun
 from pyworkflowkit.errors import PyWorkflowKitError
+from pyworkflowkit.plugins import (
+    PLUGIN_API_VERSION,
+    PluginCatalog,
+    PluginDiscovery,
+    PluginType,
+)
 
 app = typer.Typer(
     add_completion=False,
@@ -33,6 +39,7 @@ app = typer.Typer(
 
 VALIDATION_EXIT = 2
 RUN_FAILURE_EXIT = 3
+DOCTOR_FAILURE_EXIT = 4
 
 
 @app.command("version")
@@ -222,6 +229,100 @@ def manifest(
         )
 
 
+@app.command("plugins")
+def plugins_command(
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """List installed PyWorkflowKit plugin entry points without loading them."""
+
+    discovered = PluginDiscovery().discover()
+    plugins_payload = [
+        {
+            "name": plugin.name,
+            "type": plugin.plugin_type.value,
+            "group": plugin.group,
+            "value": plugin.value,
+            "distribution": plugin.distribution,
+            "status": "discovered",
+        }
+        for plugin in discovered
+    ]
+    payload: dict[str, object] = {
+        "count": len(plugins_payload),
+        "plugins": plugins_payload,
+    }
+    human = "\n".join(
+        f"{plugin.plugin_type.value}:{plugin.name} -> {plugin.value}" for plugin in discovered
+    )
+    _emit(payload, json_output=json_output, human=human or "<no plugins discovered>")
+
+
+@app.command()
+def doctor(
+    enable: Annotated[
+        str | None,
+        typer.Option(
+            "--enable",
+            help="Comma-separated explicit plugin selectors, e.g. executor:custom.",
+        ),
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Check plugin discovery and explicitly enabled plugin compatibility."""
+
+    discovery = PluginDiscovery()
+    catalog = PluginCatalog()
+
+    try:
+        enabled = _parse_plugin_enablements(enable)
+        if enabled:
+            report = discovery.enable_selected(catalog=catalog, enabled=enabled)
+            result_payload = [
+                {
+                    "name": result.plugin.name,
+                    "type": result.plugin.plugin_type.value,
+                    "status": result.status.value,
+                    "error": result.error,
+                }
+                for result in report.results
+            ]
+            healthy = not report.has_errors
+        else:
+            candidates = discovery.discover()
+            result_payload = [
+                {
+                    "name": plugin.name,
+                    "type": plugin.plugin_type.value,
+                    "status": "discovered",
+                    "error": None,
+                }
+                for plugin in candidates
+            ]
+            healthy = True
+    except (PyWorkflowKitError, ValueError) as exc:
+        _fail(str(exc), code=DOCTOR_FAILURE_EXIT, json_output=json_output)
+
+    payload: dict[str, object] = {
+        "healthy": healthy,
+        "plugin_api_version": PLUGIN_API_VERSION,
+        "plugins": result_payload,
+    }
+    human_lines = ["OK" if healthy else "FAILED"]
+    human_lines.extend(
+        f"{item['type']}:{item['name']} {item['status']}"
+        + (f" - {item['error']}" if item["error"] else "")
+        for item in result_payload
+    )
+    _emit(payload, json_output=json_output, human="\n".join(human_lines))
+
+    if not healthy:
+        raise typer.Exit(DOCTOR_FAILURE_EXIT)
+
+
 def main() -> None:
     """Console-script entrypoint."""
 
@@ -248,6 +349,29 @@ def _load_settings(config: Path | None) -> RuntimeSettings:
     if config is None:
         return RuntimeSettings()
     return RuntimeSettings.load(config_file=config)
+
+
+def _parse_plugin_enablements(
+    value: str | None,
+) -> dict[PluginType, tuple[str, ...]]:
+    if value is None or not value.strip():
+        return {}
+
+    parsed: dict[PluginType, list[str]] = {}
+    for raw_selector in value.split(","):
+        selector = raw_selector.strip()
+        type_name, separator, plugin_name = selector.partition(":")
+        if not separator or not type_name or not plugin_name:
+            raise ValueError(
+                "plugin selector must use type:name syntax (executor, metadata, workload, or event)"
+            )
+        try:
+            plugin_type = PluginType(type_name)
+        except ValueError as exc:
+            raise ValueError(f"unknown plugin type '{type_name}'") from exc
+        parsed.setdefault(plugin_type, []).append(plugin_name)
+
+    return {plugin_type: tuple(sorted(set(names))) for plugin_type, names in parsed.items()}
 
 
 def _run_payload(run: WorkflowRun) -> dict[str, object]:
