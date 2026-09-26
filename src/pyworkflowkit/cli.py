@@ -5,13 +5,17 @@ from __future__ import annotations
 import json
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 
 from pyworkflowkit import __version__
 from pyworkflowkit.application.manifest import RunManifestSerializer
-from pyworkflowkit.application.planning import DAGValidator, ExecutionPlanner, build_dependency_graph
+from pyworkflowkit.application.planning import (
+    DAGValidator,
+    ExecutionPlanner,
+    build_dependency_graph,
+)
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.declarative import WorkflowBuilder
@@ -39,8 +43,10 @@ def version_command() -> None:
 
 @app.command()
 def validate(
-    target: str = typer.Argument(..., help="Workflow reference as module:attribute."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
 ) -> None:
     """Validate one workflow definition and its DAG."""
 
@@ -57,7 +63,11 @@ def validate(
         "workflow_version": definition.version,
         "task_count": len(definition.tasks),
     }
-    _emit(payload, json_output=json_output, human=f"VALID {definition.workflow_id}@{definition.version}")
+    _emit(
+        payload,
+        json_output=json_output,
+        human=f"VALID {definition.workflow_id}@{definition.version}",
+    )
 
 
 @app.command()
@@ -98,9 +108,15 @@ def plan(
 
 @app.command("run")
 def run_command(
-    target: str = typer.Argument(..., help="Decorated workflow reference as module:attribute."),
-    config: Path | None = typer.Option(None, "--config", help="TOML runtime configuration."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    target: Annotated[
+        str, typer.Argument(help="Decorated workflow reference as module:attribute.")
+    ],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
 ) -> None:
     """Execute one decorated workflow synchronously."""
 
@@ -127,9 +143,13 @@ def run_command(
 
 @app.command()
 def inspect(
-    run_id: str = typer.Argument(..., help="Workflow run identifier."),
-    config: Path | None = typer.Option(None, "--config", help="TOML runtime configuration."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
 ) -> None:
     """Inspect one persisted workflow run."""
 
@@ -173,10 +193,12 @@ def events(
 
 @app.command()
 def manifest(
-    target: str = typer.Argument(..., help="Workflow reference as module:attribute."),
-    run_id: str = typer.Argument(..., help="Workflow run identifier."),
-    config: Path | None = typer.Option(None, "--config", help="TOML runtime configuration."),
-    json_output: bool = typer.Option(False, "--json", help="Emit canonical JSON."),
+    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit canonical JSON.")] = False,
 ) -> None:
     """Build the final manifest for a persisted terminal run."""
 
@@ -260,7 +282,11 @@ def _emit(payload: dict[str, object], *, json_output: bool, human: str) -> None:
 def _fail(message: str, *, code: int, json_output: bool) -> None:
     if json_output:
         typer.echo(
-            json.dumps({"error": message, "exit_code": code}, sort_keys=True, separators=(",", ":")),
+            json.dumps(
+                {"error": message, "exit_code": code},
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
             err=True,
         )
     else:
