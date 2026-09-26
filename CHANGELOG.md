@@ -68,6 +68,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Plugin API compatibility checks against the runtime plugin contract version.
 - Discovery reports distinguishing discovered, loaded, incompatible, and failed plugins.
 - Failure isolation so non-enabled or broken plugins do not implicitly break the runtime.
+- CLI `plugins` command for non-loading entry-point inventory.
+- CLI `doctor --enable type:name` compatibility diagnostics for explicit plugin activation.
 
 ### Changed
 
