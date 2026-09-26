@@ -16,6 +16,7 @@ from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.ports.executor import Executor
 from pyworkflowkit.ports.metadata_store import MetadataStore
+from pyworkflowkit.ports.runtime import Clock
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +29,7 @@ class RuntimeComponents:
     handler_registry: HandlerRegistry
     executor: Executor
     observability: ObservabilityDispatcher
+    clock: Clock
 
 
 class RuntimeFactory:
@@ -45,15 +47,17 @@ class RuntimeFactory:
         executor = LocalExecutor()
         metadata_store = cls._build_metadata_store(resolved)
         observability = ObservabilityDispatcher()
+        clock = SystemClock()
 
         runner = Runner(
             metadata_store=metadata_store,
             handler_registry=registry,
             executor=executor,
-            clock=SystemClock(),
+            clock=clock,
             id_factory=UuidRuntimeIdFactory(),
             sleeper=SystemSleeper(),
             observability=observability,
+            clock=clock,
         )
 
         return RuntimeComponents(
