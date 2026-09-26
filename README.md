@@ -285,10 +285,12 @@ from pyworkflowkit.adapters.executors.subprocess import (
     SubprocessExecutor,
 )
 
+
 def command() -> SubprocessCommand:
     return SubprocessCommand(
         argv=(sys.executable, "-c", "print('hello from external program')"),
     )
+
 
 executor = SubprocessExecutor(max_workers=4)
 ```
