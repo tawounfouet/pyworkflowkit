@@ -34,7 +34,7 @@ class MetadataSettings(BaseModel):
     postgres_application_name: str = "pyworkflowkit"
 
     @model_validator(mode="after")
-    def validate_backend_requirements(self) -> "MetadataSettings":
+    def validate_backend_requirements(self) -> MetadataSettings:
         if self.backend == "postgres" and self.postgres_dsn is None:
             raise ValueError("metadata.postgres_dsn is required for postgres backend")
         if not self.postgres_application_name.strip():
@@ -65,7 +65,7 @@ class RuntimeSettings(BaseSettings):
         *,
         config_file: str | Path | None = None,
         overrides: Mapping[str, object] | None = None,
-    ) -> "RuntimeSettings":
+    ) -> RuntimeSettings:
         """Load settings using the documented precedence contract."""
 
         env_and_defaults = cls()
