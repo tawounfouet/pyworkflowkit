@@ -15,6 +15,7 @@ target_metadata = Base.metadata
 def _configure(connection) -> None:
     if connection.dialect.name == "postgresql":
         connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA}"))
+        connection.commit()
 
     context.configure(
         connection=connection,
