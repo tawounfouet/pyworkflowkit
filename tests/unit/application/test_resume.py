@@ -404,18 +404,8 @@ def test_resume_missing_dependency_checkpoint_fails_before_task_mutation() -> No
 
 
 def test_resume_confirmed_external_success_finishes_existing_attempt_without_reexecution() -> None:
-    store = MemoryMetadataStore()
-    a_run_id, _, attempt_id = _persist_running_a_pending_b(store)
-    workflow = _workflow(_task("A"), _task("B", "A"))
-
-    # No downstream execution can proceed because reconciled external success has no
-    # durable Python output checkpoint. Remove B from the definition/state for this
-    # focused success-finalization case.
-    with store.unit_of_work() as uow:
-        run = store.get_workflow_run(RUN_ID)
-        uow.rollback()
-    del run
-
+    a_run_id = TaskRunId("resume-run:A")
+    attempt_id = TaskAttemptId("resume-run:A:attempt-1")
     single_store = MemoryMetadataStore()
     with single_store.unit_of_work() as uow:
         uow.add_workflow_run(
