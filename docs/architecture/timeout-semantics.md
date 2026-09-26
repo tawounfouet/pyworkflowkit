@@ -37,6 +37,8 @@ requested HARD → executor HARD only
 
 `ThreadExecutor` declares `SOFT`, so hard timeout requests are rejected.
 
+`AsyncExecutor` also declares `SOFT`: asyncio cancellation is cooperative and is not represented as hard timeout termination.
+
 ## Soft timeout
 
 A ThreadExecutor soft timeout is a **logical runtime timeout**, not thread termination.
@@ -114,6 +116,25 @@ A task that requests `SOFT` timeout under `ProcessExecutor` retains logical soft
 semantics; the process is not forcibly terminated merely because the executor is capable
 of stronger termination.
 
+## Async soft timeout
+
+M33 keeps async timeout semantics explicitly soft.
+
+```text
+asyncio.Task running
+        ↓ logical deadline
+TaskAttempt FAILED(timeout)
+        ↓
+physical coroutine may still settle
+        ↓
+completion drained
+        ↓
+capacity released / retry eligible
+```
+
+The runtime does not reinterpret `Task.cancel()` as hard timeout. Cooperative workflow
+cancellation and timeout remain separate contracts.
+
 ## Interaction with cancellation
 
 Timeout and cancellation remain distinct:
@@ -135,6 +156,4 @@ M31 does not introduce:
 - hard thread killing;
 - a `TIMED_OUT` lifecycle status;
 - non-blocking retry scheduling;
-- async cancellation.
-
 Those concerns belong to later executor and recovery milestones.
