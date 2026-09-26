@@ -1,6 +1,6 @@
 """Executor port and execution contracts."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
@@ -45,6 +45,7 @@ class ExecutorCapabilities:
     timeout: TimeoutCapability = TimeoutCapability.NONE
     cancellation: CancellationCapability = CancellationCapability.NONE
     max_concurrency: int = 1
+    supports_async: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.timeout, TimeoutCapability):
@@ -121,6 +122,37 @@ ZeroArgumentHandler: TypeAlias = Callable[[], object]
 ContextHandler: TypeAlias = Callable[[RunContext], object]
 TaskHandler: TypeAlias = ZeroArgumentHandler | ContextHandler
 
+AsyncZeroArgumentHandler: TypeAlias = Callable[[], Awaitable[object]]
+AsyncContextHandler: TypeAlias = Callable[[RunContext], Awaitable[object]]
+AsyncTaskHandler: TypeAlias = AsyncZeroArgumentHandler | AsyncContextHandler
+
+
+@runtime_checkable
+class AsyncExecutor(Protocol):
+    """Explicit async workload-execution extension.
+
+    This protocol does not replace the synchronous Executor port. Concrete async
+    adapters may provide a compatibility bridge, but native callers should await
+    execute_async().
+    """
+
+    @property
+    def key(self) -> str:
+        """Stable registry key for this async executor."""
+
+    @property
+    def capabilities(self) -> ExecutorCapabilities:
+        """Capabilities supported by this async executor."""
+
+    async def execute_async(
+        self,
+        *,
+        task: TaskDefinition,
+        handler: AsyncTaskHandler,
+        context: RunContext,
+    ) -> TaskResult:
+        """Execute one awaitable task handler and normalize its result."""
+
 
 @runtime_checkable
 class Executor(Protocol):
@@ -145,6 +177,10 @@ class Executor(Protocol):
 
 
 __all__ = [
+    "AsyncContextHandler",
+    "AsyncExecutor",
+    "AsyncTaskHandler",
+    "AsyncZeroArgumentHandler",
     "CancellationCapability",
     "ContextHandler",
     "Executor",

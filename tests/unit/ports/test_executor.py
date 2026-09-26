@@ -25,6 +25,7 @@ def test_executor_capabilities_default_to_conservative_local_contract() -> None:
     assert capabilities.timeout is TimeoutCapability.NONE
     assert capabilities.cancellation is CancellationCapability.NONE
     assert capabilities.max_concurrency == 1
+    assert capabilities.supports_async is False
     assert capabilities.supports_timeout is False
     assert capabilities.supports_cancellation is False
     assert capabilities.supports_hard_timeout is False
@@ -37,8 +38,10 @@ def test_executor_capabilities_expose_strength_and_compatibility_views() -> None
         timeout=TimeoutCapability.HARD,
         cancellation=CancellationCapability.COOPERATIVE,
         max_concurrency=8,
+        supports_async=True,
     )
 
+    assert capabilities.supports_async is True
     assert capabilities.supports_timeout is True
     assert capabilities.supports_hard_timeout is True
     assert capabilities.supports_cancellation is True
