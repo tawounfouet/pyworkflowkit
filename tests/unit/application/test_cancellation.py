@@ -89,12 +89,6 @@ def _task(name: str) -> TaskDefinition:
         task_id=TaskId(name),
         handler_ref=f"handlers:{name}",
         executor_key="thread",
-        retry_policy=RetryPolicy(
-            max_attempts=2,
-            backoff_strategy=BackoffStrategy.FIXED,
-            delay_seconds=0.1,
-            retryable_error_categories=frozenset({"RuntimeError"}),
-        ),
     )
 
 
@@ -232,6 +226,12 @@ def test_cancellation_suppresses_retry_after_running_attempt_failure() -> None:
         task_id=TaskId("A"),
         handler_ref="handlers:A",
         executor_key="thread",
+        retry_policy=RetryPolicy(
+            max_attempts=2,
+            backoff_strategy=BackoffStrategy.FIXED,
+            delay_seconds=0.1,
+            retryable_error_categories=frozenset({"RuntimeError"}),
+        ),
     )
     workflow = WorkflowDefinition(
         workflow_id=WorkflowId("cancel.retry"),
