@@ -30,9 +30,7 @@ def test_sqlite_fresh_upgrade_reaches_head(tmp_path: Path) -> None:
     assert current_revision(engine) == HEAD_REVISION
     inspector = inspect(engine)
     assert set(inspector.get_table_names()) == EXPECTED_TABLES
-    task_attempt_columns = {
-        column["name"] for column in inspector.get_columns("task_attempts")
-    }
+    task_attempt_columns = {column["name"] for column in inspector.get_columns("task_attempts")}
     assert "retry_eligible_at" in task_attempt_columns
 
     upgrade_database(engine)
