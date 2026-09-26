@@ -2,46 +2,48 @@
 
 **Reliable workflows without running a workflow platform.**
 
-PyWorkflowKit is an embedded Python workflow runtime for defining, validating, planning, executing, and evidencing generic dependency graphs of trusted Python workloads without requiring a scheduler, server, worker cluster, or orchestration platform.
+PyWorkflowKit is an embedded Python workflow runtime for defining, validating, planning,
+executing, persisting, inspecting, and evidencing generic dependency graphs of trusted
+Python workloads without requiring a scheduler, server, worker cluster, or orchestration
+platform.
 
-> **Status:** `0.1.0a1` alpha. The core sequential runtime is qualified, but the public API is still expected to evolve before 1.0.
+> **Status:** `0.3.0`. The local sequential runtime, durable persistence, public API,
+> decorators, CLI, observability, plugin foundations, entry-point discovery, and optional
+> PyIngestKit integration are qualified. Concurrent execution begins in the `0.4.x` line.
 
-## What 0.1 provides
+## What 0.3 provides
 
-The `0.1.x` line is intentionally small and local-first:
+The `0.3.x` line is the first complete local developer framework:
 
-- immutable `WorkflowDefinition` and `TaskDefinition` values;
+- immutable `WorkflowDefinition` and `TaskDefinition` domain values;
 - deterministic DAG validation and topological planning;
 - explicit workflow/task/attempt state machines;
-- synchronous trusted-Python execution through `LocalExecutor`;
-- transactional in-memory runtime metadata through `MemoryMetadataStore`;
-- retry policies with deterministic backoff;
-- fail-fast propagation with explicit skip reasons;
-- ordered runtime events;
-- artifacts and external-run references;
-- deterministic, schema-versioned `RunManifest` execution evidence.
+- sequential trusted-Python execution through `LocalExecutor`;
+- retry, fail-fast, skip propagation, runtime events, manifests, and lineage;
+- `MemoryMetadataStore`, durable SQLite, and optional PostgreSQL persistence;
+- SQLAlchemy persistence mappings and Alembic migrations;
+- validated runtime configuration from defaults, environment variables, TOML, and
+  explicit overrides;
+- small public `WorkflowRuntime` facade;
+- lazy `@task` and `@workflow` declarative APIs;
+- CLI commands for validation, planning, execution, inspection, events, manifests,
+  plugin discovery, diagnostics, and version reporting;
+- structured diagnostic logging with secret redaction;
+- typed plugin registries and opt-in `importlib.metadata` entry-point discovery;
+- optional PyIngestKit anti-corruption adapter with explicit retry ownership.
 
-The current runtime is sequential. Execution groups express structural parallelism, but concurrent dispatch is a later milestone.
+The runtime remains intentionally sequential in 0.3. Execution groups already express
+structural parallelism, but concurrent dispatch is introduced only in 0.4.
 
-## Non-goals of 0.1
-
-The alpha does not provide:
-
-- cron or scheduling;
-- a long-running control plane;
-- durable SQLite/PostgreSQL persistence;
-- CLI/decorator DX;
-- plugin discovery;
-- concurrent/process/async executors;
-- hard timeout/cancellation isolation;
-- crash recovery/resume;
-- distributed workers.
-
-These belong to later release lines.
-
-## Development setup
+## Installation
 
 PyWorkflowKit requires Python 3.11 or newer.
+
+```bash
+python -m pip install pyworkflowkit
+```
+
+For local development:
 
 ```bash
 python -m venv .venv
@@ -50,7 +52,167 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-Run all quality gates:
+PostgreSQL support is optional:
+
+```bash
+python -m pip install "pyworkflowkit[postgres]"
+```
+
+## Public API example
+
+```python
+from pyworkflowkit import TaskHandle, WorkflowRuntime, task, workflow
+
+
+@task
+def fetch() -> dict[str, int]:
+    return {"rows": 10}
+
+
+@task(depends_on=(fetch,))
+def publish() -> str:
+    return "published"
+
+
+@workflow(id="demo.etl", version="1")
+def demo() -> tuple[TaskHandle, ...]:
+    return (fetch, publish)
+
+
+runtime = WorkflowRuntime()
+for handle in demo.task_handles():
+    runtime.register(handle.handler_ref, handle.handler)
+
+definition = demo.build()
+run = runtime.run(definition)
+manifest = runtime.manifest(definition, run.run_id)
+
+print(run.status)
+print(manifest.run_id)
+```
+
+Decoration and import are lazy: defining a task or workflow does not execute a workload.
+
+## CLI
+
+Both console names currently route to the same CLI:
+
+```bash
+pyworkflow --help
+pyworkflowkit --help
+```
+
+Core commands:
+
+```text
+validate
+plan
+run
+inspect
+events
+manifest
+plugins
+doctor
+version
+```
+
+Examples:
+
+```bash
+pyworkflow validate myproject.workflows:demo
+pyworkflow plan myproject.workflows:demo --json
+pyworkflow run myproject.workflows:demo --config pyworkflowkit.toml
+pyworkflow plugins --json
+pyworkflow doctor --enable executor:custom --json
+```
+
+## Runtime configuration
+
+The default local composition is:
+
+```text
+LocalExecutor
+    +
+MemoryMetadataStore
+```
+
+A durable SQLite configuration can be supplied with TOML:
+
+```toml
+[runtime]
+workspace = ".pyworkflow"
+
+[metadata]
+backend = "sqlite"
+sqlite_path = "state/pyworkflow.sqlite3"
+sqlite_wal = true
+```
+
+Configuration precedence is:
+
+```text
+explicit overrides
+    >
+TOML configuration
+    >
+environment variables
+    >
+defaults
+```
+
+## Runtime evidence
+
+PyWorkflowKit separates queryable runtime state from portable evidence:
+
+```text
+MetadataStore
+    !=
+RunManifest
+```
+
+A run can expose:
+
+- persisted workflow/task/attempt state;
+- ordered runtime events;
+- artifact references;
+- external-run references;
+- deterministic execution lineage;
+- a canonical, schema-versioned `RunManifest`.
+
+## Plugin model
+
+The `0.3` plugin foundation supports explicit categories:
+
+```text
+executor
+metadata
+workload
+event
+```
+
+Entry-point discovery is metadata-first and opt-in. Discovering an installed plugin does
+not import or enable it. Compatibility is checked only when explicitly enabled.
+
+## PyIngestKit integration boundary
+
+PyWorkflowKit treats one PyIngestKit job as one atomic workload:
+
+```text
+PyWorkflowKit Task
+        ↓
+PyIngestKit adapter
+        ↓
+PyIngestKit Job
+        ↓
+TaskResult + ExternalRunRef
+```
+
+The PyWorkflowKit core does not import `pyingestkit` and does not reproduce ingestion
+semantics such as Source → RAW → Dataset → Quality. Exactly one runtime owns retries.
+
+## Quality gates
+
+Run the local qualification suite with:
 
 ```bash
 ruff check .
@@ -58,86 +220,13 @@ ruff format --check .
 mypy src
 pytest --cov=pyworkflowkit --cov-branch
 python -m build
-```
-
-Run only the V0.1 reference workflows:
-
-```bash
 pytest tests/reference -q
 ```
 
-## Hello world
+CI qualifies Python 3.11, 3.12, and 3.13, performs wheel installation smoke tests, and
+runs the PostgreSQL persistence contract.
 
-A complete executable example lives in:
-
-```text
-examples/00_hello_world.py
-```
-
-Run it with:
-
-```bash
-python examples/00_hello_world.py
-```
-
-The example executes:
-
-```text
-fetch
-  ↓
-transform
-```
-
-and prints the final canonical JSON `RunManifest`.
-
-The explicit API used by the alpha looks like this:
-
-```python
-from pyworkflowkit.adapters.executors.local import LocalExecutor
-from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore
-from pyworkflowkit.adapters.runtime import SystemClock, SystemSleeper, UuidRuntimeIdFactory
-from pyworkflowkit.application.execution import HandlerRegistry
-from pyworkflowkit.application.runner import Runner
-from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.ids import TaskId, WorkflowId
-
-workflow = WorkflowDefinition(
-    workflow_id=WorkflowId("example"),
-    version="1",
-    tasks=(
-        TaskDefinition(
-            task_id=TaskId("fetch"),
-            handler_ref="handlers:fetch",
-        ),
-        TaskDefinition(
-            task_id=TaskId("publish"),
-            handler_ref="handlers:publish",
-            depends_on=(TaskId("fetch"),),
-        ),
-    ),
-)
-
-handlers = HandlerRegistry()
-handlers.register("handlers:fetch", lambda: {"rows": 10})
-handlers.register("handlers:publish", lambda: None)
-
-store = MemoryMetadataStore()
-runner = Runner(
-    metadata_store=store,
-    handler_registry=handlers,
-    executor=LocalExecutor(),
-    clock=SystemClock(),
-    id_factory=UuidRuntimeIdFactory(),
-    sleeper=SystemSleeper(),
-)
-
-run = runner.run(workflow)
-print(run.status)
-```
-
-A smaller ergonomic public facade is intentionally deferred until the API surface is ready to be stabilized.
-
-## Runtime architecture
+## Architecture
 
 ```text
 WorkflowDefinition
@@ -148,95 +237,35 @@ DAGValidator
         ↓
 ExecutionPlanner
         ↓
-ReadyTaskResolver
+Runner
         ↓
-RunStateMachine
-        ↓
-HandlerRegistry
-        ↓
-LocalExecutor
-        ↓
-RetryEngine / FailurePropagator
+Executor + RetryEngine
         ↓
 MetadataStore + RuntimeEvents
         ↓
-RunManifestBuilder
+Manifest + Lineage
 ```
 
-The central design rule is:
+The central design rule remains:
 
-> **PyWorkflowKit owns reliable execution of a graph, not the world around it.**
+> **PyWorkflowKit owns reliable execution of a generic dependency graph, not the world
+> around it.**
 
-## Repository layout
+Scheduling, distributed workers, web UI, RBAC, multi-tenant governance, and enterprise
+control-plane concerns remain outside the core.
+
+## Roadmap
 
 ```text
-src/pyworkflowkit/
-├── domain/
-│   ├── definitions.py
-│   ├── graph.py
-│   ├── ids.py
-│   ├── manifest.py
-│   ├── runtime.py
-│   └── values.py
-├── application/
-│   ├── events.py
-│   ├── execution.py
-│   ├── failure.py
-│   ├── manifest.py
-│   ├── planning.py
-│   ├── retry.py
-│   ├── runner.py
-│   └── state_machine.py
-├── ports/
-│   ├── executor.py
-│   ├── metadata_store.py
-│   └── runtime.py
-└── adapters/
-    ├── executors/
-    ├── metadata/
-    └── runtime.py
-
-tests/
-├── unit/
-├── contract/
-├── property/
-└── reference/
-
-examples/
-└── 00_hello_world.py
+0.1  Core sequential runtime
+0.2  Durable persistence and evidence
+0.3  Developer framework, CLI, plugins, PyIngestKit boundary   ← current
+0.4  Bounded concurrency, cancellation, timeout
+0.5  Process/async/subprocess executors and hardening
+0.6  Recovery, reconciliation, resume, non-blocking retry
+0.7–0.9  Compatibility and stabilization
+1.0  Stable embedded runtime
 ```
 
-## V0.1 acceptance baseline
-
-The `tests/reference/` suite freezes the observable semantics of the first runtime line, including:
-
-```text
-single task success
-linear dependency execution
-deterministic sequential diamond
-retry then success
-retry exhaustion
-dependency-failure propagation
-fail-fast abort
-portable deterministic manifest
-sensitive-value redaction
-invalid cycle rejected before runtime creation
-```
-
-These scenarios are a release gate in CI.
-
-## Release direction
-
-```text
-0.1.x  Sequential in-memory runtime
-0.2.x  Durable persistence & execution evidence
-0.3.x  Developer experience & extensibility
-0.4.x  Concurrency foundations
-0.5.x  Hardening & integration
-0.6.x  Recovery / resume / reconciliation
-1.0    Stable embedded workflow runtime
-```
-
-## License
-
-No open-source license has been selected yet. Until a license is explicitly added, the repository should not be assumed to grant reuse rights beyond GitHub's normal viewing/forking mechanics.
+The next implementation milestone after the 0.3 release is **M25 — Executor
+Capabilities**.

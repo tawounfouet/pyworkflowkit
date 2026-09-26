@@ -90,13 +90,19 @@ jobs:
       - name: Import smoke
         run: python -c "import pyworkflowkit; print(pyworkflowkit.__version__)"
 
+      - name: Release metadata smoke
+        run: |
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.3.0'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.3.0'"
+          pyworkflow version | grep -Fx "0.3.0"
+
       - name: Migration resources smoke
         run: |
           python -c "from importlib.resources import files; assert files('pyworkflowkit.migrations.versions').joinpath('0001_runtime_metadata.py').is_file()"
 
 
   acceptance:
-    name: V0.1 reference acceptance
+    name: Reference acceptance
     runs-on: ubuntu-latest
 
     steps:
