@@ -155,9 +155,7 @@ class RuntimeEventRow(Base):
     )
     task_id: Mapped[str | None] = mapped_column(Text)
     attempt_number: Mapped[int | None] = mapped_column(Integer)
-    payload_json: Mapped[dict[str, Any]] = mapped_column(
-        JSON_VALUE, nullable=False, default=dict
-    )
+    payload_json: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False, default=dict)
 
 
 class ArtifactReferenceRow(Base):
@@ -184,9 +182,7 @@ class ArtifactReferenceRow(Base):
     media_type: Mapped[str | None] = mapped_column(Text)
     checksum: Mapped[str | None] = mapped_column(Text)
     size_bytes: Mapped[int | None] = mapped_column(BigInteger)
-    metadata_json: Mapped[dict[str, Any]] = mapped_column(
-        JSON_VALUE, nullable=False, default=dict
-    )
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False, default=dict)
 
 
 class ExternalRunRefRow(Base):
@@ -216,9 +212,7 @@ class ExternalRunRefRow(Base):
     provider: Mapped[str] = mapped_column(Text, nullable=False)
     external_run_id: Mapped[str] = mapped_column(Text, nullable=False)
     uri: Mapped[str | None] = mapped_column(Text)
-    metadata_json: Mapped[dict[str, Any]] = mapped_column(
-        JSON_VALUE, nullable=False, default=dict
-    )
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False, default=dict)
 
 
 __all__ = [
