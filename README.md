@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`.
-> The runtime now supports bounded concurrent DAG execution through `ThreadExecutor`
-> and `ConcurrentRunner`, plus graceful cancellation and explicit timeout semantics.
+> **Status:** stable release `0.4.0`; current development line `0.5.0a1`.
+> M32 adds process-isolated execution through `ProcessExecutor` with explicit
+> serialization boundaries and stronger per-handle termination semantics.
 
 ## What 0.4 provides
 
@@ -166,6 +166,55 @@ run = runner.run(workflow, cancellation=cancellation)
 For `ThreadExecutor`, timeout support is intentionally **SOFT**: the logical attempt can
 fail on deadline while the Python thread finishes later. Hard thread termination is not
 simulated, and `HARD` timeout requests are rejected by capability validation.
+
+## Process execution in 0.5.0a1
+
+M32 adds an advanced process-isolated executor:
+
+```python
+from pyworkflowkit.adapters.executors.process import ProcessExecutor
+
+executor = ProcessExecutor(max_workers=2)
+```
+
+`ProcessExecutor` preserves the same coordinator contract used by `ThreadExecutor`:
+
+```text
+worker execution
+      ↓
+AttemptCompletion
+      ↓
+CompletionQueue
+      ↓
+ConcurrentRunner
+      ↓
+runtime state transitions
+```
+
+The process boundary is explicit. `RunContext` and `TaskResult` are projected through
+process-safe transport snapshots instead of relying on accidental pickling of domain
+objects. Registered handlers and transported values must themselves be serializable.
+
+The executor declares:
+
+```text
+parallelism  = true
+timeout      = hard
+cancellation = hard
+```
+
+For Python 3.11-3.13, each active execution handle owns an isolated child process inside
+a bounded active-process set. This intentionally favors reliable per-handle termination
+over pretending that the standard `ProcessPoolExecutor` can terminate an individual
+running future on every supported Python version.
+
+A `HARD` timeout terminates the physical process before the existing timeout failure
+is normalized through `ExecutionTimeoutError` and the ordinary retry path. A `SOFT`
+timeout keeps the existing logical-timeout semantics.
+
+`ProcessExecutor` remains an advanced module import and is not added to the package-root
+API.
+
 
 ## CLI
 
@@ -335,10 +384,11 @@ control-plane concerns remain outside the core.
 0.2  Durable persistence and evidence
 0.3  Developer framework, CLI, plugins, PyIngestKit boundary
 0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
-0.5  Process/async/subprocess executors and hardening            ← next development
+0.5  Process/async/subprocess executors and hardening            ← current development
 0.6  Recovery, reconciliation, resume, non-blocking retry
 0.7–0.9  Compatibility and stabilization
 1.0  Stable embedded runtime
 ```
 
-The next implementation milestone after the 0.4 release is **M32 — ProcessExecutor**.
+M32 — ProcessExecutor opens the 0.5 line at **0.5.0a1**. The next planned milestone is
+**M33 — AsyncExecutor** after M32 qualification.
