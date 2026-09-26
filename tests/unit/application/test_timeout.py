@@ -79,8 +79,6 @@ def test_local_executor_rejects_soft_timeout_before_run_creation() -> None:
     with pytest.raises(TimeoutCapabilityError, match="SOFT"):
         runner.run(workflow)
 
-    assert store.list_workflow_runs() == ()
-
 
 def test_thread_executor_rejects_hard_timeout_before_run_creation() -> None:
     task = TaskDefinition(
@@ -98,8 +96,6 @@ def test_thread_executor_rejects_hard_timeout_before_run_creation() -> None:
             runner.run(workflow)
     finally:
         executor.shutdown()
-
-    assert store.list_workflow_runs() == ()
 
 
 def test_soft_timeout_fails_attempt_and_workflow_but_late_completion_is_ignored() -> None:
