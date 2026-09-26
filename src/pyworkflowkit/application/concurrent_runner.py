@@ -152,7 +152,7 @@ class ConcurrentRunner(Runner):
 
         try:
             while True:
-                if cancellation_controller.is_requested:
+                if cancellation_controller.is_requested and not workflow_failed:
                     return self._finish_cancellation(
                         run=run,
                         task_runs_by_task_id=task_runs_by_task_id,
@@ -199,7 +199,7 @@ class ConcurrentRunner(Runner):
                         cancellation=cancellation_controller,
                     )
 
-                if cancellation_controller.is_requested:
+                if cancellation_controller.is_requested and not workflow_failed:
                     continue
 
                 if active:
@@ -214,7 +214,7 @@ class ConcurrentRunner(Runner):
                         )
                     capacity.release(execution.lease)
 
-                    if cancellation_controller.is_requested:
+                    if cancellation_controller.is_requested and not workflow_failed:
                         self._apply_cancellation_completion(
                             execution=execution,
                             completion=completion,
@@ -272,6 +272,14 @@ class ConcurrentRunner(Runner):
                     reason="concurrent runner made no progress with non-terminal tasks remaining"
                 )
         except KeyboardInterrupt:
+            if workflow_failed:
+                self._drain_terminal_workflow_attempts(
+                    active=active,
+                    capacity=capacity,
+                    event_factory=event_factory,
+                )
+                return self._metadata_store.get_workflow_run(run.run_id)
+
             cancellation_controller.request(reason="keyboard_interrupt")
             return self._finish_cancellation(
                 run=run,
@@ -699,6 +707,30 @@ class ConcurrentRunner(Runner):
             ),
         )
         return self._metadata_store.get_workflow_run(run.run_id)
+
+    def _drain_terminal_workflow_attempts(
+        self,
+        *,
+        active: dict[str, _ActiveExecution],
+        capacity: CapacityManager,
+        event_factory: RuntimeEventFactory,
+    ) -> None:
+        while active:
+            completion = self._thread_executor.completion_queue.get()
+            execution = active.pop(completion.handle.handle_id, None)
+            if execution is None:
+                raise RuntimeInvariantError(
+                    reason=(
+                        "received completion for an execution handle "
+                        f"not owned by terminal run: '{completion.handle.handle_id}'"
+                    )
+                )
+            capacity.release(execution.lease)
+            self._apply_cancellation_completion(
+                execution=execution,
+                completion=completion,
+                event_factory=event_factory,
+            )
 
     def _persist_cancelled_task_runs(
         self,
