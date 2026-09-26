@@ -410,6 +410,46 @@ def test_running_attempt_can_fail_with_structured_error_context() -> None:
         setitem(attempt.error_metadata, "provider_code", "mutated")
 
 
+
+
+def test_failed_attempt_can_receive_retry_eligibility() -> None:
+    attempt = make_attempt(TaskAttemptStatus.RUNNING)
+    machine = RunStateMachine()
+    machine.fail_attempt(
+        attempt,
+        at=LATER,
+        error_type="TimeoutError",
+        error_message="temporary",
+        error_category="timeout",
+    )
+    eligible_at = datetime(2026, 9, 25, 0, 32, tzinfo=UTC)
+
+    machine.schedule_retry(attempt, eligible_at=eligible_at)
+
+    assert attempt.status is TaskAttemptStatus.FAILED
+    assert attempt.retry_eligible_at == eligible_at
+
+
+def test_retry_schedule_rejects_non_failed_attempt() -> None:
+    attempt = make_attempt(TaskAttemptStatus.RUNNING)
+
+    with pytest.raises(InvalidStateTransitionError, match="RETRY_WAIT"):
+        RunStateMachine().schedule_retry(attempt, eligible_at=LATER)
+
+
+def test_retry_schedule_rejects_time_before_failure() -> None:
+    attempt = make_attempt(TaskAttemptStatus.RUNNING)
+    machine = RunStateMachine()
+    machine.fail_attempt(
+        attempt,
+        at=LATER,
+        error_type="RuntimeError",
+        error_message="boom",
+    )
+
+    with pytest.raises(ValueError, match="earlier"):
+        machine.schedule_retry(attempt, eligible_at=NOW)
+
 def test_running_attempt_can_be_cancelled() -> None:
     attempt = make_attempt(TaskAttemptStatus.RUNNING)
 
