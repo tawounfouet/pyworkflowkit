@@ -147,17 +147,13 @@ class ReconciliationService:
             if task_run.status in TASK_TERMINAL_STATUSES:
                 continue
 
-            attempts = tuple(
-                self._metadata_store.list_task_attempts(task_run.task_run_id)
-            )
+            attempts = tuple(self._metadata_store.list_task_attempts(task_run.task_run_id))
             running_attempt_ids = tuple(
                 str(attempt.attempt_id)
                 for attempt in attempts
                 if attempt.status is TaskAttemptStatus.RUNNING
             )
-            external_refs = tuple(
-                self._metadata_store.list_external_run_refs(task_run.task_run_id)
-            )
+            external_refs = tuple(self._metadata_store.list_external_run_refs(task_run.task_run_id))
 
             if task_run.status is not TaskRunStatus.RUNNING and not external_refs:
                 continue
