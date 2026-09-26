@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- Explicit executor timeout capability levels: none, soft, and hard.
+- Explicit executor cancellation capability levels: none, cooperative, and hard.
+- Executor max_concurrency declaration with conservative invariants.
+- Backward-compatible hard-timeout and hard-cancellation capability views.
+- M25 acceptance coverage freezing LocalExecutor as single-slot, non-parallel, no-timeout, no-cancellation.
+
+
 ### Changed
 
 ### Deprecated

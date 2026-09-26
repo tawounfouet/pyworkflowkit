@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol, TypeAlias, runtime_checkable
 
@@ -20,13 +21,62 @@ def _freeze_mapping(values: Mapping[str, object]) -> Mapping[str, object]:
     return MappingProxyType(dict(values))
 
 
+class TimeoutCapability(StrEnum):
+    """Timeout strength explicitly supported by an Executor."""
+
+    NONE = "none"
+    SOFT = "soft"
+    HARD = "hard"
+
+
+class CancellationCapability(StrEnum):
+    """Cancellation strength explicitly supported by an Executor."""
+
+    NONE = "none"
+    COOPERATIVE = "cooperative"
+    HARD = "hard"
+
+
 @dataclass(frozen=True, slots=True)
 class ExecutorCapabilities:
-    """Capabilities declared by an Executor implementation."""
+    """Small immutable contract describing Executor runtime capabilities."""
 
     supports_parallelism: bool = False
-    supports_hard_timeout: bool = False
-    supports_hard_cancellation: bool = False
+    timeout: TimeoutCapability = TimeoutCapability.NONE
+    cancellation: CancellationCapability = CancellationCapability.NONE
+    max_concurrency: int = 1
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.timeout, TimeoutCapability):
+            raise TypeError("timeout must be a TimeoutCapability")
+        if not isinstance(self.cancellation, CancellationCapability):
+            raise TypeError("cancellation must be a CancellationCapability")
+        if isinstance(self.max_concurrency, bool) or not isinstance(self.max_concurrency, int):
+            raise TypeError("max_concurrency must be an integer")
+        if self.max_concurrency < 1:
+            raise ValueError("max_concurrency must be greater than or equal to 1")
+        if not self.supports_parallelism and self.max_concurrency != 1:
+            raise ValueError("non-parallel executors must declare max_concurrency=1")
+
+    @property
+    def supports_timeout(self) -> bool:
+        return self.timeout is not TimeoutCapability.NONE
+
+    @property
+    def supports_cancellation(self) -> bool:
+        return self.cancellation is not CancellationCapability.NONE
+
+    @property
+    def supports_hard_timeout(self) -> bool:
+        """Compatibility view for the pre-M25 capability contract."""
+
+        return self.timeout is TimeoutCapability.HARD
+
+    @property
+    def supports_hard_cancellation(self) -> bool:
+        """Compatibility view for the pre-M25 capability contract."""
+
+        return self.cancellation is CancellationCapability.HARD
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,10 +145,12 @@ class Executor(Protocol):
 
 
 __all__ = [
+    "CancellationCapability",
     "ContextHandler",
     "Executor",
     "ExecutorCapabilities",
     "RunContext",
     "TaskHandler",
+    "TimeoutCapability",
     "ZeroArgumentHandler",
 ]
