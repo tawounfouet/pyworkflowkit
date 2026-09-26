@@ -15,6 +15,7 @@ from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import TaskRunStatus, TimeoutMode, WorkflowRunStatus
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
+from pyworkflowkit.domain.runtime import WorkflowRun
 
 
 def _process_pid() -> int:
@@ -128,7 +129,7 @@ def test_hard_cancellation_terminates_active_process() -> None:
         ),
     )
     runner = _runner(executor=executor, handlers=handlers, store=store)
-    result: dict[str, object] = {}
+    result: dict[str, WorkflowRun] = {}
 
     def run_workflow() -> None:
         result["run"] = runner.run(workflow, cancellation=cancellation)
@@ -147,8 +148,8 @@ def test_hard_cancellation_terminates_active_process() -> None:
 
         assert coordinator.is_alive() is False
         run = result["run"]
-        assert getattr(run, "status") is WorkflowRunStatus.CANCELLED
-        task_runs = store.list_task_runs(getattr(run, "run_id"))
+        assert run.status is WorkflowRunStatus.CANCELLED
+        task_runs = store.list_task_runs(run.run_id)
         assert len(task_runs) == 1
         assert task_runs[0].status is TaskRunStatus.CANCELLED
         assert time.monotonic() - started < 4.0
