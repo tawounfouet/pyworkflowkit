@@ -1,11 +1,13 @@
 """Sequential embedded workflow runner."""
 
+import logging
 from collections.abc import Mapping
 from datetime import datetime
 
 from pyworkflowkit.application.events import RuntimeEventFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.failure import FailurePropagator
+from pyworkflowkit.application.observability import LogContext, log_runtime
 from pyworkflowkit.application.planning import (
     DAGValidator,
     ExecutionPlanner,
@@ -31,6 +33,8 @@ from pyworkflowkit.errors import (
 from pyworkflowkit.ports.executor import Executor, RunContext, TaskHandler
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
+
+logger = logging.getLogger("pyworkflowkit.runner")
 
 
 class Runner:
@@ -82,6 +86,16 @@ class Runner:
             workflow_version=workflow.version,
             parameters=resolved_parameters,
             created_at=self._clock.now(),
+        )
+        log_runtime(
+            logger,
+            logging.INFO,
+            "Workflow run created",
+            context=LogContext(
+                run_id=str(run.run_id),
+                workflow_id=str(run.workflow_id),
+            ),
+            fields={"workflow_version": run.workflow_version},
         )
         event_factory = RuntimeEventFactory(
             run_id=run.run_id,
@@ -153,6 +167,19 @@ class Runner:
             )
 
             task_definition = task_definitions[task_id]
+            log_runtime(
+                logger,
+                logging.INFO,
+                "Task execution started",
+                context=LogContext(
+                    run_id=str(run.run_id),
+                    workflow_id=str(run.workflow_id),
+                    task_run_id=str(task_run.task_run_id),
+                    task_id=str(task_id),
+                    attempt_number=1,
+                    executor_key=task_definition.executor_key,
+                ),
+            )
             result = self._execute_with_retry(
                 run=run,
                 task_run=task_run,
@@ -170,6 +197,18 @@ class Runner:
                 event_factory=event_factory,
             )
             outputs_by_task_id[task_id] = result.output
+            log_runtime(
+                logger,
+                logging.INFO,
+                "Task execution succeeded",
+                context=LogContext(
+                    run_id=str(run.run_id),
+                    workflow_id=str(run.workflow_id),
+                    task_run_id=str(task_run.task_run_id),
+                    task_id=str(task_id),
+                    executor_key=task_definition.executor_key,
+                ),
+            )
 
         if any(
             task_run.status is not TaskRunStatus.SUCCEEDED
@@ -186,6 +225,15 @@ class Runner:
             event=event_factory.create(
                 event_type=RuntimeEventType.WORKFLOW_SUCCEEDED,
                 occurred_at=workflow_finished_at,
+            ),
+        )
+        log_runtime(
+            logger,
+            logging.INFO,
+            "Workflow run succeeded",
+            context=LogContext(
+                run_id=str(run.run_id),
+                workflow_id=str(run.workflow_id),
             ),
         )
         return self._metadata_store.get_workflow_run(run.run_id)
@@ -239,6 +287,25 @@ class Runner:
                     policy=task_definition.retry_policy,
                     attempt_number=current_attempt.attempt_number,
                     error=exc,
+                )
+                log_runtime(
+                    logger,
+                    logging.WARNING,
+                    "Task attempt failed",
+                    context=LogContext(
+                        run_id=str(run.run_id),
+                        workflow_id=str(run.workflow_id),
+                        task_run_id=str(task_run.task_run_id),
+                        task_id=str(task_run.task_id),
+                        attempt_number=current_attempt.attempt_number,
+                        executor_key=task_definition.executor_key,
+                    ),
+                    fields={
+                        "error_type": error_type,
+                        "error_category": error_category,
+                        "will_retry": decision.should_retry,
+                        "delay_seconds": decision.delay_seconds,
+                    },
                 )
                 if decision.should_retry:
                     if decision.next_attempt_number is None:
