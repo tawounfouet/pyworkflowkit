@@ -174,10 +174,7 @@ class ThreadExecutor:
 
     def active_handles(self) -> tuple[ExecutionHandle, ...]:
         with self._lock:
-            return tuple(
-                self._handles[handle_id]
-                for handle_id in sorted(self._active_futures)
-            )
+            return tuple(self._handles[handle_id] for handle_id in sorted(self._active_futures))
 
     def shutdown(self, *, wait: bool = True) -> None:
         """Stop accepting submissions and shut down the underlying thread pool."""
