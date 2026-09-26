@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from alembic import context
 from sqlalchemy import Engine, create_engine, pool, text
+from sqlalchemy.engine import Connection
 
 from pyworkflowkit.adapters.metadata.sqlalchemy import models as _models  # noqa: F401
 from pyworkflowkit.adapters.metadata.sqlalchemy.base import DB_SCHEMA, Base
@@ -12,7 +13,7 @@ config = context.config
 target_metadata = Base.metadata
 
 
-def _configure(connection) -> None:
+def _configure(connection: Connection) -> None:
     if connection.dialect.name == "postgresql":
         connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA}"))
         connection.commit()
@@ -38,6 +39,8 @@ def run_migrations_online() -> None:
         return
 
     url = config.get_main_option("sqlalchemy.url")
+    if not url:
+        raise RuntimeError("sqlalchemy.url is required when no Engine is supplied.")
     connectable = create_engine(url, poolclass=pool.NullPool)
     with connectable.connect() as connection:
         _configure(connection)
