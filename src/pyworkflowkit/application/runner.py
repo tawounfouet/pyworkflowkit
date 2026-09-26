@@ -362,14 +362,22 @@ class Runner:
                         f"{task_run.status.value}"
                     ),
                 )
-            if not self._ready_resolver.is_ready(
-                task_run=task_run,
-                graph=graph,
-                task_runs_by_task_id=persisted_runs,
-            ):
-                raise ResumeError(
-                    run_id=str(run_id),
-                    reason=f"task '{task_id}' is not runtime-ready during resume",
+            if task_run.status is TaskRunStatus.PENDING:
+                if not self._ready_resolver.is_ready(
+                    task_run=task_run,
+                    graph=graph,
+                    task_runs_by_task_id=persisted_runs,
+                ):
+                    raise ResumeError(
+                        run_id=str(run_id),
+                        reason=f"task '{task_id}' is not runtime-ready during resume",
+                    )
+            else:
+                self._validate_ready_task_dependencies_for_resume(
+                    run_id=run_id,
+                    task_run=task_run,
+                    graph=graph,
+                    task_runs_by_task_id=persisted_runs,
                 )
 
             if task_run.status is TaskRunStatus.PENDING:
@@ -699,6 +707,26 @@ class Runner:
             uow.commit()
         for event in events:
             self._observability.publish(event)
+
+    def _validate_ready_task_dependencies_for_resume(
+        self,
+        *,
+        run_id: WorkflowRunId,
+        task_run: TaskRun,
+        graph: DependencyGraph,
+        task_runs_by_task_id: Mapping[TaskId, TaskRun],
+    ) -> None:
+        for upstream_task_id in graph.upstream_of(task_run.task_id):
+            upstream_run = task_runs_by_task_id.get(upstream_task_id)
+            if upstream_run is None or upstream_run.status is not TaskRunStatus.SUCCEEDED:
+                status = "missing" if upstream_run is None else upstream_run.status.value
+                raise ResumeError(
+                    run_id=str(run_id),
+                    reason=(
+                        f"READY task '{task_run.task_id}' has dependency "
+                        f"'{upstream_task_id}' in status {status}"
+                    ),
+                )
 
     def _dependency_outputs_for_resume(
         self,
