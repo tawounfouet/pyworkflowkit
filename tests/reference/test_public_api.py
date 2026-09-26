@@ -6,7 +6,6 @@ from pyworkflowkit import (
     TaskDefinition,
     TaskId,
     TaskResult,
-    TimeoutMode,
     WorkflowDefinition,
     WorkflowId,
     WorkflowRuntime,
