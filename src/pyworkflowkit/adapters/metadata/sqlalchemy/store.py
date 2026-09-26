@@ -48,6 +48,15 @@ class SqlAlchemyMetadataStore:
                 raise MetadataNotFoundError(entity_type="TaskRun", entity_id=str(task_run_id))
             return PersistenceMapper.task_run_from_row(SqlAlchemyRowMapper.task_run_from_orm(row))
 
+    def list_workflow_runs(self) -> tuple[WorkflowRun, ...]:
+        with self._session_factory() as session:
+            rows = session.scalars(select(orm_models.WorkflowRunRow)).all()
+        values = (
+            PersistenceMapper.workflow_run_from_row(SqlAlchemyRowMapper.workflow_run_from_orm(row))
+            for row in rows
+        )
+        return tuple(sorted(values, key=lambda value: str(value.run_id)))
+
     def list_task_runs(self, run_id: WorkflowRunId) -> tuple[TaskRun, ...]:
         with self._session_factory() as session:
             rows = session.scalars(

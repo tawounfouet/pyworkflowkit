@@ -8,7 +8,21 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M37 Recovery Foundation with read-only persisted-run recovery assessment.
+- RecoveryLiveness classification: terminal, active, stale_candidate, and unknown.
+- ResumeEligibility classification without performing resume: not_eligible, eligible, and requires_reconciliation.
+- Stable task-run idempotency metadata using task_run_id across attempts.
+- MetadataStore.list_workflow_runs() for recovery candidate discovery across Memory and SQLAlchemy backends.
+- WorkflowRuntime recovery_assessment() and stale_run_candidates() diagnostic facade methods.
+- Durable SQLite crash-state acceptance proving stale detection after process/store restart.
+- Explicit ambiguity detection for RUNNING TaskRuns, RUNNING TaskAttempts, and non-terminal external work.
+
 ### Changed
+
+### Changed
+
+- The 0.6 development line opens at 0.6.0a1 without automatic state mutation: M37 classifies recovery evidence only.
+- Recovery candidate discovery uses persisted timestamps/events rather than adding heartbeat or lease schema fields.
 
 ### Deprecated
 

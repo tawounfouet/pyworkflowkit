@@ -7,10 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.5.0`.
-> The 0.5 line completes multi-executor hardening, observability plugin projection, and
-> production-oriented security controls while preserving PyWorkflowKit as an embedded
-> runtime rather than a workflow platform.
+> **Status:** stable release `0.5.0`; current development line `0.6.0a1`.
+> M37 opens recovery work with read-only stale-run detection, resume-eligibility
+> diagnostics, and stable idempotency metadata. It does not auto-resume or reconcile.
 
 ## What 0.5 provides
 
@@ -486,6 +485,60 @@ a dependency vulnerability.
 These checks complement — not replace — code review, trusted plugin selection, operating
 system isolation, and external secret-management systems.
 
+## Recovery foundation in 0.6.0a1
+
+M37 starts the recovery line by classifying **persisted evidence** rather than silently
+changing runtime state.
+
+```python
+assessment = runtime.recovery_assessment(
+    run_id,
+    stale_after_seconds=300,
+)
+
+print(assessment.liveness)
+print(assessment.resume_eligibility)
+print(assessment.reasons)
+```
+
+The diagnostic pipeline is:
+
+```text
+persisted WorkflowRun
+        ↓
+TaskRuns / Attempts / Events / ExternalRunRefs
+        ↓
+latest durable evidence timestamp
+        ↓
+RecoveryInspector
+        ↓
+TERMINAL / ACTIVE / STALE_CANDIDATE / UNKNOWN
+        ↓
+NOT_ELIGIBLE / ELIGIBLE / REQUIRES_RECONCILIATION
+```
+
+A stale threshold is a **candidate detector**, not proof that a workload stopped.
+M37 therefore never changes WorkflowRun, TaskRun, or TaskAttempt state.
+
+When persisted evidence still contains a `RUNNING` TaskRun, a `RUNNING` TaskAttempt,
+or external work attached to a non-terminal task, the assessment is
+`REQUIRES_RECONCILIATION`. M38 owns the future reconciliation decision.
+
+For idempotency, M37 exposes the stable `task_run_id` as the technical
+`idempotency_key` across attempts:
+
+```text
+TaskRun task-run-123
+    ├── Attempt 1
+    ├── Attempt 2
+    └── Attempt 3
+
+idempotency_key = task-run-123
+```
+
+M37 deliberately does not add heartbeats, leases, worker ownership, remote status
+mutation, or resume execution.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -664,4 +717,5 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The next roadmap line is **0.6.x — Recovery / Resume / Reconciliation**.
+The 0.6 development line has started with **M37 — Recovery Foundation** at
+**0.6.0a1**. The next milestone is **M38 — Reconciliation**.

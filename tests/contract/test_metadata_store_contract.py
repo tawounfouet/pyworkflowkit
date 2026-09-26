@@ -51,6 +51,7 @@ def test_contract_commit_makes_data_visible(store: MetadataStore) -> None:
         uow.commit()
 
     assert store.get_workflow_run(WorkflowRunId("run")).workflow_id == WorkflowId("workflow")
+    assert tuple(run.run_id for run in store.list_workflow_runs()) == (WorkflowRunId("run"),)
     assert len(store.list_task_runs(WorkflowRunId("run"))) == 1
 
 

@@ -63,6 +63,10 @@ class MemoryMetadataStore:
                 entity_id=str(task_run_id),
             ) from exc
 
+    def list_workflow_runs(self) -> tuple[WorkflowRun, ...]:
+        values = (_clone_workflow_run(run) for run in self._state.workflow_runs.values())
+        return tuple(sorted(values, key=lambda run: str(run.run_id)))
+
     def list_task_runs(self, run_id: WorkflowRunId) -> tuple[TaskRun, ...]:
         values = (
             _clone_task_run(task_run)
