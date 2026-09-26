@@ -8,8 +8,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from pyworkflowkit.adapters.metadata.sqlalchemy import (
-    Base,
     DB_SCHEMA,
+    Base,
     SqlAlchemyMetadataStore,
 )
 from pyworkflowkit.domain.enums import RuntimeEventType, TaskAttemptStatus, TaskRunStatus
