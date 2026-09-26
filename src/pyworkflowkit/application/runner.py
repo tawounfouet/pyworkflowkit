@@ -384,7 +384,7 @@ class Runner:
                         f"task '{task_id}' remains in non-resumable status {task_run.status.value}"
                     ),
                 )
-            if is_retry_wait:
+            if task_run.status is TaskRunStatus.RUNNING and scheduled_retry is not None:
                 eligible_at = scheduled_retry.retry_eligible_at
                 if eligible_at is None:
                     raise ResumeError(
