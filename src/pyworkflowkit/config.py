@@ -85,7 +85,10 @@ class RuntimeSettings(BaseSettings):
     def redacted_dict(self) -> dict[str, object]:
         """Return settings safe for diagnostics and logging."""
 
-        return _redact(self.model_dump())
+        redacted = _redact(self.model_dump())
+        if not isinstance(redacted, dict):
+            raise TypeError("redacted runtime settings must remain a mapping")
+        return redacted
 
 
 def _deep_merge(
