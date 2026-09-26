@@ -541,20 +541,22 @@ class ProcessExecutor:
     ) -> bool:
         if timeout is not None and timeout < 0:
             raise ValueError("timeout must be greater than or equal to 0")
-        process = self._process_for_wait(handle)
-        if process is None:
-            return True
-        process.join(timeout=timeout)
-        return not process.is_alive()
+        with self._lock:
+            process = self._process_for_wait(handle)
+            if process is None:
+                return True
+            process.join(timeout=timeout)
+            return not process.is_alive()
 
     def terminate(self, handle: ExecutionHandle) -> bool:
         """Hard-stop one active execution handle when it still owns a live process."""
 
-        process = self._process_for_wait(handle)
-        if process is None or not process.is_alive():
-            return False
-        self._terminate_process(process)
-        return True
+        with self._lock:
+            process = self._process_for_wait(handle)
+            if process is None or not process.is_alive():
+                return False
+            self._terminate_process(process)
+            return True
 
     def active_handles(self) -> tuple[ExecutionHandle, ...]:
         with self._lock:
@@ -567,14 +569,15 @@ class ProcessExecutor:
         with self._lock:
             self._shutdown = True
             active = tuple(self._active.values())
-
-        if not wait:
-            for execution in active:
-                if execution.process.is_alive():
-                    self._terminate_process(execution.process)
+            if not wait:
+                for execution in active:
+                    with suppress(ValueError):
+                        if execution.process.is_alive():
+                            self._terminate_process(execution.process)
 
         for execution in active:
-            execution.process.join()
+            with suppress(ValueError):
+                execution.process.join()
         for execution in active:
             execution.watcher.join()
 
@@ -644,8 +647,8 @@ class ProcessExecutor:
             with self._lock:
                 self._active.pop(handle.handle_id, None)
                 self._completed_handle_ids.add(handle.handle_id)
-            with suppress(ValueError):
-                process.close()
+                with suppress(ValueError):
+                    process.close()
 
         self._completion_queue.put(completion)
 
