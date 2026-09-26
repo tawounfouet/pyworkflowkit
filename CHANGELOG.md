@@ -51,6 +51,16 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - WORKFLOW_CANCELLED evidence carrying cancellation reason and undispatched-task count.
 - M30 reference coverage for external cancellation, running-attempt drain, and graceful shutdown semantics.
 
+- Domain-level TimeoutMode with NONE, SOFT, and HARD task semantics.
+- Backward-compatible timeout_seconds normalization to SOFT when no explicit mode is supplied.
+- Executor timeout-capability validation before run creation.
+- ExecutionTimeoutError normalized as a TaskExecutionError with error_category="timeout".
+- Deadline-aware ConcurrentRunner completion waits using monotonic time.
+- Soft-timeout late-completion suppression while preserving the physical worker slot until the thread returns.
+- Timeout failures routed through RetryEngine, with same-task retry deferred until the timed-out physical execution completes.
+- Serialization and declarative API support for timeout_mode.
+- M31 reference coverage for terminal soft timeout and timeout retry integration.
+
 
 ### Changed
 

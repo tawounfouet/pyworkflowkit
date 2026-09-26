@@ -17,7 +17,7 @@ from pyworkflowkit.application.planning import (
 from pyworkflowkit.application.retry import RetryEngine
 from pyworkflowkit.application.state_machine import RunStateMachine
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus
+from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus, TimeoutMode
 from pyworkflowkit.domain.graph import DependencyGraph
 from pyworkflowkit.domain.ids import TaskId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
@@ -29,8 +29,9 @@ from pyworkflowkit.errors import (
     InvalidWorkflowParametersError,
     RuntimeInvariantError,
     TaskExecutionError,
+    TimeoutCapabilityError,
 )
-from pyworkflowkit.ports.executor import Executor, RunContext, TaskHandler
+from pyworkflowkit.ports.executor import Executor, RunContext, TaskHandler, TimeoutCapability
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
 
@@ -79,6 +80,7 @@ class Runner:
             supplied=parameters or {},
         )
         handlers = self._preflight_handlers(workflow)
+        self._validate_timeout_capabilities(workflow)
 
         run = WorkflowRun(
             run_id=self._id_factory.new_workflow_run_id(),
@@ -367,6 +369,26 @@ class Runner:
                 ),
             )
             return result
+
+    def _validate_timeout_capabilities(self, workflow: WorkflowDefinition) -> None:
+        supported = self._executor.capabilities.timeout
+        for task in workflow.tasks:
+            requested = task.timeout_mode
+            if requested is TimeoutMode.NONE:
+                continue
+            if requested is TimeoutMode.SOFT and supported in {
+                TimeoutCapability.SOFT,
+                TimeoutCapability.HARD,
+            }:
+                continue
+            if requested is TimeoutMode.HARD and supported is TimeoutCapability.HARD:
+                continue
+            raise TimeoutCapabilityError(
+                task_id=task.task_id,
+                requested_mode=requested.value,
+                executor_key=self._executor.key,
+                supported_mode=supported.value,
+            )
 
     def _resolve_parameters(
         self,

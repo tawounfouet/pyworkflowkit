@@ -61,6 +61,7 @@ def test_root_import_surface_is_intentional() -> None:
         "TaskHandle",
         "TaskId",
         "TaskResult",
+        "TimeoutMode",
         "WorkflowBuilder",
         "WorkflowDefinition",
         "WorkflowId",

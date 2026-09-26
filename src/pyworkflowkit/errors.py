@@ -161,6 +161,27 @@ class ExecutorWorkerError(ExecutorError):
         )
 
 
+class TimeoutCapabilityError(ExecutorError):
+    """Raised when a task requests timeout semantics unsupported by its executor."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        requested_mode: str,
+        executor_key: str,
+        supported_mode: str,
+    ) -> None:
+        self.task_id = task_id
+        self.requested_mode = requested_mode
+        self.executor_key = executor_key
+        self.supported_mode = supported_mode
+        super().__init__(
+            f"Task '{task_id}' requests timeout mode '{requested_mode}', but executor "
+            f"'{executor_key}' supports '{supported_mode}'."
+        )
+
+
 class DuplicateHandlerRegistrationError(ExecutorError):
     """Raised when a handler reference is registered more than once."""
 
@@ -206,6 +227,31 @@ class TaskExecutionError(ExecutorError):
         rendered_ref = handler_ref or "<direct-handler>"
         super().__init__(
             f"Task '{task_id}' handler '{rendered_ref}' failed with {error_type}: {error_message}"
+        )
+
+
+class ExecutionTimeoutError(TaskExecutionError):
+    """Logical task-attempt timeout normalized through the ordinary retry path."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        handler_ref: str | None,
+        timeout_seconds: float,
+        timeout_mode: str,
+    ) -> None:
+        self.timeout_seconds = timeout_seconds
+        self.timeout_mode = timeout_mode
+        super().__init__(
+            task_id=task_id,
+            handler_ref=handler_ref,
+            error_type="ExecutionTimeoutError",
+            error_message=(
+                f"execution exceeded {timeout_seconds} seconds "
+                f"under {timeout_mode} timeout semantics"
+            ),
+            error_category="timeout",
         )
 
 
@@ -511,6 +557,7 @@ __all__ = [
     "DuplicateHandlerRegistrationError",
     "DuplicateTaskDefinitionError",
     "ExecutionHandleNotFoundError",
+    "ExecutionTimeoutError",
     "ExecutorError",
     "ExecutorNotFoundError",
     "ExecutorShutdownError",
@@ -547,6 +594,7 @@ __all__ = [
     "SerializationError",
     "SelfDependencyError",
     "TaskExecutionError",
+    "TimeoutCapabilityError",
     "TerminalStateError",
     "UnitOfWorkStateError",
     "UnknownDependencyError",

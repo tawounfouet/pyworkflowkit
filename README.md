@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable baseline `0.3.0`; current development line `0.4.0a6`.
-> The 0.4 line now includes bounded concurrent DAG dispatch and explicit graceful
-> cancellation; terminal timeout semantics are the remaining 0.4 milestone.
+> **Status:** stable baseline `0.3.0`; current development line `0.4.0a7`.
+> The 0.4 line now includes bounded concurrent DAG dispatch, graceful cancellation,
+> and explicit timeout semantics. The remaining work is transverse 0.4 qualification.
 
 ## What 0.3 provides
 

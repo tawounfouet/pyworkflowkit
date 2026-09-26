@@ -185,3 +185,38 @@ def test_runtime_event_schema_round_trip_preserves_sequence_and_context() -> Non
 
 def timezone_plus_two() -> timezone:
     return timezone(timedelta(hours=2))
+
+
+def test_task_timeout_mode_round_trips_through_schema() -> None:
+    from pyworkflowkit.domain.enums import TimeoutMode
+
+    task = TaskDefinition(
+        task_id=TaskId("timed"),
+        handler_ref="handlers:timed",
+        executor_key="thread",
+        timeout_seconds=3.0,
+        timeout_mode=TimeoutMode.HARD,
+    )
+
+    schema = DomainSchemaMapper.task_definition_to_schema(task)
+    restored = DomainSchemaMapper.task_definition_from_schema(schema)
+
+    assert schema.timeout_mode is TimeoutMode.HARD
+    assert restored.timeout_seconds == 3.0
+    assert restored.timeout_mode is TimeoutMode.HARD
+
+
+def test_legacy_timeout_seconds_without_mode_normalizes_to_soft() -> None:
+    from pyworkflowkit.contracts.serialization import TaskDefinitionSchema
+    from pyworkflowkit.domain.enums import TimeoutMode
+
+    schema = TaskDefinitionSchema(
+        task_id="legacy-timeout",
+        handler_ref="handlers:legacy",
+        executor_key="thread",
+        timeout_seconds=1.0,
+    )
+
+    restored = DomainSchemaMapper.task_definition_from_schema(schema)
+
+    assert restored.timeout_mode is TimeoutMode.SOFT

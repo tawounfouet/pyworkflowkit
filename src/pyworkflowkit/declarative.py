@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import ParamSpec, TypeVar, overload
 
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import FailurePolicy
+from pyworkflowkit.domain.enums import FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 from pyworkflowkit.domain.values import RetryPolicy, WorkflowParameter
 from pyworkflowkit.ports.executor import TaskHandler
@@ -29,6 +29,7 @@ class TaskHandle:
     retry_policy: RetryPolicy = RetryPolicy()
     executor_key: str = "local"
     timeout_seconds: float | None = None
+    timeout_mode: TimeoutMode = TimeoutMode.NONE
     tags: frozenset[str] = frozenset()
     description: str | None = None
 
@@ -42,6 +43,7 @@ class TaskHandle:
             retry_policy=self.retry_policy,
             executor_key=self.executor_key,
             timeout_seconds=self.timeout_seconds,
+            timeout_mode=self.timeout_mode,
             tags=self.tags,
             description=self.description,
         )
@@ -108,6 +110,7 @@ def task(
     retry_policy: RetryPolicy | None = None,
     executor_key: str = "local",
     timeout_seconds: float | None = None,
+    timeout_mode: TimeoutMode = TimeoutMode.NONE,
     tags: Sequence[str] = (),
     description: str | None = None,
 ) -> Callable[[Callable[P, R]], TaskHandle]: ...
@@ -122,6 +125,7 @@ def task(
     retry_policy: RetryPolicy | None = None,
     executor_key: str = "local",
     timeout_seconds: float | None = None,
+    timeout_mode: TimeoutMode = TimeoutMode.NONE,
     tags: Sequence[str] = (),
     description: str | None = None,
 ) -> TaskHandle | Callable[[Callable[P, R]], TaskHandle]:
@@ -139,6 +143,7 @@ def task(
             retry_policy=retry_policy or RetryPolicy(),
             executor_key=executor_key,
             timeout_seconds=timeout_seconds,
+            timeout_mode=timeout_mode,
             tags=frozenset(tags),
             description=description,
         )
