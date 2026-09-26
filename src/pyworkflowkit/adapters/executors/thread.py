@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import Future, ThreadPoolExecutor
-from functools import partial
 from concurrent.futures import wait as wait_futures
+from functools import partial
 from threading import RLock
 
 from pyworkflowkit.adapters.executors._python import invoke_python_handler
