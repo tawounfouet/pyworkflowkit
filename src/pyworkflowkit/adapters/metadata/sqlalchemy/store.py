@@ -230,11 +230,11 @@ class SqlAlchemyUnitOfWork:
                 orm_models.RuntimeEventRow.run_id == record.run_id
             )
         )
-        expected_sequence = (last_sequence or 0) + 1
-        if record.event_sequence != expected_sequence:
+        previous_sequence = last_sequence or 0
+        if record.event_sequence is None or record.event_sequence <= previous_sequence:
             raise InvalidEventSequenceError(
                 run_id=record.run_id,
-                expected_sequence=expected_sequence,
+                previous_sequence=previous_sequence,
                 actual_sequence=record.event_sequence,
             )
         session.add(SqlAlchemyRowMapper.runtime_event_to_orm(record))
