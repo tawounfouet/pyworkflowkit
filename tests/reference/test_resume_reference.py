@@ -8,7 +8,12 @@ from pyworkflowkit.adapters.metadata.sqlite import SQLiteMetadataStore
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.config import MetadataSettings, RuntimeSettings
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import RuntimeEventType, TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
+from pyworkflowkit.domain.enums import (
+    RuntimeEventType,
+    TaskAttemptStatus,
+    TaskRunStatus,
+    WorkflowRunStatus,
+)
 from pyworkflowkit.domain.ids import (
     RuntimeEventId,
     TaskAttemptId,
