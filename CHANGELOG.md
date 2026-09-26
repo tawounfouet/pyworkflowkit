@@ -14,6 +14,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Backward-compatible hard-timeout and hard-cancellation capability views.
 - M25 acceptance coverage freezing LocalExecutor as single-slot, non-parallel, no-timeout, no-cancellation.
 
+- Thread-safe CapacityManager with bounded global and per-executor execution slots.
+- CapacityLease identity bound to TaskAttemptId for active-attempt accounting.
+- Effective executor limits capped by intrinsic ExecutorCapabilities.max_concurrency.
+- Immutable capacity snapshots exposing active and available global/executor slots.
+- Explicit capacity configuration, invariant, and release errors.
+- M26 acceptance coverage for saturation, release, active-attempt tracking, and concurrent acquisition safety.
+
 
 ### Changed
 
