@@ -251,6 +251,36 @@ class TaskExecutionError(ExecutorError):
         )
 
 
+class SubprocessExecutionError(TaskExecutionError):
+    """Raised when an external subprocess exits with a non-zero return code."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        handler_ref: str | None,
+        argv: tuple[str, ...],
+        returncode: int,
+        stdout: str,
+        stderr: str,
+    ) -> None:
+        self.argv = argv
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        rendered_stderr = stderr.strip()
+        message = f"subprocess exited with return code {returncode}"
+        if rendered_stderr:
+            message = f"{message}: {rendered_stderr}"
+        super().__init__(
+            task_id=task_id,
+            handler_ref=handler_ref,
+            error_type="SubprocessExecutionError",
+            error_message=message,
+            error_category="subprocess_exit",
+        )
+
+
 class ExecutionTimeoutError(TaskExecutionError):
     """Logical task-attempt timeout normalized through the ordinary retry path."""
 
@@ -615,6 +645,7 @@ __all__ = [
     "RuntimeInvariantError",
     "SerializationError",
     "SelfDependencyError",
+    "SubprocessExecutionError",
     "TaskExecutionError",
     "TimeoutCapabilityError",
     "TerminalStateError",

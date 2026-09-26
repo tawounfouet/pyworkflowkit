@@ -39,6 +39,8 @@ requested HARD → executor HARD only
 
 `AsyncExecutor` also declares `SOFT`: asyncio cancellation is cooperative and is not represented as hard timeout termination.
 
+`SubprocessExecutor` declares `HARD` for the directly owned external child process.
+
 ## Soft timeout
 
 A ThreadExecutor soft timeout is a **logical runtime timeout**, not thread termination.
@@ -134,6 +136,26 @@ capacity released / retry eligible
 
 The runtime does not reinterpret `Task.cancel()` as hard timeout. Cooperative workflow
 cancellation and timeout remain separate contracts.
+
+## External subprocess hard timeout
+
+M34 applies the existing HARD timeout contract to a directly owned external process:
+
+```text
+external child process
+        ↓ deadline
+terminate(handle)
+        ↓
+terminate → grace period → kill if still alive
+        ↓
+ExecutionTimeoutError
+        ↓
+RetryEngine
+```
+
+The runtime state and evidence contract is unchanged. M34 does not claim process-tree
+sandboxing or descendant-process termination; those controls belong to M36 security
+hardening.
 
 ## Interaction with cancellation
 

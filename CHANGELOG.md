@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M34 SubprocessExecutor for shell-free external-program execution through explicit argv.
+- Immutable SubprocessCommand and captured SubprocessResult contracts.
+- Natural stdout, stderr, and return-code capture without global Python stream redirection.
+- SubprocessExecutionError carrying non-zero exit evidence and retry category subprocess_exit.
+- Hard per-handle subprocess termination for timeout and cancellation through the existing ConcurrentRunner contract.
+- Explicit stdin, cwd, environment, and encoding inputs for external commands while keeping shell=False mandatory.
+- M34 unit and reference acceptance coverage for literal argv handling, capture, spawn failures, non-zero exits, hard timeout, cancellation, and cleanup.
 - M33 AsyncExecutor backed by a dedicated asyncio event loop and explicit awaitable-handler contract.
 - Explicit AsyncExecutor port plus async handler type aliases without replacing the stable synchronous Executor port.
 - ExecutorCapabilities.supports_async declaration for capability-aware composition.
@@ -25,6 +32,7 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The 0.5 executor family now covers in-process threads, isolated Python processes, asyncio workloads, and shell-free external programs behind the same coordinator-owned completion model.
 - ConcurrentRunner now distinguishes hard termination from cooperative executor cancellation while preserving coordinator-owned state transitions.
 - Concurrent timeout retries now wait for physical execution cleanup before redispatching the same task attempt lineage.
 
