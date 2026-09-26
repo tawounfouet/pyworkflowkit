@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.5.0`; current development line `0.6.0a1`.
-> M37 opens recovery work with read-only stale-run detection, resume-eligibility
-> diagnostics, and stable idempotency metadata. It does not auto-resume or reconcile.
+> **Status:** stable release `0.5.0`; current development line `0.6.0a2`.
+> M37 detects stale recovery candidates; M38 verifies ambiguous external work and
+> classifies reconciliation outcomes. Neither milestone performs resume yet.
 
 ## What 0.5 provides
 
@@ -539,6 +539,65 @@ idempotency_key = task-run-123
 M37 deliberately does not add heartbeats, leases, worker ownership, remote status
 mutation, or resume execution.
 
+## Reconciliation in 0.6.0a2
+
+M38 consumes the ambiguous recovery evidence identified by M37 and verifies
+`ExternalRunRef` values through explicit provider-specific adapters.
+
+```python
+from pyworkflowkit.ports.reconciliation import ExternalRunStatus
+
+
+class MyVerifier:
+    provider = "my-provider"
+
+    def verify(self, external_ref):
+        # Query the external system using external_ref.external_run_id.
+        return ExternalRunStatus.SUCCEEDED
+
+
+runtime.register_external_run_verifier(MyVerifier())
+report = runtime.reconcile_run(run_id, stale_after_seconds=300)
+```
+
+The reconciliation flow is:
+
+```text
+M37 STALE_CANDIDATE
+        ↓
+non-terminal TaskRun
+        ↓
+ExternalRunRef lookup
+        ↓
+provider verifier
+        ↓
+normalized external status
+        ↓
+M38 disposition
+   ├── CONFIRMED_SUCCEEDED
+   ├── CONFIRMED_FAILED
+   ├── CONFIRMED_CANCELLED
+   ├── STILL_RUNNING
+   └── MANUAL_REQUIRED
+```
+
+M38 remains read-only. It does not change WorkflowRun, TaskRun, or TaskAttempt state.
+That mutation boundary belongs to M39 — Resume.
+
+Conservative handling is intentional:
+
+```text
+missing verifier       → MANUAL_REQUIRED
+verification failure   → MANUAL_REQUIRED
+UNKNOWN / NOT_FOUND    → MANUAL_REQUIRED
+conflicting statuses   → MANUAL_REQUIRED
+local RUNNING work
+without external proof → MANUAL_REQUIRED
+```
+
+Provider exception messages are not copied into the reconciliation report; only the
+exception type is retained as diagnostic evidence.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -717,5 +776,6 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 development line has started with **M37 — Recovery Foundation** at
-**0.6.0a1**. The next milestone is **M38 — Reconciliation**.
+The 0.6 development line now contains **M37 — Recovery Foundation** and
+**M38 — Reconciliation** at **0.6.0a2**. The next milestone is
+**M39 — Resume**.
