@@ -472,9 +472,7 @@ class ConcurrentRunner(Runner):
 
         if completion.succeeded:
             if completion.result is None:
-                raise RuntimeInvariantError(
-                    reason="successful completion is missing TaskResult"
-                )
+                raise RuntimeInvariantError(reason="successful completion is missing TaskResult")
             self._persist_execution_success(
                 task_run=execution.task_run,
                 attempt=execution.attempt,
@@ -510,9 +508,7 @@ class ConcurrentRunner(Runner):
 
         if decision.should_retry and not workflow_already_failed:
             if decision.next_attempt_number is None:
-                raise RuntimeInvariantError(
-                    reason="retry decision is missing next_attempt_number"
-                )
+                raise RuntimeInvariantError(reason="retry decision is missing next_attempt_number")
             self._persist_retry_failure(
                 attempt=execution.attempt,
                 event=event_factory.create(
