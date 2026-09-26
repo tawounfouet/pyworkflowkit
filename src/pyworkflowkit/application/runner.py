@@ -171,8 +171,7 @@ class Runner:
             )
 
             started_at = self._clock.now()
-            if not is_retry_wait:
-                self._state_machine.start_task(task_run, at=started_at)
+            self._state_machine.start_task(task_run, at=started_at)
             attempt = self._new_attempt(
                 task_run=task_run,
                 attempt_number=1,
@@ -378,7 +377,10 @@ class Runner:
                 task_run.status is TaskRunStatus.RUNNING
                 and scheduled_retry is not None
             )
-            if task_run.status not in {TaskRunStatus.PENDING, TaskRunStatus.READY} and not is_retry_wait:
+            if (
+                task_run.status not in {TaskRunStatus.PENDING, TaskRunStatus.READY}
+                and not is_retry_wait
+            ):
                 raise ResumeError(
                     run_id=str(run_id),
                     reason=(
