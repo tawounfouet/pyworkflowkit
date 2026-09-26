@@ -56,9 +56,7 @@ class ExecutorCapabilities:
         if self.max_concurrency < 1:
             raise ValueError("max_concurrency must be greater than or equal to 1")
         if not self.supports_parallelism and self.max_concurrency != 1:
-            raise ValueError(
-                "non-parallel executors must declare max_concurrency=1"
-            )
+            raise ValueError("non-parallel executors must declare max_concurrency=1")
 
     @property
     def supports_timeout(self) -> bool:
