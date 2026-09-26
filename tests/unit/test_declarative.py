@@ -1,6 +1,6 @@
 """Tests for the lazy declarative API."""
 
-from pyworkflowkit import RetryPolicy, TaskId
+from pyworkflowkit import RetryPolicy, TaskId, TimeoutMode
 from pyworkflowkit.declarative import TaskHandle, WorkflowBuilder, task, workflow
 
 
@@ -68,3 +68,18 @@ def test_workflow_build_rejects_non_task_handles() -> None:
         assert "TaskHandle" in str(exc)
     else:
         raise AssertionError("expected TypeError")
+
+
+def test_task_decorator_preserves_explicit_timeout_mode() -> None:
+    @task(
+        executor_key="thread",
+        timeout_seconds=2.0,
+        timeout_mode=TimeoutMode.HARD,
+    )
+    def slow() -> str:
+        return "slow"
+
+    definition = slow.to_definition()
+
+    assert definition.timeout_seconds == 2.0
+    assert definition.timeout_mode is TimeoutMode.HARD
