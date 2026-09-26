@@ -620,10 +620,7 @@ class ConcurrentRunner(Runner):
             for execution in active.values()
             if not execution.timed_out and execution.deadline_monotonic is not None
         ]
-        deadlines.extend(
-            pending.eligible_monotonic
-            for pending in pending_retries.values()
-        )
+        deadlines.extend(pending.eligible_monotonic for pending in pending_retries.values())
         deadline_wait = max(0.0, min(deadlines) - monotonic()) if deadlines else None
         if cancellation_poll_seconds is None:
             return deadline_wait
