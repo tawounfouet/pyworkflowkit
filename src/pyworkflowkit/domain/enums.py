@@ -39,6 +39,12 @@ class FailurePolicy(StrEnum):
     FAIL_FAST = "FAIL_FAST"
 
 
+class TimeoutMode(StrEnum):
+    NONE = "NONE"
+    SOFT = "SOFT"
+    HARD = "HARD"
+
+
 class BackoffStrategy(StrEnum):
     NONE = "NONE"
     FIXED = "FIXED"
@@ -96,5 +102,6 @@ __all__ = [
     "SkipReason",
     "TaskAttemptStatus",
     "TaskRunStatus",
+    "TimeoutMode",
     "WorkflowRunStatus",
 ]
