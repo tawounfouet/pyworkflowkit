@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 import pytest
 
