@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from pyworkflowkit.application.observability import log_runtime
 from pyworkflowkit.domain.enums import BackoffStrategy
@@ -32,6 +33,16 @@ class RetryDecision:
                 raise ValueError("non-retry decision cannot define next_attempt_number")
             if self.delay_seconds != 0:
                 raise ValueError("non-retry decision must have zero delay_seconds")
+
+
+def retry_eligible_at(*, failed_at: datetime, decision: RetryDecision) -> datetime:
+    """Convert a RetryDecision delay into one timezone-aware durable eligibility time."""
+
+    if failed_at.tzinfo is None or failed_at.utcoffset() is None:
+        raise ValueError("failed_at must be timezone-aware")
+    if not decision.should_retry:
+        raise ValueError("retry eligibility requires a retry decision")
+    return failed_at + timedelta(seconds=decision.delay_seconds)
 
 
 class RetryEngine:
@@ -106,4 +117,4 @@ class RetryEngine:
         return float(delay)
 
 
-__all__ = ["RetryDecision", "RetryEngine"]
+__all__ = ["RetryDecision", "RetryEngine", "retry_eligible_at"]
