@@ -6,7 +6,7 @@ from alembic import context
 from sqlalchemy import Engine, create_engine, pool, text
 
 from pyworkflowkit.adapters.metadata.sqlalchemy import models as _models  # noqa: F401
-from pyworkflowkit.adapters.metadata.sqlalchemy.base import Base, DB_SCHEMA
+from pyworkflowkit.adapters.metadata.sqlalchemy.base import DB_SCHEMA, Base
 
 config = context.config
 target_metadata = Base.metadata
