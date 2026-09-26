@@ -329,8 +329,6 @@ def test_retry_creates_new_attempt_without_losing_concurrent_runner_authority() 
     ]
 
 
-
-
 def test_retry_wait_does_not_block_other_ready_task_dispatch() -> None:
     calls = 0
     order: list[str] = []
@@ -386,9 +384,8 @@ def test_retry_wait_does_not_block_other_ready_task_dispatch() -> None:
         for event in store.list_events(run.run_id)
         if event.event_type is RuntimeEventType.TASK_RETRYING
     )
-    assert retry_event.payload["retry_eligible_at"] == (
-        NOW + timedelta(seconds=0.05)
-    ).isoformat()
+    assert retry_event.payload["retry_eligible_at"] == (NOW + timedelta(seconds=0.05)).isoformat()
+
 
 def test_two_running_siblings_can_fail_without_second_workflow_transition() -> None:
     barrier = threading.Barrier(2)
