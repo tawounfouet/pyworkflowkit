@@ -43,6 +43,14 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Concurrent retry coordination using the existing RetryEngine and Sleeper contracts.
 - M29 mandatory coverage for fan-out, fan-in, capacity, duplicate-ready race, and fail-fast siblings.
 
+- Thread-safe CancellationController with deterministic first-request semantics.
+- ConcurrentRunner cancellation that stops new dispatch and normalizes PENDING/READY tasks to CANCELLED.
+- Natural completion coordination for already-RUNNING ThreadExecutor attempts.
+- Cancellation-aware retry suppression after a request has been observed.
+- KeyboardInterrupt normalization into the same graceful cancellation path.
+- WORKFLOW_CANCELLED evidence carrying cancellation reason and undispatched-task count.
+- M30 reference coverage for external cancellation, running-attempt drain, and graceful shutdown semantics.
+
 
 ### Changed
 
