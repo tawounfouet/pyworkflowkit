@@ -10,11 +10,20 @@ from typing import Protocol
 
 
 class _CommandView(Protocol):
-    argv: tuple[str, ...]
-    cwd: str | None
-    env: Mapping[str, str] | None
-    stdin: str | None
-    encoding: str
+    @property
+    def argv(self) -> tuple[str, ...]: ...
+
+    @property
+    def cwd(self) -> str | None: ...
+
+    @property
+    def env(self) -> Mapping[str, str] | None: ...
+
+    @property
+    def stdin(self) -> str | None: ...
+
+    @property
+    def encoding(self) -> str: ...
 
 
 @dataclass(frozen=True, slots=True)
