@@ -33,6 +33,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - SQLite and PostgreSQL stores now bootstrap durable schemas through Alembic rather than `create_all()`.
 - Fresh-upgrade and idempotent-upgrade migration qualification for SQLite and PostgreSQL.
 - Wheel smoke coverage ensuring migration revision resources are shipped with the installed package.
+- Strictly monotonic durable runtime-event ordering while allowing non-gapless sequences.
+- Deterministic execution-lineage projection across task dependencies, attempts, artifacts, and external runs.
+- Atomic local JSON export for canonical RunManifest evidence.
+- V0.2 evidence-hardening acceptance coverage across SQLite restart, manifest serialization, lineage, and event ordering.
 
 ### Changed
 
