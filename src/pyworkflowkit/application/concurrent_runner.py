@@ -84,6 +84,11 @@ class _HardTerminationExecutor(Protocol):
     def terminate(self, handle: ExecutionHandle) -> bool: ...
 
 
+@runtime_checkable
+class _CooperativeCancellationExecutor(Protocol):
+    def cancel(self, handle: ExecutionHandle) -> bool: ...
+
+
 @dataclass(slots=True)
 class _ActiveExecution:
     task_id: TaskId
@@ -261,8 +266,7 @@ class ConcurrentRunner(Runner):
                     try:
                         cancellation_poll_seconds = (
                             0.05
-                            if self._concurrent_executor.capabilities.cancellation
-                            is CancellationCapability.HARD
+                            if self._concurrent_executor.capabilities.supports_cancellation
                             else None
                         )
                         completion = self._concurrent_executor.completion_queue.get(
@@ -888,13 +892,20 @@ class ConcurrentRunner(Runner):
         pending_retries.clear()
         self._persist_cancelled_task_runs(cancelled_task_runs)
 
-        hard_cancelled_handle_ids: set[str] = set()
-        if self._concurrent_executor.capabilities.cancellation is CancellationCapability.HARD:
+        executor_cancelled_handle_ids: set[str] = set()
+        cancellation_capability = self._concurrent_executor.capabilities.cancellation
+        if cancellation_capability is CancellationCapability.HARD:
             terminator = self._hard_terminator()
             for execution in tuple(active.values()):
                 terminated = terminator.terminate(execution.handle)
                 if terminated and not execution.timed_out:
-                    hard_cancelled_handle_ids.add(execution.handle.handle_id)
+                    executor_cancelled_handle_ids.add(execution.handle.handle_id)
+        elif cancellation_capability is CancellationCapability.COOPERATIVE:
+            canceller = self._cooperative_canceller()
+            for execution in tuple(active.values()):
+                cancelled = canceller.cancel(execution.handle)
+                if cancelled and not execution.timed_out:
+                    executor_cancelled_handle_ids.add(execution.handle.handle_id)
 
         log_runtime(
             logger,
@@ -925,8 +936,8 @@ class ConcurrentRunner(Runner):
             capacity.release(completed_execution.lease)
             if completed_execution.timed_out:
                 continue
-            if completed_execution.handle.handle_id in hard_cancelled_handle_ids:
-                self._apply_hard_cancellation_completion(
+            if completed_execution.handle.handle_id in executor_cancelled_handle_ids:
+                self._apply_executor_cancellation_completion(
                     execution=completed_execution,
                     completion=completion,
                 )
@@ -999,7 +1010,17 @@ class ConcurrentRunner(Runner):
             )
         return self._concurrent_executor
 
-    def _apply_hard_cancellation_completion(
+    def _cooperative_canceller(self) -> _CooperativeCancellationExecutor:
+        if not isinstance(self._concurrent_executor, _CooperativeCancellationExecutor):
+            raise RuntimeInvariantError(
+                reason=(
+                    f"executor '{self._concurrent_executor.key}' declares cooperative "
+                    "cancellation but does not implement cancel(handle)"
+                )
+            )
+        return self._concurrent_executor
+
+    def _apply_executor_cancellation_completion(
         self,
         *,
         execution: _ActiveExecution,
@@ -1007,7 +1028,7 @@ class ConcurrentRunner(Runner):
     ) -> None:
         if completion.handle != execution.handle:
             raise RuntimeInvariantError(
-                reason="hard-cancellation completion handle does not match active execution"
+                reason="executor-cancellation completion handle does not match active execution"
             )
         cancelled_at = self._clock.now()
         self._state_machine.cancel_attempt(execution.attempt, at=cancelled_at)
