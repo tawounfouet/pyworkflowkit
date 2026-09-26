@@ -6,6 +6,7 @@ Create Date: 2026-09-26
 """
 
 from collections.abc import Sequence
+from typing import Any
 
 import sqlalchemy as sa
 from alembic import op
@@ -23,7 +24,7 @@ def _schema() -> str | None:
     return "pyworkflowkit" if op.get_bind().dialect.name == "postgresql" else None
 
 
-def _json_type() -> sa.types.TypeEngine:
+def _json_type() -> sa.types.TypeEngine[Any]:
     if op.get_bind().dialect.name == "postgresql":
         return postgresql.JSONB()
     return sa.JSON()
