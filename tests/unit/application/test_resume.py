@@ -542,8 +542,6 @@ def test_resume_blocks_unresolved_reconciliation_without_mutation(
     assert store.list_task_attempts(a_run_id)[0].status is TaskAttemptStatus.RUNNING
 
 
-
-
 def test_resume_overdue_retry_wait_creates_next_attempt_on_same_task_run() -> None:
     store = MemoryMetadataStore()
     task_run_id = TaskRunId("resume-run:A")
@@ -675,6 +673,7 @@ def test_resume_rejects_retry_wait_before_eligibility_without_mutation() -> None
     assert len(attempts) == 1
     assert attempts[0].retry_eligible_at == eligible_at
     assert store.get_task_run(task_run_id).status is TaskRunStatus.RUNNING
+
 
 def test_resume_rejects_workflow_definition_version_mismatch() -> None:
     store = MemoryMetadataStore()
