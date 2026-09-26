@@ -46,6 +46,17 @@ def _context(name: str) -> RunContext:
     )
 
 
+def test_thread_executor_preserves_explicit_completion_queue() -> None:
+    from pyworkflowkit.application.completion import CompletionQueue
+
+    completion_queue = CompletionQueue()
+    executor = ThreadExecutor(max_workers=1, completion_queue=completion_queue)
+    try:
+        assert executor.completion_queue is completion_queue
+    finally:
+        executor.shutdown()
+
+
 def test_thread_executor_declares_parallel_soft_timeout_capabilities() -> None:
     executor = ThreadExecutor(max_workers=3)
     try:
