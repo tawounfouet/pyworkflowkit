@@ -7,8 +7,8 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Self
 
-from sqlalchemy import Engine, URL, create_engine, event
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import URL, Engine, create_engine, event
+from sqlalchemy.orm import sessionmaker
 
 from pyworkflowkit.adapters.metadata.sqlalchemy import (
     DB_SCHEMA,
