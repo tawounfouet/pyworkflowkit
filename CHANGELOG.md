@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M38 Reconciliation with provider-specific ExternalRunVerifier contracts and registry.
+- Normalized external statuses: RUNNING, SUCCEEDED, FAILED, CANCELLED, NOT_FOUND, UNKNOWN.
+- ReconciliationService for read-only classification of ambiguous persisted work.
+- Reconciliation dispositions: CONFIRMED_SUCCEEDED, CONFIRMED_FAILED, CONFIRMED_CANCELLED, STILL_RUNNING, MANUAL_REQUIRED.
+- Durable SQLite reconciliation acceptance after restart.
+- WorkflowRuntime register_external_run_verifier() and reconcile_run() facade methods.
+
 - M37 Recovery Foundation with read-only persisted-run recovery assessment.
 - RecoveryLiveness classification: terminal, active, stale_candidate, and unknown.
 - ResumeEligibility classification without performing resume: not_eligible, eligible, and requires_reconciliation.
@@ -18,6 +25,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Explicit ambiguity detection for RUNNING TaskRuns, RUNNING TaskAttempts, and non-terminal external work.
 
 ### Changed
+
+- The 0.6 development line advances to 0.6.0a2.
+- M38 verifies external status before any resume decision and still performs no runtime-state mutation.
+- Missing verifiers, provider failures, unknown/not-found states, and conflicting external statuses are classified conservatively as manual action.
 
 ### Changed
 
