@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** `0.3.0`. The local sequential runtime, durable persistence, public API,
-> decorators, CLI, observability, plugin foundations, entry-point discovery, and optional
-> PyIngestKit integration are qualified. Concurrent execution begins in the `0.4.x` line.
+> **Status:** stable baseline `0.3.0`; current development line `0.4.0a1`.
+> The 0.4 line introduces bounded concurrency incrementally, starting with explicit
+> executor capability contracts before any concurrent dispatch is enabled.
 
 ## What 0.3 provides
 
@@ -259,8 +259,8 @@ control-plane concerns remain outside the core.
 ```text
 0.1  Core sequential runtime
 0.2  Durable persistence and evidence
-0.3  Developer framework, CLI, plugins, PyIngestKit boundary   ← current
-0.4  Bounded concurrency, cancellation, timeout
+0.3  Developer framework, CLI, plugins, PyIngestKit boundary   ✓ stable baseline
+0.4  Bounded concurrency, cancellation, timeout                 ← current development
 0.5  Process/async/subprocess executors and hardening
 0.6  Recovery, reconciliation, resume, non-blocking retry
 0.7–0.9  Compatibility and stabilization
