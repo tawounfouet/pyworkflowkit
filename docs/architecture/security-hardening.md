@@ -83,7 +83,7 @@ A command may still provide an explicit environment.
 When configured:
 
 ```python
-allowed_executables=frozenset({sys.executable})
+allowed_executables = frozenset({sys.executable})
 ```
 
 the command's exact `argv[0]` must be present in the allowlist.
