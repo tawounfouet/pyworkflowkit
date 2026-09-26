@@ -33,7 +33,12 @@ dependencies = [
   "pydantic>=2.13,<3",
   "pydantic-settings>=2.11,<3",
   "sqlalchemy>=2.0,<3",
+  "typer>=0.12,<1",
 ]
+
+[project.scripts]
+pyworkflow = "pyworkflowkit.cli:main"
+pyworkflowkit = "pyworkflowkit.cli:main"
 
 [project.optional-dependencies]
 postgres = [
