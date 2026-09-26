@@ -8,7 +8,17 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M32 ProcessExecutor with bounded process isolation and explicit spawn-time serialization checks.
+- Process-safe RunContext and TaskResult transport snapshots that keep MappingProxyType inside the domain boundary.
+- Hard timeout and hard cancellation capabilities backed by per-handle child-process termination.
+- Process worker error translation into existing TaskExecutionError / ExecutorError completion semantics.
+- ConcurrentRunner support for structural concurrent executors instead of ThreadExecutor-only coordination.
+- Hard-cancellation coordinator semantics and periodic cancellation polling for hard-terminable executors.
+- M32 unit and reference acceptance coverage for isolation, serialization, error transfer, cleanup, and hard timeout.
+
 ### Changed
+
+- Concurrent timeout retries now wait for physical execution cleanup before redispatching the same task attempt lineage.
 
 ### Deprecated
 
