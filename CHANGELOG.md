@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M36 SubprocessSecurityPolicy with executable, cwd, environment, stdin, and captured-output guardrails.
+- Default subprocess environment isolation: parent environment variables are not inherited unless explicitly enabled.
+- SubprocessSecurityError with stable security_policy retry/error category.
+- ObservabilitySecurityPolicy with recursive sensitive-key redaction for external event sinks.
+- Default redaction of observability sink exception messages.
+- Dedicated Security CI gate with Bandit, pip-audit, detect-secrets, and pull-request dependency review.
+- M36 unit and reference acceptance coverage for environment isolation, allowlists, size boundaries, and observability redaction.
 - M35 committed-runtime-event observability plugin boundary through RuntimeEventSink.
 - ObservabilityDispatcher with deterministic fan-out and isolated sink failures.
 - Runtime-level event sink registration through WorkflowRuntime.register_event_sink().
@@ -38,6 +45,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- SubprocessExecutor now applies a security policy before process creation and before captured output crosses the executor boundary.
+- SubprocessExecutor no longer inherits the parent process environment by default.
+- External observability sinks receive redacted RuntimeEvent payloads by default while durable RuntimeEvent evidence remains unchanged.
 - Runtime events are now published to observability sinks only after their metadata UnitOfWork commit succeeds.
 - Observability plugins are explicitly secondary projections: sink failures do not alter workflow state or durable evidence.
 - The 0.5 executor family now covers in-process threads, isolated Python processes, asyncio workloads, and shell-free external programs behind the same coordinator-owned completion model.
