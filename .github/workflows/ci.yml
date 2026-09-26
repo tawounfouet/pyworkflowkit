@@ -93,7 +93,7 @@ jobs:
       - name: Package metadata smoke
         run: |
           python -c "from importlib.metadata import version; import pyworkflowkit; assert pyworkflowkit.__version__ == version('pyworkflowkit')"
-          test "$(pyworkflow version)" = "$(python -c "from importlib.metadata import version; print(version('pyworkflowkit'))")"
+          python -c "import subprocess; from importlib.metadata import version; assert subprocess.check_output(['pyworkflow', 'version'], text=True).strip() == version('pyworkflowkit')"
 
       - name: Migration resources smoke
         run: |
