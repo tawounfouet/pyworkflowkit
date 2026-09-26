@@ -29,7 +29,7 @@ def test_toml_overrides_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     monkeypatch.setenv("PYWORKFLOWKIT_METADATA__BACKEND", "memory")
     config_file = tmp_path / "pyworkflowkit.toml"
     config_file.write_text(
-        "[metadata]\nbackend = \"sqlite\"\nsqlite_path = \"local.sqlite3\"\n",
+        '[metadata]\nbackend = "sqlite"\nsqlite_path = "local.sqlite3"\n',
         encoding="utf-8",
     )
 
@@ -45,7 +45,7 @@ def test_explicit_overrides_win_over_toml_and_environment(
 ) -> None:
     monkeypatch.setenv("PYWORKFLOWKIT_METADATA__BACKEND", "memory")
     config_file = tmp_path / "pyworkflowkit.toml"
-    config_file.write_text("[metadata]\nbackend = \"sqlite\"\n", encoding="utf-8")
+    config_file.write_text('[metadata]\nbackend = "sqlite"\n', encoding="utf-8")
 
     settings = RuntimeSettings.load(
         config_file=config_file,
