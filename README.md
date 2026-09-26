@@ -547,12 +547,14 @@ M38 consumes the ambiguous recovery evidence identified by M37 and verifies
 ```python
 from pyworkflowkit.ports.reconciliation import ExternalRunStatus
 
+
 class MyVerifier:
     provider = "my-provider"
 
     def verify(self, external_ref):
         # Query the external system using external_ref.external_run_id.
         return ExternalRunStatus.SUCCEEDED
+
 
 runtime.register_external_run_verifier(MyVerifier())
 report = runtime.reconcile_run(run_id, stale_after_seconds=300)
