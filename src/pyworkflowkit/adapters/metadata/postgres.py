@@ -52,7 +52,11 @@ def create_postgres_engine(settings: PostgresSettings) -> Engine:
         pool_size=settings.pool_size,
         max_overflow=settings.max_overflow,
         isolation_level="READ COMMITTED",
-        connect_args={"application_name": settings.application_name},
+        connect_args={
+            "application_name": settings.application_name,
+            "client_encoding": "UTF8",
+            "options": "-c timezone=UTC",
+        },
     )
 
 
