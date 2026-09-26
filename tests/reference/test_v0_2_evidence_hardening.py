@@ -236,16 +236,18 @@ def test_event_sequence_must_increase_but_need_not_be_gapless(tmp_path) -> None:
             )
             uow.commit()
 
-        assert [event.event_sequence for event in store.list_events(WorkflowRunId("run"))] == [10, 20]
+        event_sequences = [
+            event.event_sequence for event in store.list_events(WorkflowRunId("run"))
+        ]
+        assert event_sequences == [10, 20]
 
-        with pytest.raises(InvalidEventSequenceError):
-            with store.unit_of_work() as uow:
-                uow.add_event(
+        with pytest.raises(InvalidEventSequenceError), store.unit_of_work() as uow:
+            uow.add_event(
                     RuntimeEvent(
                         event_id=RuntimeEventId("event-15"),
                         event_type=RuntimeEventType.WORKFLOW_STARTED,
                         run_id=WorkflowRunId("run"),
                         occurred_at=NOW,
                         event_sequence=15,
-                    )
                 )
+            )
