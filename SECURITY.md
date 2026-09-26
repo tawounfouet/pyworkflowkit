@@ -80,7 +80,12 @@ The repository CI includes dedicated security checks for:
 - Bandit static analysis;
 - pip-audit dependency vulnerability scanning;
 - detect-secrets scanning of package source;
-- GitHub dependency review on pull requests.
+- GitHub dependency review on pull requests, when the repository Dependency Graph is enabled.
+
+Bandit, pip-audit, and detect-secrets are blocking CI gates. Dependency Review is already
+wired into CI but currently degrades to an explicit warning if GitHub reports that the
+repository Dependency Graph is unavailable. Enabling Dependency Graph makes that review
+fully effective without changing the workflow definition.
 
 These checks reduce risk but do not prove absence of vulnerabilities.
 
