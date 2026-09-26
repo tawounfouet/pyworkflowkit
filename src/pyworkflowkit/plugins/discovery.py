@@ -117,8 +117,7 @@ class PluginDiscovery:
 
         candidates = self.discover(plugin_types=tuple(enabled))
         by_identity = {
-            (candidate.plugin_type, candidate.name): candidate
-            for candidate in candidates
+            (candidate.plugin_type, candidate.name): candidate for candidate in candidates
         }
 
         missing = [
@@ -138,9 +137,7 @@ class PluginDiscovery:
             )
 
         enabled_identities = {
-            (plugin_type, name)
-            for plugin_type, names in enabled.items()
-            for name in names
+            (plugin_type, name) for plugin_type, names in enabled.items() for name in names
         }
         results: list[PluginDiscoveryResult] = []
 
