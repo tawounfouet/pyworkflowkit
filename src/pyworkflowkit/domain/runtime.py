@@ -150,6 +150,7 @@ class TaskAttempt:
     error_type: str | None = None
     error_message: str | None = None
     error_category: str | None = None
+    retry_eligible_at: datetime | None = None
     error_metadata: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -171,12 +172,19 @@ class TaskAttempt:
 
         _ensure_aware_datetime(self.started_at, field_name="started_at")
         _ensure_aware_datetime(self.finished_at, field_name="finished_at")
+        _ensure_aware_datetime(self.retry_eligible_at, field_name="retry_eligible_at")
 
         if self.status is TaskAttemptStatus.RUNNING:
             if self.finished_at is not None:
                 raise ValueError("RUNNING TaskAttempt cannot have finished_at.")
         elif self.finished_at is None:
             raise ValueError("Terminal TaskAttempt must have finished_at.")
+
+        if self.retry_eligible_at is not None:
+            if self.status is not TaskAttemptStatus.FAILED:
+                raise ValueError("retry_eligible_at is only valid for FAILED TaskAttempt.")
+            if self.finished_at is None or self.retry_eligible_at < self.finished_at:
+                raise ValueError("retry_eligible_at cannot be earlier than finished_at.")
 
         self.error_metadata = _freeze_mapping(self.error_metadata)
 
