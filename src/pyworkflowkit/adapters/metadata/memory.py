@@ -16,6 +16,7 @@ from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, Wor
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef
 from pyworkflowkit.errors import (
     DuplicateMetadataError,
+    InvalidEventSequenceError,
     MetadataNotFoundError,
     UnitOfWorkStateError,
 )
@@ -215,16 +216,18 @@ class MemoryUnitOfWork:
                 entity_type="WorkflowRun",
                 entity_id=str(event.run_id),
             )
-        if event.event_sequence is not None:
-            for existing in state.events.values():
-                if (
-                    existing.run_id == event.run_id
-                    and existing.event_sequence == event.event_sequence
-                ):
-                    raise DuplicateMetadataError(
-                        entity_type="RuntimeEventSequence",
-                        entity_id=f"{event.run_id}:{event.event_sequence}",
-                    )
+        existing_sequences = [
+            existing.event_sequence
+            for existing in state.events.values()
+            if existing.run_id == event.run_id and existing.event_sequence is not None
+        ]
+        expected_sequence = max(existing_sequences, default=0) + 1
+        if event.event_sequence != expected_sequence:
+            raise InvalidEventSequenceError(
+                run_id=str(event.run_id),
+                expected_sequence=expected_sequence,
+                actual_sequence=event.event_sequence,
+            )
         state.events[event.event_id] = event
 
     def add_artifact(
