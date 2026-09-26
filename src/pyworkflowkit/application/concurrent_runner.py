@@ -121,6 +121,7 @@ class ConcurrentRunner(Runner):
         sleeper: Sleeper,
         global_limit: int | None = None,
         executor_limit: int | None = None,
+        observability: ObservabilityDispatcher | None = None,
     ) -> None:
         super().__init__(
             metadata_store=metadata_store,
@@ -129,6 +130,7 @@ class ConcurrentRunner(Runner):
             clock=clock,
             id_factory=id_factory,
             sleeper=sleeper,
+            observability=observability,
         )
         self._concurrent_executor = executor
         self._global_limit = (
