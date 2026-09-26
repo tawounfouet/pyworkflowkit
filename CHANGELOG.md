@@ -62,6 +62,12 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - PluginCatalog with separate executor, metadata, workload, and event registries.
 - Public PluginError hierarchy for duplicate, missing, and type-mismatched registrations.
 - M22 acceptance coverage proving manual registration is explicit and performs no automatic discovery.
+- Entry-point discovery across pyworkflowkit.executors, metadata, workloads, and events groups.
+- Discovery metadata collection without importing plugin code.
+- Explicit opt-in enablement with lazy provider loading.
+- Plugin API compatibility checks against the runtime plugin contract version.
+- Discovery reports distinguishing discovered, loaded, incompatible, and failed plugins.
+- Failure isolation so non-enabled or broken plugins do not implicitly break the runtime.
 
 ### Changed
 
