@@ -49,9 +49,7 @@ class WorkflowRuntime:
     def events(self, run_id: WorkflowRunId | str) -> tuple[RuntimeEvent, ...]:
         """Return persisted runtime events in durable sequence order."""
 
-        return tuple(
-            self._components.metadata_store.list_events(WorkflowRunId(str(run_id)))
-        )
+        return tuple(self._components.metadata_store.list_events(WorkflowRunId(str(run_id))))
 
     def manifest(
         self,
