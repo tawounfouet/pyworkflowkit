@@ -268,8 +268,6 @@ def test_running_local_work_without_external_reference_requires_manual_action() 
     assert item.reasons == ("local_running_work_has_no_external_reconciliation_evidence",)
 
 
-
-
 def test_retry_wait_without_external_work_needs_no_reconciliation() -> None:
     store = MemoryMetadataStore()
     run_id, task_run_id = _persist(
@@ -310,6 +308,7 @@ def test_retry_wait_with_external_work_still_reconciles_provider() -> None:
 
     assert len(report.task_reconciliations) == 1
     assert report.task_reconciliations[0].disposition is ReconciliationDisposition.STILL_RUNNING
+
 
 def test_ready_task_without_external_work_needs_no_reconciliation() -> None:
     store = MemoryMetadataStore()
