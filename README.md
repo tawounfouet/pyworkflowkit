@@ -7,13 +7,14 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable baseline `0.3.0`; current development line `0.4.0a7`.
-> The 0.4 line now includes bounded concurrent DAG dispatch, graceful cancellation,
-> and explicit timeout semantics. The remaining work is transverse 0.4 qualification.
+> **Status:** stable release `0.4.0`.
+> The runtime now supports bounded concurrent DAG execution through `ThreadExecutor`
+> and `ConcurrentRunner`, plus graceful cancellation and explicit timeout semantics.
 
-## What 0.3 provides
+## What 0.4 provides
 
-The `0.3.x` line is the first complete local developer framework:
+The `0.4.x` line keeps the complete local developer framework from 0.3 and adds
+bounded concurrent execution:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
 - deterministic DAG validation and topological planning;
@@ -30,10 +31,17 @@ The `0.3.x` line is the first complete local developer framework:
   plugin discovery, diagnostics, and version reporting;
 - structured diagnostic logging with secret redaction;
 - typed plugin registries and opt-in `importlib.metadata` entry-point discovery;
-- optional PyIngestKit anti-corruption adapter with explicit retry ownership.
+- optional PyIngestKit anti-corruption adapter with explicit retry ownership;
+- explicit executor capabilities for parallelism, timeout, cancellation, and concurrency;
+- thread-safe global and per-executor capacity accounting;
+- `ThreadExecutor` backed by `ThreadPoolExecutor`;
+- coordinator-owned concurrent fan-out/fan-in execution through `ConcurrentRunner`;
+- graceful workflow cancellation that stops new dispatch and drains already-running work;
+- explicit `NONE` / `SOFT` / `HARD` timeout semantics with capability validation;
+- timeout failures normalized through the existing retry engine.
 
-The runtime remains intentionally sequential in 0.3. Execution groups already express
-structural parallelism, but concurrent dispatch is introduced only in 0.4.
+`WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
+an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.
 
 ## Installation
 
@@ -92,6 +100,72 @@ print(manifest.run_id)
 ```
 
 Decoration and import are lazy: defining a task or workflow does not execute a workload.
+
+## Concurrent execution in 0.4
+
+The concurrent runtime is explicit rather than hidden behind the default local facade:
+
+```python
+from pyworkflowkit import TaskDefinition, TaskId, TimeoutMode, WorkflowDefinition, WorkflowId
+from pyworkflowkit.adapters.executors.thread import ThreadExecutor
+from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore
+from pyworkflowkit.adapters.runtime import SystemClock, SystemSleeper, UuidRuntimeIdFactory
+from pyworkflowkit.application.concurrent_runner import ConcurrentRunner
+from pyworkflowkit.application.execution import HandlerRegistry
+
+handlers = HandlerRegistry()
+handlers.register("handlers:a", lambda: "a")
+handlers.register("handlers:b", lambda: "b")
+
+workflow = WorkflowDefinition(
+    workflow_id=WorkflowId("demo.concurrent"),
+    version="1",
+    tasks=(
+        TaskDefinition(
+            task_id=TaskId("a"),
+            handler_ref="handlers:a",
+            executor_key="thread",
+            timeout_seconds=5.0,
+            timeout_mode=TimeoutMode.SOFT,
+        ),
+        TaskDefinition(
+            task_id=TaskId("b"),
+            handler_ref="handlers:b",
+            executor_key="thread",
+        ),
+    ),
+)
+
+executor = ThreadExecutor(max_workers=2)
+runner = ConcurrentRunner(
+    metadata_store=MemoryMetadataStore(),
+    handler_registry=handlers,
+    executor=executor,
+    clock=SystemClock(),
+    id_factory=UuidRuntimeIdFactory(),
+    sleeper=SystemSleeper(),
+    global_limit=2,
+)
+
+try:
+    run = runner.run(workflow)
+finally:
+    executor.shutdown(wait=True)
+```
+
+Cancellation uses a thread-safe controller passed to the coordinator:
+
+```python
+from pyworkflowkit.application.cancellation import CancellationController
+
+cancellation = CancellationController()
+cancellation.request(reason="user_requested")
+run = runner.run(workflow, cancellation=cancellation)
+```
+
+For `ThreadExecutor`, timeout support is intentionally **SOFT**: the logical attempt can
+fail on deadline while the Python thread finishes later. Hard thread termination is not
+simulated, and `HARD` timeout requests are rejected by capability validation.
 
 ## CLI
 
@@ -237,9 +311,9 @@ DAGValidator
         ↓
 ExecutionPlanner
         ↓
-Runner
+Runner / ConcurrentRunner
         ↓
-Executor + RetryEngine
+LocalExecutor / ThreadExecutor + RetryEngine
         ↓
 MetadataStore + RuntimeEvents
         ↓
@@ -259,13 +333,12 @@ control-plane concerns remain outside the core.
 ```text
 0.1  Core sequential runtime
 0.2  Durable persistence and evidence
-0.3  Developer framework, CLI, plugins, PyIngestKit boundary   ✓ stable baseline
-0.4  Bounded concurrency, cancellation, timeout                 ← current development
-0.5  Process/async/subprocess executors and hardening
+0.3  Developer framework, CLI, plugins, PyIngestKit boundary
+0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
+0.5  Process/async/subprocess executors and hardening            ← next development
 0.6  Recovery, reconciliation, resume, non-blocking retry
 0.7–0.9  Compatibility and stabilization
 1.0  Stable embedded runtime
 ```
 
-The next implementation milestone after the 0.3 release is **M25 — Executor
-Capabilities**.
+The next implementation milestone after the 0.4 release is **M32 — ProcessExecutor**.

@@ -8,6 +8,20 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.4.0 - 2026-09-26
+
+### Added
+
 - Explicit executor timeout capability levels: none, soft, and hard.
 - Explicit executor cancellation capability levels: none, cooperative, and hard.
 - Executor max_concurrency declaration with conservative invariants.
@@ -61,14 +75,19 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Serialization and declarative API support for timeout_mode.
 - M31 reference coverage for terminal soft timeout and timeout retry integration.
 
-
 ### Changed
+
+- The execution line now supports bounded concurrent READY-task dispatch while preserving coordinator-owned runtime state transitions.
+- Task timeout declarations now carry explicit NONE/SOFT/HARD semantics with backward-compatible timeout_seconds-to-SOFT normalization.
+- The package root public API adds TimeoutMode while advanced concurrency components remain on their dedicated application/adapter import paths.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Explicitly injected empty CompletionQueue instances are preserved by ThreadExecutor instead of being replaced by a default queue.
 
 ### Security
 

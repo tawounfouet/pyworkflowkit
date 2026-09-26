@@ -90,10 +90,11 @@ jobs:
       - name: Import smoke
         run: python -c "import pyworkflowkit; print(pyworkflowkit.__version__)"
 
-      - name: Package metadata smoke
+      - name: Release metadata smoke
         run: |
-          python -c "from importlib.metadata import version; import pyworkflowkit; assert pyworkflowkit.__version__ == version('pyworkflowkit')"
-          python -c "import subprocess; from importlib.metadata import version; assert subprocess.check_output(['pyworkflow', 'version'], text=True).strip() == version('pyworkflowkit')"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.4.0'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.4.0'"
+          pyworkflow version | grep -Fx "0.4.0"
 
       - name: Migration resources smoke
         run: |
