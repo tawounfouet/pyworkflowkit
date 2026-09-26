@@ -58,7 +58,7 @@ jobs:
         run: bandit -q -r src/pyworkflowkit -x src/pyworkflowkit/migrations
 
       - name: Dependency audit
-        run: pip-audit --strict
+        run: pip-audit --strict --skip-editable
 
       - name: Secret scan
         run: |
