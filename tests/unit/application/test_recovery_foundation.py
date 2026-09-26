@@ -69,19 +69,27 @@ def _persist_run(
 ) -> None:
     workflow_run_id = WorkflowRunId(run_id)
     task_run_id = TaskRunId(f"{run_id}:task")
-    run_finished = NOW if run_status in {
-        WorkflowRunStatus.SUCCEEDED,
-        WorkflowRunStatus.FAILED,
-        WorkflowRunStatus.CANCELLED,
-    } else None
+    run_finished = (
+        NOW
+        if run_status
+        in {
+            WorkflowRunStatus.SUCCEEDED,
+            WorkflowRunStatus.FAILED,
+            WorkflowRunStatus.CANCELLED,
+        }
+        else None
+    )
     task_finished = (
-        task_finished_at if task_finished_at is not None else NOW
-    ) if task_status in {
-        TaskRunStatus.SUCCEEDED,
-        TaskRunStatus.FAILED,
-        TaskRunStatus.SKIPPED,
-        TaskRunStatus.CANCELLED,
-    } else None
+        (task_finished_at if task_finished_at is not None else NOW)
+        if task_status
+        in {
+            TaskRunStatus.SUCCEEDED,
+            TaskRunStatus.FAILED,
+            TaskRunStatus.SKIPPED,
+            TaskRunStatus.CANCELLED,
+        }
+        else None
+    )
 
     with store.unit_of_work() as uow:
         uow.add_workflow_run(
@@ -118,11 +126,7 @@ def _persist_run(
                     attempt_number=1,
                     status=attempt_status,
                     started_at=attempt_started_at,
-                    finished_at=(
-                        attempt_finished_at
-                        if terminal_attempt
-                        else None
-                    ),
+                    finished_at=(attempt_finished_at if terminal_attempt else None),
                 )
             )
         if event_at is not None:
