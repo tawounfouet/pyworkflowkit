@@ -37,6 +37,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Deterministic execution-lineage projection across task dependencies, attempts, artifacts, and external runs.
 - Atomic local JSON export for canonical RunManifest evidence.
 - V0.2 evidence-hardening acceptance coverage across SQLite restart, manifest serialization, lineage, and event ordering.
+- Validated RuntimeSettings with nested environment-variable support.
+- TOML configuration loading with explicit > file > environment > defaults precedence.
+- SecretStr-backed PostgreSQL configuration with redacted diagnostic export.
+- RuntimeFactory composition root for Memory, SQLite, PostgreSQL, and LocalExecutor.
 
 ### Changed
 
