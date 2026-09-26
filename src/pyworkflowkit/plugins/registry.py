@@ -119,7 +119,7 @@ class PluginCatalog:
             return _erase_registry(self.metadata)
         if plugin_type is PluginType.WORKLOAD:
             return self.workloads
-        return self.events
+        return _erase_registry(self.events)
 
     def descriptors(self) -> tuple[PluginDescriptor, ...]:
         """Return all manually registered descriptors deterministically."""
