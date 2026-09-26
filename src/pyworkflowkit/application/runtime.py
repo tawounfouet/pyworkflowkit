@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 
 from pyworkflowkit.application.factory import RuntimeComponents, RuntimeFactory
 from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.application.lineage import ExecutionLineageProjector
 from pyworkflowkit.application.manifest import RunManifestBuilder
 from pyworkflowkit.application.observability_plugins import ObservabilityDispatchFailure
+from pyworkflowkit.application.recovery import RecoveryAssessment, RecoveryInspector
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.ids import WorkflowRunId
@@ -88,6 +90,33 @@ class WorkflowRuntime:
             workflow=workflow,
             run_id=WorkflowRunId(str(run_id)),
         )
+
+    def recovery_assessment(
+        self,
+        run_id: WorkflowRunId | str,
+        *,
+        stale_after_seconds: float = 300.0,
+    ) -> RecoveryAssessment:
+        """Classify persisted recovery evidence without mutating the run."""
+
+        return RecoveryInspector(
+            metadata_store=self._components.metadata_store,
+            clock=self._components.clock,
+            stale_after=timedelta(seconds=stale_after_seconds),
+        ).assess(WorkflowRunId(str(run_id)))
+
+    def stale_run_candidates(
+        self,
+        *,
+        stale_after_seconds: float = 300.0,
+    ) -> tuple[RecoveryAssessment, ...]:
+        """Return persisted non-terminal runs whose evidence is stale."""
+
+        return RecoveryInspector(
+            metadata_store=self._components.metadata_store,
+            clock=self._components.clock,
+            stale_after=timedelta(seconds=stale_after_seconds),
+        ).find_stale_candidates()
 
     def lineage(
         self,
