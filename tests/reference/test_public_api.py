@@ -47,9 +47,11 @@ def test_root_import_surface_is_intentional() -> None:
     import pyworkflowkit
 
     expected = {
+        "ArtifactId",
         "ArtifactReference",
         "BackoffStrategy",
         "ExternalRunRef",
+        "ExternalRunRefId",
         "FailurePolicy",
         "PyWorkflowKitError",
         "RetryPolicy",
