@@ -243,11 +243,11 @@ def test_event_sequence_must_increase_but_need_not_be_gapless(tmp_path) -> None:
 
         with pytest.raises(InvalidEventSequenceError), store.unit_of_work() as uow:
             uow.add_event(
-                    RuntimeEvent(
-                        event_id=RuntimeEventId("event-15"),
-                        event_type=RuntimeEventType.WORKFLOW_STARTED,
-                        run_id=WorkflowRunId("run"),
-                        occurred_at=NOW,
-                        event_sequence=15,
+                RuntimeEvent(
+                    event_id=RuntimeEventId("event-15"),
+                    event_type=RuntimeEventType.WORKFLOW_STARTED,
+                    run_id=WorkflowRunId("run"),
+                    occurred_at=NOW,
+                    event_sequence=15,
                 )
             )
