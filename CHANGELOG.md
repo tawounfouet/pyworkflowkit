@@ -35,6 +35,14 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Shared in-process Python handler invocation mechanics across LocalExecutor and ThreadExecutor.
 - M28 acceptance coverage for parallelism, soft timeout behavior, completion errors, and shutdown.
 
+- ConcurrentRunner coordinator with serialized runtime-state authority.
+- Bounded dispatch of multiple READY TaskRuns through CapacityManager and ThreadExecutor.
+- Coordinator-owned fan-out/fan-in progression and completion processing.
+- Duplicate-ready protection through serialized PENDING → READY → RUNNING transitions.
+- FAIL_FAST concurrent semantics that stop new dispatch while allowing already-RUNNING siblings to finish.
+- Concurrent retry coordination using the existing RetryEngine and Sleeper contracts.
+- M29 mandatory coverage for fan-out, fan-in, capacity, duplicate-ready race, and fail-fast siblings.
+
 
 ### Changed
 
