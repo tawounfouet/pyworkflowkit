@@ -133,7 +133,6 @@ def test_sqlalchemy_contract_attempt_event_and_update(store: MetadataStore) -> N
     assert store.list_events(WorkflowRunId("run"))[0].event_type is RuntimeEventType.TASK_STARTED
 
 
-
 def test_sqlalchemy_contract_task_output_checkpoint_round_trip(
     store: MetadataStore,
 ) -> None:
