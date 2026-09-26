@@ -64,6 +64,7 @@ def _persist_run(
     attempt_status: TaskAttemptStatus | None = TaskAttemptStatus.RUNNING,
     attempt_started_at: datetime | None = OLD,
     attempt_finished_at: datetime | None = None,
+    retry_eligible_at: datetime | None = None,
     event_at: datetime | None = None,
     external: bool = False,
 ) -> None:
@@ -127,6 +128,7 @@ def _persist_run(
                     status=attempt_status,
                     started_at=attempt_started_at,
                     finished_at=(attempt_finished_at if terminal_attempt else None),
+                    retry_eligible_at=retry_eligible_at,
                 )
             )
         if event_at is not None:
@@ -282,6 +284,54 @@ def test_task_run_id_is_stable_idempotency_key_across_attempts() -> None:
     assert metadata.idempotency_key == "run:task"
     assert metadata.attempt_count == 2
 
+
+
+
+def test_future_retry_wait_is_active_not_ambiguous_running_work() -> None:
+    store = MemoryMetadataStore()
+    eligible_at = NOW + timedelta(minutes=10)
+    _persist_run(
+        store,
+        task_status=TaskRunStatus.RUNNING,
+        task_started_at=OLD,
+        attempt_status=TaskAttemptStatus.FAILED,
+        attempt_started_at=OLD,
+        attempt_finished_at=OLD + timedelta(minutes=1),
+        retry_eligible_at=eligible_at,
+    )
+
+    assessment = _inspector(store).assess(WorkflowRunId("run"))
+
+    assert assessment.liveness is RecoveryLiveness.ACTIVE
+    assert assessment.resume_eligibility is ResumeEligibility.NOT_ELIGIBLE
+    assert assessment.running_task_run_ids == ()
+    assert assessment.running_attempt_ids == ()
+    assert assessment.retry_waiting_task_run_ids == ("run:task",)
+    assert assessment.next_retry_eligible_at == eligible_at
+    assert "retry_wait_not_yet_eligible" in assessment.reasons
+
+
+def test_overdue_retry_wait_becomes_resume_eligible_without_reconciliation() -> None:
+    store = MemoryMetadataStore()
+    eligible_at = OLD + timedelta(minutes=10)
+    _persist_run(
+        store,
+        task_status=TaskRunStatus.RUNNING,
+        task_started_at=OLD,
+        attempt_status=TaskAttemptStatus.FAILED,
+        attempt_started_at=OLD,
+        attempt_finished_at=OLD + timedelta(minutes=1),
+        retry_eligible_at=eligible_at,
+        external=True,
+    )
+
+    assessment = _inspector(store).assess(WorkflowRunId("run"))
+
+    assert assessment.liveness is RecoveryLiveness.STALE_CANDIDATE
+    assert assessment.resume_eligibility is ResumeEligibility.ELIGIBLE
+    assert assessment.requires_reconciliation is False
+    assert assessment.retry_waiting_task_run_ids == ("run:task",)
+    assert assessment.unresolved_external_run_ref_count == 0
 
 def test_find_stale_candidates_excludes_recent_and_terminal_runs() -> None:
     store = MemoryMetadataStore()
