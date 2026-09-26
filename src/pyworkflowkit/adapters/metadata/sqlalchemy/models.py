@@ -13,11 +13,13 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import text
 
 from pyworkflowkit.adapters.metadata.sqlalchemy.base import (
     DB_SCHEMA,
     JSON_VALUE,
     Base,
+    RuntimeIdType,
     UTCDateTime,
 )
 
@@ -33,7 +35,7 @@ class WorkflowRunRow(Base):
         {"schema": DB_SCHEMA},
     )
 
-    run_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    run_id: Mapped[str] = mapped_column(RuntimeIdType(), primary_key=True)
     workflow_id: Mapped[str] = mapped_column(Text, nullable=False)
     workflow_version: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False)
@@ -57,9 +59,9 @@ class TaskRunRow(Base):
         {"schema": DB_SCHEMA},
     )
 
-    task_run_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    task_run_id: Mapped[str] = mapped_column(RuntimeIdType(), primary_key=True)
     run_id: Mapped[str] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.workflow_runs.run_id",
             onupdate="RESTRICT",
@@ -86,12 +88,18 @@ class TaskAttemptRow(Base):
             name="status_valid",
         ),
         Index("ix_task_attempts_task_run", "task_run_id", "attempt_number"),
+        Index(
+            "uq_task_attempts_one_running",
+            "task_run_id",
+            unique=True,
+            postgresql_where=text("status = 'RUNNING'"),
+        ).ddl_if(dialect="postgresql"),
         {"schema": DB_SCHEMA},
     )
 
-    attempt_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    attempt_id: Mapped[str] = mapped_column(RuntimeIdType(), primary_key=True)
     task_run_id: Mapped[str] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.task_runs.task_run_id",
             onupdate="RESTRICT",
@@ -130,10 +138,10 @@ class RuntimeEventRow(Base):
         {"schema": DB_SCHEMA},
     )
 
-    event_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    event_id: Mapped[str] = mapped_column(RuntimeIdType(), primary_key=True)
     event_type: Mapped[str] = mapped_column(Text, nullable=False)
     run_id: Mapped[str] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.workflow_runs.run_id",
             onupdate="RESTRICT",
@@ -145,7 +153,7 @@ class RuntimeEventRow(Base):
     occurred_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     event_sequence: Mapped[int | None] = mapped_column(Integer)
     task_run_id: Mapped[str | None] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.task_runs.task_run_id",
             onupdate="RESTRICT",
@@ -168,7 +176,7 @@ class ArtifactReferenceRow(Base):
 
     artifact_id: Mapped[str] = mapped_column(Text, primary_key=True)
     task_run_id: Mapped[str] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.task_runs.task_run_id",
             onupdate="RESTRICT",
@@ -200,7 +208,7 @@ class ExternalRunRefRow(Base):
 
     external_ref_id: Mapped[str] = mapped_column(Text, primary_key=True)
     task_run_id: Mapped[str] = mapped_column(
-        Text,
+        RuntimeIdType(),
         ForeignKey(
             f"{DB_SCHEMA}.task_runs.task_run_id",
             onupdate="RESTRICT",
