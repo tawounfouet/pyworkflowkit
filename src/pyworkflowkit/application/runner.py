@@ -448,7 +448,8 @@ class Runner:
                 + 1
             )
             started_at = self._clock.now()
-            self._state_machine.start_task(task_run, at=started_at)
+            if not is_retry_wait:
+                self._state_machine.start_task(task_run, at=started_at)
             attempt = self._new_attempt(
                 task_run=task_run,
                 attempt_number=next_attempt_number,
