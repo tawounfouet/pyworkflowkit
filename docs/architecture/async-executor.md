@@ -29,8 +29,7 @@ class AsyncExecutor(Protocol):
         task: TaskDefinition,
         handler: AsyncTaskHandler,
         context: RunContext,
-    ) -> TaskResult:
-        ...
+    ) -> TaskResult: ...
 ```
 
 The concrete adapter also implements the historical synchronous `execute()` shape as a
