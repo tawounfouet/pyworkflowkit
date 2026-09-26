@@ -172,7 +172,8 @@ class RecoveryInspector:
         unresolved_external_ref_count = sum(
             len(external_refs_by_task_run[task_run.task_run_id])
             for task_run in task_runs
-            if task_run.status
+            if task_run.task_run_id not in retry_waiting
+            and task_run.status
             not in {
                 TaskRunStatus.SUCCEEDED,
                 TaskRunStatus.FAILED,
