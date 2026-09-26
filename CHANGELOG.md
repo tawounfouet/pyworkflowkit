@@ -14,8 +14,16 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Explicit Domain ↔ Row persistence mappings with UTC normalization.
 - Canonical schema JSON codec with extra-field rejection and no implicit string fallback.
 - SerializationError with structured path/type/reason context.
+- SQLAlchemy 2.x dialect-neutral Declarative Base with deterministic naming conventions.
+- Portable UTC datetime and JSON/JSONB persistence types.
+- SQLAlchemy runtime/evidence rows for workflow runs, task runs, attempts, events, artifacts, and external run references.
+- Explicit neutral-record ↔ ORM-row mappings.
+- SqlAlchemyMetadataStore and SqlAlchemyUnitOfWork implementing the existing persistence ports.
+- SQLAlchemy contract checks using a transient relational database without introducing the durable SQLite product adapter.
 
 ### Changed
+
+- SQLAlchemy 2.x is now a runtime dependency for the relational persistence foundation.
 
 ### Deprecated
 
