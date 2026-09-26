@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired
 from threading import Event, RLock, Thread
@@ -394,17 +395,13 @@ class SubprocessExecutor:
 
         if not wait:
             for handle in active_handles:
-                try:
+                with suppress(ExecutionHandleNotFoundError):
                     self.terminate(handle)
-                except ExecutionHandleNotFoundError:
-                    pass
             return
 
         for handle in active_handles:
-            try:
+            with suppress(ExecutionHandleNotFoundError):
                 self.wait(handle)
-            except ExecutionHandleNotFoundError:
-                pass
 
         with self._lock:
             watchers = tuple(
