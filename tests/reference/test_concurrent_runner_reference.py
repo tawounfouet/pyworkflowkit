@@ -81,6 +81,6 @@ def test_diamond_executes_siblings_concurrently_before_fan_in() -> None:
         executor.shutdown()
 
     assert run.status is WorkflowRunStatus.SUCCEEDED
-    assert {
-        task_run.status for task_run in store.list_task_runs(run.run_id)
-    } == {TaskRunStatus.SUCCEEDED}
+    assert {task_run.status for task_run in store.list_task_runs(run.run_id)} == {
+        TaskRunStatus.SUCCEEDED
+    }
