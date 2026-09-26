@@ -371,8 +371,7 @@ class AsyncExecutor:
     def active_handles(self) -> tuple[ExecutionHandle, ...]:
         with self._lock:
             return tuple(
-                self._active_handles[handle_id]
-                for handle_id in sorted(self._active_handles)
+                self._active_handles[handle_id] for handle_id in sorted(self._active_handles)
             )
 
     def shutdown(self, *, wait: bool = True) -> None:
@@ -381,9 +380,7 @@ class AsyncExecutor:
         with self._lock:
             self._shutdown = True
             active_handles = tuple(self._active_handles.values())
-            done_events = tuple(
-                self._done_events[handle.handle_id] for handle in active_handles
-            )
+            done_events = tuple(self._done_events[handle.handle_id] for handle in active_handles)
 
         if wait:
             for done_event in done_events:
