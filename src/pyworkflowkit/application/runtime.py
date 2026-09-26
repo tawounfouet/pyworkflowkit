@@ -70,9 +70,7 @@ class WorkflowRuntime:
     ) -> ExecutionLineage:
         """Project deterministic execution lineage for one run."""
 
-        return ExecutionLineageProjector(
-            metadata_store=self._components.metadata_store
-        ).project(
+        return ExecutionLineageProjector(metadata_store=self._components.metadata_store).project(
             workflow=workflow,
             run_id=WorkflowRunId(str(run_id)),
         )
