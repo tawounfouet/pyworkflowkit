@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import FailurePolicy
+from pyworkflowkit.domain.enums import FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 from pyworkflowkit.domain.values import RetryPolicy, WorkflowParameter
 from pyworkflowkit.errors import (
@@ -24,6 +24,7 @@ def test_task_definition_has_safe_defaults() -> None:
     assert task.retry_policy == RetryPolicy()
     assert task.executor_key == "local"
     assert task.timeout_seconds is None
+    assert task.timeout_mode is TimeoutMode.NONE
     assert task.tags == frozenset()
 
 
@@ -81,6 +82,33 @@ def test_task_definition_rejects_invalid_timeout(timeout: float) -> None:
             task_id=TaskId("fetch"),
             timeout_seconds=timeout,
         )
+
+
+def test_timeout_seconds_without_explicit_mode_defaults_to_soft() -> None:
+    task = TaskDefinition(
+        task_id=TaskId("fetch"),
+        timeout_seconds=1.5,
+    )
+
+    assert task.timeout_mode is TimeoutMode.SOFT
+
+
+def test_timeout_mode_requires_timeout_seconds() -> None:
+    with pytest.raises(DefinitionError, match="timeout_mode requires timeout_seconds"):
+        TaskDefinition(
+            task_id=TaskId("fetch"),
+            timeout_mode=TimeoutMode.HARD,
+        )
+
+
+def test_task_definition_preserves_explicit_hard_timeout_mode() -> None:
+    task = TaskDefinition(
+        task_id=TaskId("fetch"),
+        timeout_seconds=2.0,
+        timeout_mode=TimeoutMode.HARD,
+    )
+
+    assert task.timeout_mode is TimeoutMode.HARD
 
 
 def test_task_definition_rejects_boolean_timeout() -> None:
