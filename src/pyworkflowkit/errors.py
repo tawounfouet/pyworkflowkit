@@ -282,6 +282,45 @@ class UnitOfWorkStateError(MetadataStoreError):
         super().__init__(f"UnitOfWork state is invalid: {reason}.")
 
 
+class PluginError(PyWorkflowKitError):
+    """Base class for plugin registration and resolution errors."""
+
+
+class DuplicatePluginError(PluginError):
+    """Raised when a plugin name is registered more than once."""
+
+    def __init__(self, *, plugin_name: str) -> None:
+        self.plugin_name = plugin_name
+        super().__init__(f"Plugin '{plugin_name}' is already registered.")
+
+
+class PluginNotFoundError(PluginError):
+    """Raised when a named plugin is absent from a typed registry."""
+
+    def __init__(self, *, plugin_name: str, plugin_type: str) -> None:
+        self.plugin_name = plugin_name
+        self.plugin_type = plugin_type
+        super().__init__(f"{plugin_type} plugin '{plugin_name}' is not registered.")
+
+
+class PluginTypeMismatchError(PluginError):
+    """Raised when a descriptor is registered in the wrong typed registry."""
+
+    def __init__(
+        self,
+        *,
+        plugin_name: str,
+        expected_type: str,
+        actual_type: str,
+    ) -> None:
+        self.plugin_name = plugin_name
+        self.expected_type = expected_type
+        self.actual_type = actual_type
+        super().__init__(
+            f"Plugin '{plugin_name}' has type '{actual_type}', expected '{expected_type}'."
+        )
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -354,8 +393,12 @@ __all__ = [
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",
+    "DuplicatePluginError",
     "PlanningError",
     "PlanningInvariantError",
+    "PluginError",
+    "PluginNotFoundError",
+    "PluginTypeMismatchError",
     "PyWorkflowKitError",
     "RuntimeErrorBase",
     "RuntimeInvariantError",
