@@ -43,6 +43,7 @@ def make_task_run() -> TaskRun:
         created_at=NOW,
     )
 
+
 def test_contract_commit_makes_data_visible(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
         uow.add_workflow_run(make_run())
@@ -53,6 +54,7 @@ def test_contract_commit_makes_data_visible(store: MetadataStore) -> None:
     assert tuple(run.run_id for run in store.list_workflow_runs()) == (WorkflowRunId("run"),)
     assert len(store.list_task_runs(WorkflowRunId("run"))) == 1
 
+
 def test_contract_rollback_keeps_data_invisible(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
         uow.add_workflow_run(make_run())
@@ -60,6 +62,7 @@ def test_contract_rollback_keeps_data_invisible(store: MetadataStore) -> None:
 
     with pytest.raises(MetadataNotFoundError):
         store.get_workflow_run(WorkflowRunId("run"))
+
 
 def test_contract_saved_runtime_state_requires_explicit_commit(
     store: MetadataStore,
@@ -79,6 +82,7 @@ def test_contract_saved_runtime_state_requires_explicit_commit(
         uow.commit()
 
     assert store.get_task_run(TaskRunId("task-run")).status is TaskRunStatus.READY
+
 
 def test_contract_attempt_and_event_history_are_queryable(
     store: MetadataStore,
@@ -111,6 +115,7 @@ def test_contract_attempt_and_event_history_are_queryable(
     assert len(store.list_task_attempts(TaskRunId("task-run"))) == 1
     assert len(store.list_events(WorkflowRunId("run"))) == 1
 
+
 def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
     with store.unit_of_work() as uow:
         uow.add_workflow_run(make_run())
@@ -135,6 +140,7 @@ def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
 
     persisted = store.list_task_attempts(TaskRunId("task-run"))[0]
     assert persisted.status is TaskAttemptStatus.SUCCEEDED
+
 
 
 def test_contract_task_output_checkpoint_round_trips_and_preserves_none(
