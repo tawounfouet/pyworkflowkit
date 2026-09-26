@@ -87,10 +87,7 @@ class PluginRegistry(Generic[T]):
     def descriptors(self) -> tuple[PluginDescriptor, ...]:
         """Return registered descriptors in deterministic name order."""
 
-        return tuple(
-            self._plugins[name].descriptor
-            for name in sorted(self._plugins)
-        )
+        return tuple(self._plugins[name].descriptor for name in sorted(self._plugins))
 
     def __contains__(self, name: object) -> bool:
         return isinstance(name, str) and name in self._plugins
@@ -103,18 +100,12 @@ class PluginCatalog:
     """Typed registries for current PyWorkflowKit extension categories."""
 
     def __init__(self) -> None:
-        self.executors: PluginRegistry[Executor] = PluginRegistry(
-            plugin_type=PluginType.EXECUTOR
-        )
+        self.executors: PluginRegistry[Executor] = PluginRegistry(plugin_type=PluginType.EXECUTOR)
         self.metadata: PluginRegistry[MetadataStore] = PluginRegistry(
             plugin_type=PluginType.METADATA
         )
-        self.workloads: PluginRegistry[object] = PluginRegistry(
-            plugin_type=PluginType.WORKLOAD
-        )
-        self.events: PluginRegistry[object] = PluginRegistry(
-            plugin_type=PluginType.EVENT
-        )
+        self.workloads: PluginRegistry[object] = PluginRegistry(plugin_type=PluginType.WORKLOAD)
+        self.events: PluginRegistry[object] = PluginRegistry(plugin_type=PluginType.EVENT)
 
     def registry_for(self, plugin_type: PluginType) -> PluginRegistry[object]:
         """Return a type-erased registry for generic inspection tooling."""
@@ -137,9 +128,7 @@ class PluginCatalog:
             self.events,
         )
         descriptors = [
-            descriptor
-            for registry in registries
-            for descriptor in registry.descriptors()
+            descriptor for registry in registries for descriptor in registry.descriptors()
         ]
         return tuple(
             sorted(
