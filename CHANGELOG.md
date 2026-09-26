@@ -20,6 +20,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Explicit neutral-record ↔ ORM-row mappings.
 - SqlAlchemyMetadataStore and SqlAlchemyUnitOfWork implementing the existing persistence ports.
 - SQLAlchemy contract checks using a transient relational database without introducing the durable SQLite product adapter.
+- Durable `SQLiteMetadataStore` backed by a local database file.
+- SQLite connection policy with foreign keys enabled, configurable busy timeout, and optional WAL mode.
+- Automatic parent-directory and schema bootstrap for local persistence.
+- Restart acceptance coverage proving persisted runs, tasks, attempts, and events survive store recreation.
 
 ### Changed
 
