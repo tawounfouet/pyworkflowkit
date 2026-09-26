@@ -41,6 +41,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - TOML configuration loading with explicit > file > environment > defaults precedence.
 - SecretStr-backed PostgreSQL configuration with redacted diagnostic export.
 - RuntimeFactory composition root for Memory, SQLite, PostgreSQL, and LocalExecutor.
+- WorkflowRuntime public application facade for handler registration, execution, run lookup, events, manifests, and lineage.
+- Intentional package-root API exposing workflow definitions, runtime settings, retry/result values, identifiers, and the public error root.
+- Public API acceptance coverage proving end-to-end execution using only package-root imports.
 
 ### Changed
 
