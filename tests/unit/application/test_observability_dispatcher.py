@@ -82,7 +82,7 @@ def test_dispatcher_isolates_sink_failure_and_continues_fanout() -> None:
     assert failure.event_id == "event-1"
     assert failure.event_type == RuntimeEventType.WORKFLOW_STARTED.value
     assert failure.error_type == "RuntimeError"
-    assert failure.error_message == "export unavailable"
+    assert failure.error_message == "<redacted>"
 
 
 def test_dispatcher_rejects_blank_and_duplicate_sink_names() -> None:

@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`; current development line `0.5.0a4`.
-> M35 adds committed-runtime-event observability plugins while keeping durable runtime
-> evidence authoritative and external telemetry best-effort.
+> **Status:** stable release `0.4.0`; current development line `0.5.0a5`.
+> M36 hardens subprocess, observability, and supply-chain boundaries without presenting
+> PyWorkflowKit as a sandbox for untrusted Python code.
 
 ## What 0.4 provides
 
@@ -393,6 +393,91 @@ factory result: RuntimeEventSink
 M35 does not add a dependency on OpenTelemetry, Prometheus, Datadog, or another
 observability backend.
 
+## Security hardening in 0.5.0a5
+
+M36 adds explicit guardrails around the two extension boundaries most likely to leak
+privilege or sensitive information: external subprocess execution and observability
+export.
+
+### Subprocess policy
+
+```python
+import sys
+
+from pyworkflowkit.adapters.executors.subprocess import (
+    SubprocessExecutor,
+    SubprocessSecurityPolicy,
+)
+
+policy = SubprocessSecurityPolicy(
+    allowed_executables=frozenset({sys.executable}),
+    allowed_env_keys=frozenset({"LANG"}),
+    inherit_environment=False,
+    max_stdin_bytes=1_048_576,
+    max_stdout_bytes=10_485_760,
+    max_stderr_bytes=10_485_760,
+)
+
+executor = SubprocessExecutor(
+    max_workers=4,
+    security_policy=policy,
+)
+```
+
+The default policy does **not** inherit the parent process environment. Explicit
+allowlists can further restrict executables, working-directory roots, and environment
+keys.
+
+Security-policy violations are normalized as:
+
+```text
+SubprocessSecurityError
+error_category = security_policy
+```
+
+PyWorkflowKit still does **not** claim operating-system sandboxing, CPU/RAM/network
+quotas, privilege dropping, seccomp, container isolation, or safe execution of untrusted
+Python handlers.
+
+### Observability redaction
+
+Committed RuntimeEvents remain unchanged in durable metadata. Before an event crosses
+into an external `RuntimeEventSink`, sensitive-looking payload keys such as
+`password`, `token`, `secret`, `api_key`, and authorization/credential fields are
+recursively replaced with `<redacted>` by default.
+
+```text
+durable RuntimeEvent
+        ↓
+ObservabilitySecurityPolicy
+        ↓
+redacted projection
+        ↓
+external sink
+```
+
+Sink exception messages are also redacted by default. An explicit debugging policy can
+opt into bounded error-message exposure.
+
+### Release security gates
+
+The CI security job now checks:
+
+```text
+Bandit
+pip-audit
+detect-secrets
+dependency review (pull requests; active when GitHub Dependency Graph is enabled)
+```
+
+Bandit, pip-audit, and detect-secrets are blocking CI gates. Dependency Review is
+configured for pull requests; until GitHub Dependency Graph is enabled for the
+repository, CI emits an explicit warning instead of treating platform unavailability as
+a dependency vulnerability.
+
+These checks complement — not replace — code review, trusted plugin selection, operating
+system isolation, and external secret-management systems.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -569,5 +654,6 @@ control-plane concerns remain outside the core.
 
 M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**; M33 — AsyncExecutor advanced
 it to **0.5.0a2**; M34 — SubprocessExecutor advanced it to **0.5.0a3**; M35 —
-Observability Plugins advances it to **0.5.0a4**. The next planned milestone is **M36 —
-Security Hardening**.
+Observability Plugins advanced it to **0.5.0a4**; M36 — Security Hardening advances it
+to **0.5.0a5**. The next step is transverse qualification and promotion to **0.5.0
+stable**.

@@ -64,9 +64,12 @@ class UuidRuntimeIdFactory:
         return RuntimeEventId(str(uuid4()))
 
 
-assert isinstance(SystemClock(), Clock)
-assert isinstance(SystemSleeper(), Sleeper)
-assert isinstance(UuidRuntimeIdFactory(), RuntimeIdFactory)
+if not isinstance(SystemClock(), Clock):
+    raise TypeError("SystemClock must satisfy Clock")
+if not isinstance(SystemSleeper(), Sleeper):
+    raise TypeError("SystemSleeper must satisfy Sleeper")
+if not isinstance(UuidRuntimeIdFactory(), RuntimeIdFactory):
+    raise TypeError("UuidRuntimeIdFactory must satisfy RuntimeIdFactory")
 
 
 __all__ = ["SystemClock", "SystemSleeper", "UuidRuntimeIdFactory"]

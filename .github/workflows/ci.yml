@@ -36,6 +36,62 @@ jobs:
       - name: Mypy
         run: mypy src
 
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install security tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[security]"
+
+      - name: Bandit
+        run: bandit -q -r src/pyworkflowkit -x src/pyworkflowkit/migrations
+
+      - name: Dependency audit
+        run: pip-audit --skip-editable
+
+      - name: Secret scan
+        run: |
+          detect-secrets scan src/pyworkflowkit > /tmp/pyworkflowkit-secrets.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("/tmp/pyworkflowkit-secrets.json").read_text())
+          results = report.get("results", {})
+          if results:
+              print(json.dumps(results, indent=2, sort_keys=True))
+              raise SystemExit("detect-secrets found candidate secrets in src/pyworkflowkit")
+          PY
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency review
+        id: dependency-review
+        continue-on-error: true
+        uses: actions/dependency-review-action@v4
+
+      - name: Dependency review availability
+        if: steps.dependency-review.outcome == 'failure'
+        run: |
+          echo "::warning::GitHub Dependency Review is unavailable until Dependency Graph is enabled for this repository."
+
   tests:
     name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -92,9 +148,9 @@ jobs:
 
       - name: Development metadata smoke
         run: |
-          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.5.0a4'"
-          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.5.0a4'"
-          pyworkflow version | grep -Fx "0.5.0a4"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.5.0a5'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.5.0a5'"
+          pyworkflow version | grep -Fx "0.5.0a5"
 
       - name: Migration resources smoke
         run: |

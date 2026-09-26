@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-import pickle
+import pickle  # nosec B403 - trusted intra-runtime process transport only
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
