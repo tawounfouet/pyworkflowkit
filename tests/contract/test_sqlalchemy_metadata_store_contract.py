@@ -76,6 +76,7 @@ def test_sqlalchemy_contract_commit_and_round_trip(store: MetadataStore) -> None
     loaded = store.get_workflow_run(WorkflowRunId("run"))
     assert loaded.workflow_id == WorkflowId("workflow")
     assert loaded.created_at == NOW
+    assert tuple(run.run_id for run in store.list_workflow_runs()) == (WorkflowRunId("run"),)
     assert len(store.list_task_runs(WorkflowRunId("run"))) == 1
 
 
