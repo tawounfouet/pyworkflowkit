@@ -17,7 +17,7 @@ from pyworkflowkit.domain.enums import (
     TaskRunStatus,
     WorkflowRunStatus,
 )
-from pyworkflowkit.domain.ids import WorkflowRunId
+from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock
@@ -123,16 +123,15 @@ class RecoveryInspector:
             events=events,
         )
 
-        retry_waiting = {
-            task_run.task_run_id: pending_retry_attempt(attempts_by_task_run[task_run.task_run_id])
-            for task_run in task_runs
-            if task_run.status is TaskRunStatus.RUNNING
-        }
-        retry_waiting = {
-            task_run_id: attempt
-            for task_run_id, attempt in retry_waiting.items()
-            if attempt is not None
-        }
+        retry_waiting: dict[TaskRunId, TaskAttempt] = {}
+        for task_run in task_runs:
+            if task_run.status is not TaskRunStatus.RUNNING:
+                continue
+            scheduled_retry = pending_retry_attempt(
+                attempts_by_task_run[task_run.task_run_id]
+            )
+            if scheduled_retry is not None:
+                retry_waiting[task_run.task_run_id] = scheduled_retry
         retry_waiting_task_runs = tuple(sorted(str(task_run_id) for task_run_id in retry_waiting))
         retry_eligible_times = tuple(
             attempt.retry_eligible_at
