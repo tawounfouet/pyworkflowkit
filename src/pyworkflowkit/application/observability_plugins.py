@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 
 from pyworkflowkit.application.observability import LogContext, log_runtime
+from pyworkflowkit.application.security import ObservabilitySecurityPolicy
 from pyworkflowkit.domain.runtime import RuntimeEvent
 from pyworkflowkit.ports.observability import RuntimeEventSink
 
@@ -30,9 +31,15 @@ class ObservabilityDispatchFailure:
 class ObservabilityDispatcher:
     """Best-effort fan-out of committed RuntimeEvents to external sinks."""
 
-    def __init__(self, sinks: tuple[RuntimeEventSink, ...] = ()) -> None:
+    def __init__(
+        self,
+        sinks: tuple[RuntimeEventSink, ...] = (),
+        *,
+        security_policy: ObservabilitySecurityPolicy | None = None,
+    ) -> None:
         self._sinks: dict[str, RuntimeEventSink] = {}
         self._failures: list[ObservabilityDispatchFailure] = []
+        self._security_policy = security_policy or ObservabilitySecurityPolicy()
         for sink in sinks:
             self.register(sink)
 
@@ -61,17 +68,18 @@ class ObservabilityDispatcher:
     def publish(self, event: RuntimeEvent) -> None:
         """Fan out one committed RuntimeEvent without affecting runtime correctness."""
 
+        sink_event = self._security_policy.event_for_sink(event)
         for name in self.sink_names:
             sink = self._sinks[name]
             try:
-                sink.emit(event)
+                sink.emit(sink_event)
             except Exception as exc:
                 failure = ObservabilityDispatchFailure(
                     sink_name=name,
                     event_id=str(event.event_id),
                     event_type=event.event_type.value,
                     error_type=type(exc).__name__,
-                    error_message=str(exc) or type(exc).__name__,
+                    error_message=self._security_policy.sink_error_message(exc),
                 )
                 self._failures.append(failure)
                 log_runtime(
