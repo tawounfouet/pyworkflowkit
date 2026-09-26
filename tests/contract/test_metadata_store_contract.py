@@ -142,7 +142,6 @@ def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
     assert persisted.status is TaskAttemptStatus.SUCCEEDED
 
 
-
 def test_contract_task_output_checkpoint_round_trips_and_preserves_none(
     store: MetadataStore,
 ) -> None:
