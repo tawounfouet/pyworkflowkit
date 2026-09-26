@@ -101,6 +101,7 @@ class PersistenceMapper:
             error_type=schema.error_type,
             error_message=schema.error_message,
             error_category=schema.error_category,
+            retry_eligible_at=schema.retry_eligible_at,
             error_metadata=dict(schema.error_metadata),
         )
 
@@ -116,6 +117,7 @@ class PersistenceMapper:
             error_type=value.error_type,
             error_message=value.error_message,
             error_category=value.error_category,
+            retry_eligible_at=value.retry_eligible_at,
             error_metadata=dict(value.error_metadata),
         )
         return DomainSchemaMapper.task_attempt_from_schema(schema)
