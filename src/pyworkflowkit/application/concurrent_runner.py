@@ -913,8 +913,8 @@ class ConcurrentRunner(Runner):
 
         while active:
             completion = self._concurrent_executor.completion_queue.get()
-            execution = active.get(completion.handle.handle_id)
-            if execution is None:
+            completed_execution = active.get(completion.handle.handle_id)
+            if completed_execution is None:
                 raise RuntimeInvariantError(
                     reason=(
                         "received completion for an execution handle "
@@ -922,17 +922,17 @@ class ConcurrentRunner(Runner):
                     )
                 )
             del active[completion.handle.handle_id]
-            capacity.release(execution.lease)
-            if execution.timed_out:
+            capacity.release(completed_execution.lease)
+            if completed_execution.timed_out:
                 continue
-            if execution.handle.handle_id in hard_cancelled_handle_ids:
+            if completed_execution.handle.handle_id in hard_cancelled_handle_ids:
                 self._apply_hard_cancellation_completion(
-                    execution=execution,
+                    execution=completed_execution,
                     completion=completion,
                 )
             else:
                 self._apply_cancellation_completion(
-                    execution=execution,
+                    execution=completed_execution,
                     completion=completion,
                     event_factory=event_factory,
                 )
@@ -972,8 +972,8 @@ class ConcurrentRunner(Runner):
     ) -> None:
         while active:
             completion = self._concurrent_executor.completion_queue.get()
-            execution = active.get(completion.handle.handle_id)
-            if execution is None:
+            completed_execution = active.get(completion.handle.handle_id)
+            if completed_execution is None:
                 raise RuntimeInvariantError(
                     reason=(
                         "received completion for an execution handle "
@@ -981,10 +981,10 @@ class ConcurrentRunner(Runner):
                     )
                 )
             del active[completion.handle.handle_id]
-            capacity.release(execution.lease)
-            if not execution.timed_out:
+            capacity.release(completed_execution.lease)
+            if not completed_execution.timed_out:
                 self._apply_cancellation_completion(
-                    execution=execution,
+                    execution=completed_execution,
                     completion=completion,
                     event_factory=event_factory,
                 )
