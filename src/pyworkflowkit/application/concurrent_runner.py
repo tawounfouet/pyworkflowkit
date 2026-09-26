@@ -54,16 +54,13 @@ class _ConcurrentExecutor(Protocol):
     """Structural contract required by the concurrent coordinator."""
 
     @property
-    def key(self) -> str:
-        ...
+    def key(self) -> str: ...
 
     @property
-    def capabilities(self) -> ExecutorCapabilities:
-        ...
+    def capabilities(self) -> ExecutorCapabilities: ...
 
     @property
-    def completion_queue(self) -> CompletionQueue:
-        ...
+    def completion_queue(self) -> CompletionQueue: ...
 
     def execute(
         self,
@@ -71,8 +68,7 @@ class _ConcurrentExecutor(Protocol):
         task: TaskDefinition,
         handler: TaskHandler,
         context: RunContext,
-    ) -> TaskResult:
-        ...
+    ) -> TaskResult: ...
 
     def submit(
         self,
@@ -80,14 +76,12 @@ class _ConcurrentExecutor(Protocol):
         task: TaskDefinition,
         handler: TaskHandler,
         context: RunContext,
-    ) -> ExecutionHandle:
-        ...
+    ) -> ExecutionHandle: ...
 
 
 @runtime_checkable
 class _HardTerminationExecutor(Protocol):
-    def terminate(self, handle: ExecutionHandle) -> bool:
-        ...
+    def terminate(self, handle: ExecutionHandle) -> bool: ...
 
 
 @dataclass(slots=True)
@@ -874,9 +868,7 @@ class ConcurrentRunner(Runner):
         reason = request.reason if request is not None else "requested"
         cancelled_task_runs: list[TaskRun] = []
         active_task_ids = {
-            execution.task_id
-            for execution in active.values()
-            if not execution.timed_out
+            execution.task_id for execution in active.values() if not execution.timed_out
         }
 
         for task_run in task_runs_by_task_id.values():
