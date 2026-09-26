@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from datetime import datetime
 
 from pyworkflowkit.application.events import RuntimeEventFactory
-from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.failure import FailurePropagator
 from pyworkflowkit.application.observability import LogContext, log_runtime
@@ -22,6 +21,7 @@ from pyworkflowkit.application.reconciliation import (
 )
 from pyworkflowkit.application.retry import RetryEngine
 from pyworkflowkit.application.state_machine import RunStateMachine
+from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import (
     RuntimeEventType,
