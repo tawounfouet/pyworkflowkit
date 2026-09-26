@@ -12,6 +12,7 @@ from types import MappingProxyType
 from typing import cast
 
 from pyworkflowkit.adapters.executors._python import resolve_invocation_arity
+from pyworkflowkit.adapters.executors.subprocess_security import SubprocessSecurityPolicy
 from pyworkflowkit.application.completion import (
     AttemptCompletion,
     CompletionQueue,
@@ -29,6 +30,7 @@ from pyworkflowkit.errors import (
     ExecutorWorkerError,
     InvalidHandlerError,
     SubprocessExecutionError,
+    SubprocessSecurityError,
     TaskExecutionError,
 )
 from pyworkflowkit.ports.executor import (
@@ -173,6 +175,7 @@ class SubprocessExecutor:
         max_workers: int = 4,
         completion_queue: CompletionQueue | None = None,
         terminate_grace_seconds: float = 0.2,
+        security_policy: SubprocessSecurityPolicy | None = None,
     ) -> None:
         if isinstance(max_workers, bool) or not isinstance(max_workers, int):
             raise TypeError("max_workers must be an integer")
@@ -190,6 +193,7 @@ class SubprocessExecutor:
             completion_queue if completion_queue is not None else CompletionQueue()
         )
         self._terminate_grace_seconds = float(terminate_grace_seconds)
+        self._security_policy = security_policy or SubprocessSecurityPolicy()
         self._capabilities = ExecutorCapabilities(
             supports_parallelism=True,
             timeout=TimeoutCapability.HARD,
@@ -234,6 +238,7 @@ class SubprocessExecutor:
         """
 
         command = _resolve_command(task=task, handler=handler, context=context)
+        self._validate_security(task=task, command=command)
         process = self._spawn(task=task, command=command)
         try:
             stdout, stderr = process.communicate(input=command.stdin)
@@ -242,6 +247,12 @@ class SubprocessExecutor:
                 self._terminate_process(process)
             raise
 
+        self._validate_captured_security(
+            task=task,
+            command=command,
+            stdout=stdout,
+            stderr=stderr,
+        )
         return self._result_or_error(
             task=task,
             command=command,
@@ -288,6 +299,7 @@ class SubprocessExecutor:
 
         try:
             command = _resolve_command(task=task, handler=handler, context=context)
+            self._validate_security(task=task, command=command)
             process = self._spawn(task=task, command=command)
         except ExecutorError as exc:
             self._finish_handle(
@@ -428,7 +440,7 @@ class SubprocessExecutor:
                 command.argv,
                 shell=False,
                 cwd=command.cwd,
-                env=dict(command.env) if command.env is not None else None,
+                env=self._security_policy.environment_for(command),
                 stdin=PIPE if command.stdin is not None else DEVNULL,
                 stdout=PIPE,
                 stderr=PIPE,
@@ -454,6 +466,12 @@ class SubprocessExecutor:
         try:
             stdout, stderr = process.communicate(input=command.stdin)
             try:
+                self._validate_captured_security(
+                    task=task,
+                    command=command,
+                    stdout=stdout,
+                    stderr=stderr,
+                )
                 result = self._result_or_error(
                     task=task,
                     command=command,
@@ -489,6 +507,42 @@ class SubprocessExecutor:
         if active is not None:
             active.done_event.set()
         self._completion_queue.put(completion)
+
+    def _validate_security(
+        self,
+        *,
+        task: TaskDefinition,
+        command: SubprocessCommand,
+    ) -> None:
+        try:
+            self._security_policy.validate(command)
+        except (TypeError, ValueError, UnicodeError) as exc:
+            raise SubprocessSecurityError(
+                task_id=task.task_id,
+                handler_ref=task.handler_ref,
+                violation=str(exc) or type(exc).__name__,
+            ) from exc
+
+    def _validate_captured_security(
+        self,
+        *,
+        task: TaskDefinition,
+        command: SubprocessCommand,
+        stdout: str,
+        stderr: str,
+    ) -> None:
+        try:
+            self._security_policy.validate_captured_output(
+                command=command,
+                stdout=stdout,
+                stderr=stderr,
+            )
+        except (TypeError, ValueError, UnicodeError) as exc:
+            raise SubprocessSecurityError(
+                task_id=task.task_id,
+                handler_ref=task.handler_ref,
+                violation=str(exc) or type(exc).__name__,
+            ) from exc
 
     def _result_or_error(
         self,
@@ -534,4 +588,9 @@ class SubprocessExecutor:
             process.wait()
 
 
-__all__ = ["SubprocessCommand", "SubprocessExecutor", "SubprocessResult"]
+__all__ = [
+    "SubprocessCommand",
+    "SubprocessExecutor",
+    "SubprocessResult",
+    "SubprocessSecurityPolicy",
+]
