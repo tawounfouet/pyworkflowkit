@@ -6,7 +6,7 @@ import logging
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired
+from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired  # nosec B404
 from threading import Event, RLock, Thread
 from types import MappingProxyType
 from typing import cast
@@ -436,7 +436,7 @@ class SubprocessExecutor:
         command: SubprocessCommand,
     ) -> Popen[str]:
         try:
-            return Popen(
+            return Popen(  # nosec B603 - validated argv with shell=False
                 command.argv,
                 shell=False,
                 cwd=command.cwd,
