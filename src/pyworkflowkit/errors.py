@@ -281,6 +281,26 @@ class SubprocessExecutionError(TaskExecutionError):
         )
 
 
+class SubprocessSecurityError(TaskExecutionError):
+    """Raised when a subprocess command violates an execution security policy."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        handler_ref: str | None,
+        violation: str,
+    ) -> None:
+        self.violation = violation
+        super().__init__(
+            task_id=task_id,
+            handler_ref=handler_ref,
+            error_type="SubprocessSecurityError",
+            error_message=violation,
+            error_category="security_policy",
+        )
+
+
 class ExecutionTimeoutError(TaskExecutionError):
     """Logical task-attempt timeout normalized through the ordinary retry path."""
 
@@ -646,6 +666,7 @@ __all__ = [
     "SerializationError",
     "SelfDependencyError",
     "SubprocessExecutionError",
+    "SubprocessSecurityError",
     "TaskExecutionError",
     "TimeoutCapabilityError",
     "TerminalStateError",
