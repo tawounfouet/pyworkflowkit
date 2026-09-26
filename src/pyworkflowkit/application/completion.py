@@ -34,9 +34,7 @@ class AttemptCompletion:
 
     def __post_init__(self) -> None:
         if (self.result is None) == (self.error is None):
-            raise ValueError(
-                "AttemptCompletion requires exactly one of result or error"
-            )
+            raise ValueError("AttemptCompletion requires exactly one of result or error")
 
     @property
     def succeeded(self) -> bool:
