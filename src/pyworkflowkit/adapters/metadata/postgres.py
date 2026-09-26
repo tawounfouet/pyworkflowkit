@@ -10,7 +10,7 @@ from sqlalchemy import Engine, create_engine, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 
-from pyworkflowkit.adapters.metadata.sqlalchemy import Base, SqlAlchemyMetadataStore
+from pyworkflowkit.adapters.metadata.sqlalchemy import SqlAlchemyMetadataStore
 from pyworkflowkit.adapters.metadata.sqlalchemy import models as orm_models
 from pyworkflowkit.adapters.metadata.sqlalchemy.mapping import SqlAlchemyRowMapper
 from pyworkflowkit.adapters.metadata.sqlalchemy.store import SqlAlchemyUnitOfWork
@@ -18,6 +18,7 @@ from pyworkflowkit.adapters.persistence.mapping import PersistenceMapper
 from pyworkflowkit.domain.ids import TaskRunId
 from pyworkflowkit.domain.runtime import TaskRun
 from pyworkflowkit.errors import MetadataNotFoundError
+from pyworkflowkit.migrations import upgrade_database
 
 DEFAULT_POSTGRES_SCHEMA = "pyworkflowkit"
 
@@ -81,10 +82,7 @@ class PostgresMetadataStore(SqlAlchemyMetadataStore):
         self.engine = create_postgres_engine(self.settings)
 
         if create_schema:
-            with self.engine.begin() as connection:
-                connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DEFAULT_POSTGRES_SCHEMA}"))
-                connection.execute(text("SET TIME ZONE 'UTC'"))
-                Base.metadata.create_all(connection)
+            upgrade_database(self.engine)
 
         session_factory = sessionmaker(
             bind=self.engine,
