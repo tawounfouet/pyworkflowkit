@@ -11,6 +11,7 @@ from pyworkflowkit.adapters.metadata.postgres import PostgresMetadataStore
 from pyworkflowkit.adapters.metadata.sqlite import SQLiteMetadataStore
 from pyworkflowkit.adapters.runtime import SystemClock, SystemSleeper, UuidRuntimeIdFactory
 from pyworkflowkit.application.execution import HandlerRegistry
+from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.ports.executor import Executor
@@ -26,6 +27,7 @@ class RuntimeComponents:
     metadata_store: MetadataStore
     handler_registry: HandlerRegistry
     executor: Executor
+    observability: ObservabilityDispatcher
 
 
 class RuntimeFactory:
@@ -42,6 +44,7 @@ class RuntimeFactory:
         registry = handler_registry or HandlerRegistry()
         executor = LocalExecutor()
         metadata_store = cls._build_metadata_store(resolved)
+        observability = ObservabilityDispatcher()
 
         runner = Runner(
             metadata_store=metadata_store,
@@ -50,6 +53,7 @@ class RuntimeFactory:
             clock=SystemClock(),
             id_factory=UuidRuntimeIdFactory(),
             sleeper=SystemSleeper(),
+            observability=observability,
         )
 
         return RuntimeComponents(
@@ -58,6 +62,7 @@ class RuntimeFactory:
             metadata_store=metadata_store,
             handler_registry=registry,
             executor=executor,
+            observability=observability,
         )
 
     @staticmethod
