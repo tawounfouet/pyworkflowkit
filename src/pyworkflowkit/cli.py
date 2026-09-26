@@ -24,7 +24,12 @@ from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.enums import WorkflowRunStatus
 from pyworkflowkit.domain.runtime import RuntimeEvent, WorkflowRun
 from pyworkflowkit.errors import PyWorkflowKitError
-from pyworkflowkit.plugins import PluginCatalog, PluginDiscovery, PluginType
+from pyworkflowkit.plugins import (
+    PLUGIN_API_VERSION,
+    PluginCatalog,
+    PluginDiscovery,
+    PluginType,
+)
 
 app = typer.Typer(
     add_completion=False,
@@ -304,7 +309,7 @@ def doctor(
 
     payload: dict[str, object] = {
         "healthy": healthy,
-        "plugin_api_version": "1",
+        "plugin_api_version": PLUGIN_API_VERSION,
         "plugins": result_payload,
     }
     human_lines = ["OK" if healthy else "FAILED"]
