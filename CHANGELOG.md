@@ -8,6 +8,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M33 AsyncExecutor backed by a dedicated asyncio event loop and explicit awaitable-handler contract.
+- Explicit AsyncExecutor port plus async handler type aliases without replacing the stable synchronous Executor port.
+- ExecutorCapabilities.supports_async declaration for capability-aware composition.
+- Cooperative per-handle cancellation through asyncio.Task.cancel().
+- ConcurrentRunner cancellation polling generalized to cancellable executors and cooperative cancellation coordination.
+- Async soft-timeout integration preserving the existing ExecutionTimeoutError / RetryEngine contract.
+- M33 unit and reference acceptance coverage for native awaiting, fan-out, context propagation, soft timeout, cooperative cancellation, and lifecycle.
 - M32 ProcessExecutor with bounded process isolation and explicit spawn-time serialization checks.
 - Process-safe RunContext and TaskResult transport snapshots that keep MappingProxyType inside the domain boundary.
 - Hard timeout and hard cancellation capabilities backed by per-handle child-process termination.
@@ -18,6 +25,7 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- ConcurrentRunner now distinguishes hard termination from cooperative executor cancellation while preserving coordinator-owned state transitions.
 - Concurrent timeout retries now wait for physical execution cleanup before redispatching the same task attempt lineage.
 
 ### Deprecated
