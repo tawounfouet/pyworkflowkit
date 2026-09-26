@@ -106,9 +106,7 @@ class PluginCatalog:
             plugin_type=PluginType.METADATA
         )
         self.workloads: PluginRegistry[object] = PluginRegistry(plugin_type=PluginType.WORKLOAD)
-        self.events: PluginRegistry[RuntimeEventSink] = PluginRegistry(
-            plugin_type=PluginType.EVENT
-        )
+        self.events: PluginRegistry[RuntimeEventSink] = PluginRegistry(plugin_type=PluginType.EVENT)
 
     def registry_for(self, plugin_type: PluginType) -> PluginRegistry[object]:
         """Return a type-erased registry for generic inspection tooling."""
