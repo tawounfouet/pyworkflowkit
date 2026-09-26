@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`; current development line `0.5.0a1`.
-> M32 adds process-isolated execution through `ProcessExecutor` with explicit
-> serialization boundaries and stronger per-handle termination semantics.
+> **Status:** stable release `0.4.0`; current development line `0.5.0a2`.
+> M33 adds native asyncio workload execution with cooperative per-handle cancellation,
+> while retaining the M32 process-isolation and hard-termination capabilities.
 
 ## What 0.4 provides
 
@@ -216,6 +216,63 @@ timeout keeps the existing logical-timeout semantics.
 API.
 
 
+## Async execution in 0.5.0a2
+
+M33 adds an advanced asyncio executor for I/O-bound and natively asynchronous workloads:
+
+```python
+from pyworkflowkit.adapters.executors.asyncio import AsyncExecutor
+
+executor = AsyncExecutor(max_concurrency=100)
+```
+
+Handlers assigned to `executor_key="async"` must return an awaitable. Native callers can
+use the explicit async extension directly:
+
+```python
+result = await executor.execute_async(
+    task=task_definition,
+    handler=async_handler,
+    context=run_context,
+)
+```
+
+`ConcurrentRunner` continues to use the existing submission/completion boundary:
+
+```text
+async handler
+    ↓
+asyncio.Task
+    ↓
+ExecutionHandle
+    ↓
+AttemptCompletion
+    ↓
+CompletionQueue
+    ↓
+ConcurrentRunner
+```
+
+The executor declares:
+
+```text
+parallelism   = true
+async         = true
+timeout       = soft
+cancellation  = cooperative
+```
+
+Cancellation uses `asyncio.Task.cancel()`. This is intentionally **cooperative**, not
+hard termination: a coroutine receives cancellation at an await point and may perform
+cleanup or, if written poorly, suppress cancellation.
+
+Timeout remains `SOFT` for the same reason. A logical timeout is recorded through the
+existing `ExecutionTimeoutError` contract, while physical coroutine completion is still
+drained before the same task lineage can be retried.
+
+`AsyncExecutor` remains an advanced module import and is not added to the package-root
+API.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -390,5 +447,6 @@ control-plane concerns remain outside the core.
 1.0  Stable embedded runtime
 ```
 
-M32 — ProcessExecutor opens the 0.5 line at **0.5.0a1**. The next planned milestone is
-**M33 — AsyncExecutor** after M32 qualification.
+M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**. M33 — AsyncExecutor advances
+the development line to **0.5.0a2**. The next planned milestone is **M34 —
+SubprocessExecutor**.
