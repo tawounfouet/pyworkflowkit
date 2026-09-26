@@ -8,6 +8,7 @@ import time
 
 import pytest
 
+from pyworkflowkit.adapters.executors import process as process_module
 from pyworkflowkit.adapters.executors.process import ProcessExecutor
 from pyworkflowkit.application.completion import CompletionQueue, ExecutionHandle
 from pyworkflowkit.domain.definitions import TaskDefinition
@@ -256,3 +257,74 @@ def test_shutdown_rejects_new_submissions() -> None:
             handler=_return_pid,
             context=_context("late"),
         )
+
+
+class _CapturingConnection:
+    def __init__(self) -> None:
+        self.messages: list[object] = []
+        self.closed = False
+
+    def send(self, value: object) -> None:
+        self.messages.append(value)
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_worker_transport_success_path_is_unit_qualified() -> None:
+    connection = _CapturingConnection()
+    task = _task("worker-success")
+    context = _context("worker-success")
+
+    process_module._worker_main(
+        connection,  # type: ignore[arg-type]
+        process_module._task_snapshot(task),
+        _return_pid,
+        process_module._context_snapshot(context),
+    )
+
+    assert connection.closed is True
+    assert len(connection.messages) == 1
+    message = connection.messages[0]
+    assert isinstance(message, process_module._WorkerMessage)
+    assert message.result is not None
+    assert message.error is None
+
+
+def test_worker_transport_task_failure_path_is_unit_qualified() -> None:
+    connection = _CapturingConnection()
+    task = _task("worker-failure")
+    context = _context("worker-failure")
+
+    process_module._worker_main(
+        connection,  # type: ignore[arg-type]
+        process_module._task_snapshot(task),
+        _raise_runtime_error,
+        process_module._context_snapshot(context),
+    )
+
+    message = connection.messages[0]
+    assert isinstance(message, process_module._WorkerMessage)
+    assert message.result is None
+    assert message.error is not None
+    assert message.error.kind == "task"
+    assert message.error.error_type == "RuntimeError"
+
+
+def test_worker_transport_result_serialization_path_is_unit_qualified() -> None:
+    connection = _CapturingConnection()
+    task = _task("worker-serialization")
+    context = _context("worker-serialization")
+
+    process_module._worker_main(
+        connection,  # type: ignore[arg-type]
+        process_module._task_snapshot(task),
+        _return_unserializable,
+        process_module._context_snapshot(context),
+    )
+
+    message = connection.messages[0]
+    assert isinstance(message, process_module._WorkerMessage)
+    assert message.result is None
+    assert message.error is not None
+    assert message.error.kind == "serialization"
