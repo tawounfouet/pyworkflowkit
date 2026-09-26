@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from pyworkflowkit.adapters.executors.thread import ThreadExecutor
+from pyworkflowkit.application.cancellation import CancellationController
 from pyworkflowkit.application.capacity import CapacityLease, CapacityManager
 from pyworkflowkit.application.completion import AttemptCompletion, ExecutionHandle
 from pyworkflowkit.application.events import RuntimeEventFactory
@@ -80,6 +81,7 @@ class ConcurrentRunner(Runner):
         workflow: WorkflowDefinition,
         *,
         parameters: Mapping[str, object] | None = None,
+        cancellation: CancellationController | None = None,
     ) -> WorkflowRun:
         """Execute one workflow with bounded parallel READY-task dispatch."""
 
@@ -140,6 +142,7 @@ class ConcurrentRunner(Runner):
             },
         )
 
+        cancellation_controller = cancellation or CancellationController()
         capacity = self._new_capacity_manager()
         task_definitions = {task.task_id: task for task in workflow.tasks}
         outputs_by_task_id: dict[TaskId, object] = {}
@@ -147,29 +150,27 @@ class ConcurrentRunner(Runner):
         pending_retries: dict[TaskId, _PendingRetry] = {}
         workflow_failed = False
 
-        while True:
-            if not workflow_failed:
-                self._mark_new_ready_tasks(
-                    graph=graph,
-                    task_runs_by_task_id=task_runs_by_task_id,
-                    event_factory=event_factory,
-                )
+        try:
+            while True:
+                if cancellation_controller.is_requested:
+                    return self._finish_cancellation(
+                        run=run,
+                        task_runs_by_task_id=task_runs_by_task_id,
+                        active=active,
+                        pending_retries=pending_retries,
+                        capacity=capacity,
+                        event_factory=event_factory,
+                        cancellation=cancellation_controller,
+                    )
 
-            self._dispatch_pending_retries(
-                run=run,
-                graph=graph,
-                task_definitions=task_definitions,
-                handlers=handlers,
-                resolved_parameters=resolved_parameters,
-                outputs_by_task_id=outputs_by_task_id,
-                task_runs_by_task_id=task_runs_by_task_id,
-                pending_retries=pending_retries,
-                active=active,
-                capacity=capacity,
-            )
+                if not workflow_failed:
+                    self._mark_new_ready_tasks(
+                        graph=graph,
+                        task_runs_by_task_id=task_runs_by_task_id,
+                        event_factory=event_factory,
+                    )
 
-            if not workflow_failed:
-                self._dispatch_ready_tasks(
+                self._dispatch_pending_retries(
                     run=run,
                     graph=graph,
                     task_definitions=task_definitions,
@@ -177,71 +178,109 @@ class ConcurrentRunner(Runner):
                     resolved_parameters=resolved_parameters,
                     outputs_by_task_id=outputs_by_task_id,
                     task_runs_by_task_id=task_runs_by_task_id,
-                    event_factory=event_factory,
+                    pending_retries=pending_retries,
                     active=active,
                     capacity=capacity,
+                    cancellation=cancellation_controller,
                 )
 
-            if active:
-                completion = self._thread_executor.completion_queue.get()
-                execution = active.pop(completion.handle.handle_id, None)
-                if execution is None:
-                    raise RuntimeInvariantError(
-                        reason=(
-                            "received completion for an execution handle "
-                            f"not owned by this run: '{completion.handle.handle_id}'"
-                        )
+                if not workflow_failed:
+                    self._dispatch_ready_tasks(
+                        run=run,
+                        graph=graph,
+                        task_definitions=task_definitions,
+                        handlers=handlers,
+                        resolved_parameters=resolved_parameters,
+                        outputs_by_task_id=outputs_by_task_id,
+                        task_runs_by_task_id=task_runs_by_task_id,
+                        event_factory=event_factory,
+                        active=active,
+                        capacity=capacity,
+                        cancellation=cancellation_controller,
                     )
-                capacity.release(execution.lease)
 
-                terminal_failure = self._apply_completion(
-                    run=run,
-                    graph=graph,
-                    plan_task_ids=plan.task_ids,
-                    task_runs_by_task_id=task_runs_by_task_id,
-                    task_definitions=task_definitions,
-                    outputs_by_task_id=outputs_by_task_id,
-                    execution=execution,
-                    completion=completion,
-                    pending_retries=pending_retries,
-                    event_factory=event_factory,
-                    workflow_already_failed=workflow_failed,
-                )
-                workflow_failed = workflow_failed or terminal_failure
-                continue
+                if cancellation_controller.is_requested:
+                    continue
 
-            if pending_retries:
-                raise RuntimeInvariantError(
-                    reason="retry is pending but no execution can acquire capacity"
-                )
+                if active:
+                    completion = self._thread_executor.completion_queue.get()
+                    execution = active.pop(completion.handle.handle_id, None)
+                    if execution is None:
+                        raise RuntimeInvariantError(
+                            reason=(
+                                "received completion for an execution handle "
+                                f"not owned by this run: '{completion.handle.handle_id}'"
+                            )
+                        )
+                    capacity.release(execution.lease)
 
-            if workflow_failed:
-                return self._metadata_store.get_workflow_run(run.run_id)
+                    if cancellation_controller.is_requested:
+                        self._apply_cancellation_completion(
+                            execution=execution,
+                            completion=completion,
+                            event_factory=event_factory,
+                        )
+                        continue
 
-            if all(
-                task_run.status in TASK_TERMINAL_STATUSES
-                for task_run in task_runs_by_task_id.values()
-            ):
-                if any(
-                    task_run.status is TaskRunStatus.FAILED
+                    terminal_failure = self._apply_completion(
+                        run=run,
+                        graph=graph,
+                        plan_task_ids=plan.task_ids,
+                        task_runs_by_task_id=task_runs_by_task_id,
+                        task_definitions=task_definitions,
+                        outputs_by_task_id=outputs_by_task_id,
+                        execution=execution,
+                        completion=completion,
+                        pending_retries=pending_retries,
+                        event_factory=event_factory,
+                        workflow_already_failed=workflow_failed,
+                    )
+                    workflow_failed = workflow_failed or terminal_failure
+                    continue
+
+                if pending_retries:
+                    raise RuntimeInvariantError(
+                        reason="retry is pending but no execution can acquire capacity"
+                    )
+
+                if workflow_failed:
+                    return self._metadata_store.get_workflow_run(run.run_id)
+
+                if all(
+                    task_run.status in TASK_TERMINAL_STATUSES
                     for task_run in task_runs_by_task_id.values()
                 ):
-                    raise RuntimeInvariantError(
-                        reason="failed TaskRun exists without failed workflow state"
+                    if any(
+                        task_run.status is TaskRunStatus.FAILED
+                        for task_run in task_runs_by_task_id.values()
+                    ):
+                        raise RuntimeInvariantError(
+                            reason="failed TaskRun exists without failed workflow state"
+                        )
+                    finished_at = self._clock.now()
+                    self._state_machine.succeed_workflow(run, at=finished_at)
+                    self._persist_workflow_transition(
+                        run=run,
+                        event=event_factory.create(
+                            event_type=RuntimeEventType.WORKFLOW_SUCCEEDED,
+                            occurred_at=finished_at,
+                        ),
                     )
-                finished_at = self._clock.now()
-                self._state_machine.succeed_workflow(run, at=finished_at)
-                self._persist_workflow_transition(
-                    run=run,
-                    event=event_factory.create(
-                        event_type=RuntimeEventType.WORKFLOW_SUCCEEDED,
-                        occurred_at=finished_at,
-                    ),
-                )
-                return self._metadata_store.get_workflow_run(run.run_id)
+                    return self._metadata_store.get_workflow_run(run.run_id)
 
-            raise RuntimeInvariantError(
-                reason="concurrent runner made no progress with non-terminal tasks remaining"
+                raise RuntimeInvariantError(
+                    reason="concurrent runner made no progress with non-terminal tasks remaining"
+                )
+        except KeyboardInterrupt:
+            cancellation_controller.request(reason="keyboard_interrupt")
+            return self._finish_cancellation(
+                run=run,
+                task_runs_by_task_id=task_runs_by_task_id,
+                active=active,
+                pending_retries=pending_retries,
+                capacity=capacity,
+                event_factory=event_factory,
+                cancellation=cancellation_controller,
             )
 
     def _new_capacity_manager(self) -> CapacityManager:
@@ -302,6 +341,7 @@ class ConcurrentRunner(Runner):
         event_factory: RuntimeEventFactory,
         active: dict[str, _ActiveExecution],
         capacity: CapacityManager,
+        cancellation: CancellationController,
     ) -> None:
         ready_task_ids = tuple(
             sorted(
@@ -314,6 +354,8 @@ class ConcurrentRunner(Runner):
             )
         )
         for task_id in ready_task_ids:
+            if cancellation.is_requested:
+                return
             task_run = task_runs_by_task_id[task_id]
             attempt_id = self._id_factory.new_task_attempt_id(
                 task_run_id=task_run.task_run_id,
@@ -371,8 +413,11 @@ class ConcurrentRunner(Runner):
         pending_retries: dict[TaskId, _PendingRetry],
         active: dict[str, _ActiveExecution],
         capacity: CapacityManager,
+        cancellation: CancellationController,
     ) -> None:
         for task_id in tuple(sorted(pending_retries, key=str)):
+            if cancellation.is_requested:
+                return
             task_run = task_runs_by_task_id[task_id]
             pending = pending_retries[task_id]
             attempt_id = self._id_factory.new_task_attempt_id(
@@ -563,6 +608,166 @@ class ConcurrentRunner(Runner):
             error_category=error_category,
         )
         return True
+
+    def _finish_cancellation(
+        self,
+        *,
+        run: WorkflowRun,
+        task_runs_by_task_id: Mapping[TaskId, TaskRun],
+        active: dict[str, _ActiveExecution],
+        pending_retries: dict[TaskId, _PendingRetry],
+        capacity: CapacityManager,
+        event_factory: RuntimeEventFactory,
+        cancellation: CancellationController,
+    ) -> WorkflowRun:
+        request = cancellation.request_details
+        reason = request.reason if request is not None else "requested"
+        cancelled_task_runs: list[TaskRun] = []
+        active_task_ids = {execution.task_id for execution in active.values()}
+
+        for task_run in task_runs_by_task_id.values():
+            should_cancel = task_run.status in {
+                TaskRunStatus.PENDING,
+                TaskRunStatus.READY,
+            } or (
+                task_run.status is TaskRunStatus.RUNNING
+                and task_run.task_id in pending_retries
+                and task_run.task_id not in active_task_ids
+            )
+            if not should_cancel:
+                continue
+            self._state_machine.cancel_task(task_run, at=self._clock.now())
+            cancelled_task_runs.append(task_run)
+
+        pending_retries.clear()
+        self._persist_cancelled_task_runs(cancelled_task_runs)
+
+        log_runtime(
+            logger,
+            logging.INFO,
+            "Workflow cancellation requested",
+            context=LogContext(
+                run_id=str(run.run_id),
+                workflow_id=str(run.workflow_id),
+            ),
+            fields={
+                "reason": reason,
+                "cancelled_undispatched_tasks": len(cancelled_task_runs),
+                "running_attempts": len(active),
+            },
+        )
+
+        while active:
+            completion = self._thread_executor.completion_queue.get()
+            execution = active.pop(completion.handle.handle_id, None)
+            if execution is None:
+                raise RuntimeInvariantError(
+                    reason=(
+                        "received completion for an execution handle "
+                        f"not owned by cancelling run: '{completion.handle.handle_id}'"
+                    )
+                )
+            capacity.release(execution.lease)
+            self._apply_cancellation_completion(
+                execution=execution,
+                completion=completion,
+                event_factory=event_factory,
+            )
+
+        unexpected_running = tuple(
+            task_run.task_id
+            for task_run in task_runs_by_task_id.values()
+            if task_run.status is TaskRunStatus.RUNNING
+        )
+        if unexpected_running:
+            rendered = ", ".join(str(task_id) for task_id in unexpected_running)
+            raise RuntimeInvariantError(
+                reason=f"cancellation drained workers but RUNNING tasks remain: {rendered}"
+            )
+
+        finished_at = self._clock.now()
+        self._state_machine.cancel_workflow(run, at=finished_at)
+        self._persist_workflow_transition(
+            run=run,
+            event=event_factory.create(
+                event_type=RuntimeEventType.WORKFLOW_CANCELLED,
+                occurred_at=finished_at,
+                payload={
+                    "reason": reason,
+                    "cancelled_undispatched_tasks": len(cancelled_task_runs),
+                },
+            ),
+        )
+        return self._metadata_store.get_workflow_run(run.run_id)
+
+    def _persist_cancelled_task_runs(
+        self,
+        task_runs: list[TaskRun],
+    ) -> None:
+        if not task_runs:
+            return
+        with self._metadata_store.unit_of_work() as uow:
+            for task_run in task_runs:
+                uow.save_task_run(task_run)
+            uow.commit()
+
+    def _apply_cancellation_completion(
+        self,
+        *,
+        execution: _ActiveExecution,
+        completion: AttemptCompletion,
+        event_factory: RuntimeEventFactory,
+    ) -> None:
+        if completion.handle != execution.handle:
+            raise RuntimeInvariantError(
+                reason="cancellation completion handle does not match active execution"
+            )
+
+        if completion.succeeded:
+            if completion.result is None:
+                raise RuntimeInvariantError(reason="successful completion is missing TaskResult")
+            self._persist_execution_success(
+                task_run=execution.task_run,
+                attempt=execution.attempt,
+                result=completion.result,
+                event=event_factory.create(
+                    event_type=RuntimeEventType.TASK_SUCCEEDED,
+                    occurred_at=self._clock.now(),
+                    task_run_id=execution.task_run.task_run_id,
+                    task_id=execution.task_id,
+                    attempt_number=execution.attempt.attempt_number,
+                ),
+            )
+            return
+
+        if completion.error is None:
+            raise RuntimeInvariantError(reason="failed completion is missing ExecutorError")
+
+        failed_at = self._clock.now()
+        error_type, error_message, error_category = _normalize_executor_error(completion.error)
+        self._state_machine.fail_attempt(
+            execution.attempt,
+            at=failed_at,
+            error_type=error_type,
+            error_message=error_message,
+            error_category=error_category,
+        )
+        self._persist_running_sibling_failure(
+            task_run=execution.task_run,
+            attempt=execution.attempt,
+            event=event_factory.create(
+                event_type=RuntimeEventType.TASK_FAILED,
+                occurred_at=failed_at,
+                task_run_id=execution.task_run.task_run_id,
+                task_id=execution.task_id,
+                attempt_number=execution.attempt.attempt_number,
+                payload={
+                    "error_type": error_type,
+                    "error_category": error_category,
+                    "during_cancellation": True,
+                },
+            ),
+        )
 
     def _persist_running_sibling_failure(
         self,
