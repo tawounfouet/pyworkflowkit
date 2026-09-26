@@ -204,6 +204,34 @@ class PyIngestKitRetryOwnershipError(IntegrationError):
         )
 
 
+class CapacityError(PyWorkflowKitError):
+    """Base class for execution-capacity accounting errors."""
+
+
+class CapacityConfigurationError(CapacityError):
+    """Raised when capacity limits or executor capacity contracts are invalid."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Capacity configuration is invalid: {reason}.")
+
+
+class CapacityInvariantError(CapacityError):
+    """Raised when active slot accounting violates an internal invariant."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Capacity invariant violated: {reason}.")
+
+
+class CapacityReleaseError(CapacityError):
+    """Raised when releasing a slot that is not owned by the provided lease."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Capacity release is invalid: {reason}.")
+
+
 class RuntimeErrorBase(PyWorkflowKitError):
     """Base class for workflow runtime orchestration errors."""
 
@@ -427,6 +455,10 @@ class TerminalStateError(InvalidStateTransitionError):
 
 
 __all__ = [
+    "CapacityConfigurationError",
+    "CapacityError",
+    "CapacityInvariantError",
+    "CapacityReleaseError",
     "CycleDetectedError",
     "DefinitionError",
     "DomainError",
