@@ -35,7 +35,5 @@ def test_sqlite_fresh_upgrade_reaches_head(tmp_path: Path) -> None:
 
 
 def test_baseline_revision_is_packaged() -> None:
-    revision = files("pyworkflowkit.migrations.versions").joinpath(
-        "0001_runtime_metadata.py"
-    )
+    revision = files("pyworkflowkit.migrations.versions").joinpath("0001_runtime_metadata.py")
     assert revision.is_file()
