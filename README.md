@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`; current development line `0.5.0a3`.
-> M34 adds shell-free external-program execution with captured process evidence and
-> hard per-handle termination, alongside the process and asyncio executors.
+> **Status:** stable release `0.4.0`; current development line `0.5.0a4`.
+> M35 adds committed-runtime-event observability plugins while keeping durable runtime
+> evidence authoritative and external telemetry best-effort.
 
 ## What 0.4 provides
 
@@ -335,6 +335,64 @@ remain part of M36 Security Hardening.
 `SubprocessExecutor` remains an advanced module import and is not added to the
 package-root API.
 
+## Observability plugins in 0.5.0a4
+
+M35 turns the existing runtime-event extension category into a typed observability
+boundary:
+
+```python
+from dataclasses import dataclass, field
+
+from pyworkflowkit.domain.runtime import RuntimeEvent
+
+
+@dataclass
+class MyEventSink:
+    name: str = "my-events"
+    events: list[RuntimeEvent] = field(default_factory=list)
+
+    def emit(self, event: RuntimeEvent) -> None:
+        self.events.append(event)
+
+
+runtime.register_event_sink(MyEventSink())
+```
+
+The ordering invariant is deliberate:
+
+```text
+state transition
+      ↓
+UnitOfWork
+      ↓
+RuntimeEvent persisted
+      ↓
+COMMIT succeeds
+      ↓
+ObservabilityDispatcher
+      ↓
+RuntimeEventSink(s)
+```
+
+The durable `RuntimeEvent` history remains the source of truth. Event sinks are
+secondary projections that can translate the committed stream into external logs,
+metrics, traces, dashboards, or vendor-specific telemetry.
+
+Sink fan-out is deterministic by sink name. A sink exception is isolated, recorded in
+`runtime.observability_failures`, and logged; it does not roll back committed runtime
+state or change the workflow outcome.
+
+The existing plugin category remains:
+
+```text
+PluginType.EVENT
+entry-point group: pyworkflowkit.events
+factory result: RuntimeEventSink
+```
+
+M35 does not add a dependency on OpenTelemetry, Prometheus, Datadog, or another
+observability backend.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -510,5 +568,6 @@ control-plane concerns remain outside the core.
 ```
 
 M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**; M33 — AsyncExecutor advanced
-it to **0.5.0a2**; M34 — SubprocessExecutor advances it to **0.5.0a3**. The next
-planned milestone is **M35 — Observability Plugins**.
+it to **0.5.0a2**; M34 — SubprocessExecutor advanced it to **0.5.0a3**; M35 —
+Observability Plugins advances it to **0.5.0a4**. The next planned milestone is **M36 —
+Security Hardening**.
