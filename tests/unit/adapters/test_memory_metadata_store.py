@@ -25,6 +25,7 @@ from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, Wor
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef
 from pyworkflowkit.errors import (
     DuplicateMetadataError,
+    InvalidEventSequenceError,
     MetadataNotFoundError,
     UnitOfWorkStateError,
 )
@@ -247,8 +248,8 @@ def test_events_require_parent_run_and_are_sorted_by_sequence() -> None:
     )
 
     with store.unit_of_work() as uow:
-        uow.add_event(later)
         uow.add_event(earlier)
+        uow.add_event(later)
         uow.commit()
 
     assert tuple(event.event_id for event in store.list_events(WorkflowRunId("run-1"))) == (
@@ -399,5 +400,5 @@ def test_duplicate_event_sequence_per_run_is_rejected() -> None:
 
     with store.unit_of_work() as uow:
         uow.add_event(first)
-        with pytest.raises(DuplicateMetadataError, match="RuntimeEventSequence"):
+        with pytest.raises(InvalidEventSequenceError, match="greater than"):
             uow.add_event(duplicate_sequence)

@@ -3,7 +3,7 @@
 from types import TracebackType
 from typing import Self
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -15,6 +15,7 @@ from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, Wor
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef
 from pyworkflowkit.errors import (
     DuplicateMetadataError,
+    InvalidEventSequenceError,
     MetadataNotFoundError,
     MetadataStoreError,
     UnitOfWorkStateError,
@@ -224,18 +225,18 @@ class SqlAlchemyUnitOfWork:
             and session.get(orm_models.TaskRunRow, record.task_run_id) is None
         ):
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=record.task_run_id)
-        if record.event_sequence is not None:
-            duplicate = session.scalar(
-                select(orm_models.RuntimeEventRow).where(
-                    orm_models.RuntimeEventRow.run_id == record.run_id,
-                    orm_models.RuntimeEventRow.event_sequence == record.event_sequence,
-                )
+        last_sequence = session.scalar(
+            select(func.max(orm_models.RuntimeEventRow.event_sequence)).where(
+                orm_models.RuntimeEventRow.run_id == record.run_id
             )
-            if duplicate is not None:
-                raise DuplicateMetadataError(
-                    entity_type="RuntimeEventSequence",
-                    entity_id=f"{record.run_id}:{record.event_sequence}",
-                )
+        )
+        previous_sequence = last_sequence or 0
+        if record.event_sequence is None or record.event_sequence <= previous_sequence:
+            raise InvalidEventSequenceError(
+                run_id=record.run_id,
+                previous_sequence=previous_sequence,
+                actual_sequence=record.event_sequence,
+            )
         session.add(SqlAlchemyRowMapper.runtime_event_to_orm(record))
         self._flush()
 

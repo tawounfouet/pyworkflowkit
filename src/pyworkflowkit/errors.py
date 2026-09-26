@@ -255,6 +255,25 @@ class DuplicateMetadataError(MetadataStoreError):
         super().__init__(f"{entity_type} '{entity_id}' already exists.")
 
 
+class InvalidEventSequenceError(MetadataStoreError):
+    """Raised when an event does not advance the run-local sequence."""
+
+    def __init__(
+        self,
+        *,
+        run_id: str,
+        previous_sequence: int,
+        actual_sequence: int | None,
+    ) -> None:
+        self.run_id = run_id
+        self.previous_sequence = previous_sequence
+        self.actual_sequence = actual_sequence
+        super().__init__(
+            f"RuntimeEvent for run '{run_id}' must use a sequence greater than "
+            f"{previous_sequence}, got {actual_sequence}."
+        )
+
+
 class UnitOfWorkStateError(MetadataStoreError):
     """Raised when a UnitOfWork lifecycle operation is invalid."""
 
@@ -323,6 +342,7 @@ __all__ = [
     "GraphError",
     "HandlerNotFoundError",
     "InvalidExecutionPlanError",
+    "InvalidEventSequenceError",
     "InvalidHandlerError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
