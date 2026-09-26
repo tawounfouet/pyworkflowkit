@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from math import isfinite
 
-from pyworkflowkit.domain.enums import FailurePolicy
+from pyworkflowkit.domain.enums import FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.ids import TaskId, WorkflowId, validate_non_empty_identifier
 from pyworkflowkit.domain.values import RetryPolicy, WorkflowParameter
 from pyworkflowkit.errors import (
@@ -42,6 +42,7 @@ class TaskDefinition:
     retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
     executor_key: str = "local"
     timeout_seconds: float | None = None
+    timeout_mode: TimeoutMode = TimeoutMode.NONE
     tags: frozenset[str] = field(default_factory=frozenset)
     description: str | None = None
 
@@ -52,6 +53,12 @@ class TaskDefinition:
             _require_non_empty_text(self.handler_ref, field_name="handler_ref")
         _require_non_empty_text(self.executor_key, field_name="executor_key")
         _validate_timeout(self.timeout_seconds)
+        if not isinstance(self.timeout_mode, TimeoutMode):
+            raise TypeError("timeout_mode must be a TimeoutMode.")
+        if self.timeout_seconds is None and self.timeout_mode is not TimeoutMode.NONE:
+            raise DefinitionError("timeout_mode requires timeout_seconds.")
+        if self.timeout_seconds is not None and self.timeout_mode is TimeoutMode.NONE:
+            object.__setattr__(self, "timeout_mode", TimeoutMode.SOFT)
 
         dependencies = tuple(self.depends_on)
         if len(dependencies) != len(set(dependencies)):
