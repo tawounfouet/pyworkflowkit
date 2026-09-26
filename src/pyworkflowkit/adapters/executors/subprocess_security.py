@@ -65,10 +65,7 @@ class SubprocessSecurityPolicy:
         """Validate command inputs before process creation."""
 
         executable = command.argv[0]
-        if (
-            self.allowed_executables is not None
-            and executable not in self.allowed_executables
-        ):
+        if self.allowed_executables is not None and executable not in self.allowed_executables:
             raise ValueError("executable is not allowed by subprocess security policy")
 
         if command.cwd is not None and self.allowed_cwd_roots:
@@ -104,9 +101,7 @@ class SubprocessSecurityPolicy:
 
         if self.allowed_env_keys is not None:
             environment = {
-                key: value
-                for key, value in environment.items()
-                if key in self.allowed_env_keys
+                key: value for key, value in environment.items() if key in self.allowed_env_keys
             }
         return environment
 
