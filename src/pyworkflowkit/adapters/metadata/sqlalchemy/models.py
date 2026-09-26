@@ -15,9 +15,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pyworkflowkit.adapters.metadata.sqlalchemy.base import (
-    Base,
     DB_SCHEMA,
     JSON_VALUE,
+    Base,
     UTCDateTime,
 )
 
