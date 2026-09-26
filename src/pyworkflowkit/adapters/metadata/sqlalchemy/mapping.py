@@ -1,13 +1,6 @@
 """Mappings between neutral persistence records and SQLAlchemy rows."""
 
-from pyworkflowkit.adapters.metadata.sqlalchemy.models import (
-    ArtifactReferenceRow as ORMArtifactReferenceRow,
-    ExternalRunRefRow as ORMExternalRunRefRow,
-    RuntimeEventRow as ORMRuntimeEventRow,
-    TaskAttemptRow as ORMTaskAttemptRow,
-    TaskRunRow as ORMTaskRunRow,
-    WorkflowRunRow as ORMWorkflowRunRow,
-)
+from pyworkflowkit.adapters.metadata.sqlalchemy import models as orm_models
 from pyworkflowkit.adapters.persistence.records import (
     ArtifactReferenceRow,
     ExternalRunRefRow,
@@ -22,8 +15,8 @@ class SqlAlchemyRowMapper:
     """Convert neutral row DTOs to/from SQLAlchemy mapped rows."""
 
     @staticmethod
-    def workflow_run_to_orm(value: WorkflowRunRow) -> ORMWorkflowRunRow:
-        return ORMWorkflowRunRow(
+    def workflow_run_to_orm(value: WorkflowRunRow) -> orm_models.WorkflowRunRow:
+        return orm_models.WorkflowRunRow(
             run_id=value.run_id,
             workflow_id=value.workflow_id,
             workflow_version=value.workflow_version,
@@ -35,7 +28,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def workflow_run_from_orm(value: ORMWorkflowRunRow) -> WorkflowRunRow:
+    def workflow_run_from_orm(value: orm_models.WorkflowRunRow) -> WorkflowRunRow:
         return WorkflowRunRow(
             run_id=value.run_id,
             workflow_id=value.workflow_id,
@@ -48,7 +41,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def apply_workflow_run(target: ORMWorkflowRunRow, value: WorkflowRunRow) -> None:
+    def apply_workflow_run(target: orm_models.WorkflowRunRow, value: WorkflowRunRow) -> None:
         target.workflow_id = value.workflow_id
         target.workflow_version = value.workflow_version
         target.status = value.status
@@ -58,8 +51,8 @@ class SqlAlchemyRowMapper:
         target.finished_at = value.finished_at
 
     @staticmethod
-    def task_run_to_orm(value: TaskRunRow) -> ORMTaskRunRow:
-        return ORMTaskRunRow(
+    def task_run_to_orm(value: TaskRunRow) -> orm_models.TaskRunRow:
+        return orm_models.TaskRunRow(
             task_run_id=value.task_run_id,
             run_id=value.run_id,
             task_id=value.task_id,
@@ -71,7 +64,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def task_run_from_orm(value: ORMTaskRunRow) -> TaskRunRow:
+    def task_run_from_orm(value: orm_models.TaskRunRow) -> TaskRunRow:
         return TaskRunRow(
             task_run_id=value.task_run_id,
             run_id=value.run_id,
@@ -84,7 +77,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def apply_task_run(target: ORMTaskRunRow, value: TaskRunRow) -> None:
+    def apply_task_run(target: orm_models.TaskRunRow, value: TaskRunRow) -> None:
         target.run_id = value.run_id
         target.task_id = value.task_id
         target.status = value.status
@@ -94,8 +87,8 @@ class SqlAlchemyRowMapper:
         target.finished_at = value.finished_at
 
     @staticmethod
-    def task_attempt_to_orm(value: TaskAttemptRow) -> ORMTaskAttemptRow:
-        return ORMTaskAttemptRow(
+    def task_attempt_to_orm(value: TaskAttemptRow) -> orm_models.TaskAttemptRow:
+        return orm_models.TaskAttemptRow(
             attempt_id=value.attempt_id,
             task_run_id=value.task_run_id,
             attempt_number=value.attempt_number,
@@ -109,7 +102,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def task_attempt_from_orm(value: ORMTaskAttemptRow) -> TaskAttemptRow:
+    def task_attempt_from_orm(value: orm_models.TaskAttemptRow) -> TaskAttemptRow:
         return TaskAttemptRow(
             attempt_id=value.attempt_id,
             task_run_id=value.task_run_id,
@@ -124,7 +117,10 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def apply_task_attempt(target: ORMTaskAttemptRow, value: TaskAttemptRow) -> None:
+    def apply_task_attempt(
+        target: orm_models.TaskAttemptRow,
+        value: TaskAttemptRow,
+    ) -> None:
         target.task_run_id = value.task_run_id
         target.attempt_number = value.attempt_number
         target.status = value.status
@@ -136,8 +132,8 @@ class SqlAlchemyRowMapper:
         target.error_metadata_json = dict(value.error_metadata)
 
     @staticmethod
-    def runtime_event_to_orm(value: RuntimeEventRow) -> ORMRuntimeEventRow:
-        return ORMRuntimeEventRow(
+    def runtime_event_to_orm(value: RuntimeEventRow) -> orm_models.RuntimeEventRow:
+        return orm_models.RuntimeEventRow(
             event_id=value.event_id,
             event_type=value.event_type,
             run_id=value.run_id,
@@ -150,7 +146,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def runtime_event_from_orm(value: ORMRuntimeEventRow) -> RuntimeEventRow:
+    def runtime_event_from_orm(value: orm_models.RuntimeEventRow) -> RuntimeEventRow:
         return RuntimeEventRow(
             event_id=value.event_id,
             event_type=value.event_type,
@@ -164,8 +160,8 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def artifact_to_orm(value: ArtifactReferenceRow) -> ORMArtifactReferenceRow:
-        return ORMArtifactReferenceRow(
+    def artifact_to_orm(value: ArtifactReferenceRow) -> orm_models.ArtifactReferenceRow:
+        return orm_models.ArtifactReferenceRow(
             artifact_id=value.artifact_id,
             task_run_id=value.task_run_id,
             name=value.name,
@@ -177,7 +173,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def artifact_from_orm(value: ORMArtifactReferenceRow) -> ArtifactReferenceRow:
+    def artifact_from_orm(value: orm_models.ArtifactReferenceRow) -> ArtifactReferenceRow:
         return ArtifactReferenceRow(
             artifact_id=value.artifact_id,
             task_run_id=value.task_run_id,
@@ -190,8 +186,8 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def external_ref_to_orm(value: ExternalRunRefRow) -> ORMExternalRunRefRow:
-        return ORMExternalRunRefRow(
+    def external_ref_to_orm(value: ExternalRunRefRow) -> orm_models.ExternalRunRefRow:
+        return orm_models.ExternalRunRefRow(
             external_ref_id=value.external_ref_id,
             task_run_id=value.task_run_id,
             provider=value.provider,
@@ -201,7 +197,7 @@ class SqlAlchemyRowMapper:
         )
 
     @staticmethod
-    def external_ref_from_orm(value: ORMExternalRunRefRow) -> ExternalRunRefRow:
+    def external_ref_from_orm(value: orm_models.ExternalRunRefRow) -> ExternalRunRefRow:
         return ExternalRunRefRow(
             external_ref_id=value.external_ref_id,
             task_run_id=value.task_run_id,
