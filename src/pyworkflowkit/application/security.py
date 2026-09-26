@@ -19,9 +19,8 @@ class ObservabilitySecurityPolicy:
     max_sink_error_message_chars: int = 256
 
     def __post_init__(self) -> None:
-        if (
-            isinstance(self.max_sink_error_message_chars, bool)
-            or not isinstance(self.max_sink_error_message_chars, int)
+        if isinstance(self.max_sink_error_message_chars, bool) or not isinstance(
+            self.max_sink_error_message_chars, int
         ):
             raise TypeError("max_sink_error_message_chars must be an integer")
         if self.max_sink_error_message_chars < 1:
