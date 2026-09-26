@@ -13,6 +13,7 @@ from pyworkflowkit.migrations import current_revision, upgrade_database
 POSTGRES_DSN = os.environ.get("PYWORKFLOWKIT_TEST_POSTGRES_DSN")
 HEAD_REVISION = "0001_runtime_metadata"
 EXPECTED_TABLES = {
+    "alembic_version",
     "artifact_references",
     "external_run_refs",
     "runtime_events",
