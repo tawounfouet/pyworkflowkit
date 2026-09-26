@@ -10,8 +10,7 @@ from pyworkflowkit.application.retry import (
     pending_retry_attempt,
     retry_eligible_at,
 )
-from pyworkflowkit.domain.enums import BackoffStrategy
-from pyworkflowkit.domain.enums import TaskAttemptStatus
+from pyworkflowkit.domain.enums import BackoffStrategy, TaskAttemptStatus
 from pyworkflowkit.domain.ids import TaskAttemptId, TaskId, TaskRunId
 from pyworkflowkit.domain.runtime import TaskAttempt
 from pyworkflowkit.domain.values import RetryPolicy
