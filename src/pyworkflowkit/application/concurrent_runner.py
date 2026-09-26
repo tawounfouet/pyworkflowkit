@@ -7,11 +7,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from queue import Empty
 from time import monotonic
+from typing import Protocol, runtime_checkable
 
-from pyworkflowkit.adapters.executors.thread import ThreadExecutor
 from pyworkflowkit.application.cancellation import CancellationController
 from pyworkflowkit.application.capacity import CapacityLease, CapacityManager
-from pyworkflowkit.application.completion import AttemptCompletion, ExecutionHandle
+from pyworkflowkit.application.completion import (
+    AttemptCompletion,
+    CompletionQueue,
+    ExecutionHandle,
+)
 from pyworkflowkit.application.events import RuntimeEventFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.observability import LogContext, log_runtime
@@ -27,17 +31,57 @@ from pyworkflowkit.domain.enums import (
 from pyworkflowkit.domain.graph import DependencyGraph
 from pyworkflowkit.domain.ids import TaskId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.domain.values import TaskResult
 from pyworkflowkit.errors import (
     ExecutionTimeoutError,
     ExecutorError,
     RuntimeInvariantError,
     TaskExecutionError,
 )
-from pyworkflowkit.ports.executor import RunContext, TaskHandler
+from pyworkflowkit.ports.executor import (
+    CancellationCapability,
+    ExecutorCapabilities,
+    RunContext,
+    TaskHandler,
+)
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
 
 logger = logging.getLogger("pyworkflowkit.concurrent_runner")
+
+
+class _ConcurrentExecutor(Protocol):
+    """Structural contract required by the concurrent coordinator."""
+
+    @property
+    def key(self) -> str: ...
+
+    @property
+    def capabilities(self) -> ExecutorCapabilities: ...
+
+    @property
+    def completion_queue(self) -> CompletionQueue: ...
+
+    def execute(
+        self,
+        *,
+        task: TaskDefinition,
+        handler: TaskHandler,
+        context: RunContext,
+    ) -> TaskResult: ...
+
+    def submit(
+        self,
+        *,
+        task: TaskDefinition,
+        handler: TaskHandler,
+        context: RunContext,
+    ) -> ExecutionHandle: ...
+
+
+@runtime_checkable
+class _HardTerminationExecutor(Protocol):
+    def terminate(self, handle: ExecutionHandle) -> bool: ...
 
 
 @dataclass(slots=True)
@@ -65,7 +109,7 @@ class ConcurrentRunner(Runner):
         *,
         metadata_store: MetadataStore,
         handler_registry: HandlerRegistry,
-        executor: ThreadExecutor,
+        executor: _ConcurrentExecutor,
         clock: Clock,
         id_factory: RuntimeIdFactory,
         sleeper: Sleeper,
@@ -80,7 +124,7 @@ class ConcurrentRunner(Runner):
             id_factory=id_factory,
             sleeper=sleeper,
         )
-        self._thread_executor = executor
+        self._concurrent_executor = executor
         self._global_limit = (
             executor.capabilities.max_concurrency if global_limit is None else global_limit
         )
@@ -95,9 +139,9 @@ class ConcurrentRunner(Runner):
     ) -> WorkflowRun:
         """Execute one workflow with bounded parallel READY-task dispatch."""
 
-        if len(self._thread_executor.completion_queue) != 0:
+        if len(self._concurrent_executor.completion_queue) != 0:
             raise RuntimeInvariantError(
-                reason="ThreadExecutor completion queue must be empty before a workflow run"
+                reason="Executor completion queue must be empty before a workflow run"
             )
 
         graph = build_dependency_graph(workflow)
@@ -215,8 +259,17 @@ class ConcurrentRunner(Runner):
 
                 if active:
                     try:
-                        completion = self._thread_executor.completion_queue.get(
-                            timeout=self._completion_wait_timeout(active)
+                        cancellation_poll_seconds = (
+                            0.05
+                            if self._concurrent_executor.capabilities.cancellation
+                            is CancellationCapability.HARD
+                            else None
+                        )
+                        completion = self._concurrent_executor.completion_queue.get(
+                            timeout=self._completion_wait_timeout(
+                                active,
+                                cancellation_poll_seconds=cancellation_poll_seconds,
+                            )
                         )
                     except Empty:
                         terminal_failure = self._expire_due_timeouts(
@@ -325,24 +378,24 @@ class ConcurrentRunner(Runner):
 
     def _new_capacity_manager(self) -> CapacityManager:
         per_executor_limits = (
-            {self._thread_executor.key: self._executor_limit}
+            {self._concurrent_executor.key: self._executor_limit}
             if self._executor_limit is not None
             else None
         )
         return CapacityManager(
             global_limit=self._global_limit,
             executor_capabilities={
-                self._thread_executor.key: self._thread_executor.capabilities,
+                self._concurrent_executor.key: self._concurrent_executor.capabilities,
             },
             per_executor_limits=per_executor_limits,
         )
 
     def _effective_executor_limit(self) -> int:
         if self._executor_limit is None:
-            return self._thread_executor.capabilities.max_concurrency
+            return self._concurrent_executor.capabilities.max_concurrency
         return min(
             self._executor_limit,
-            self._thread_executor.capabilities.max_concurrency,
+            self._concurrent_executor.capabilities.max_concurrency,
         )
 
     def _mark_new_ready_tasks(
@@ -402,7 +455,7 @@ class ConcurrentRunner(Runner):
                 attempt_number=1,
             )
             lease = capacity.try_acquire(
-                executor_key=self._thread_executor.key,
+                executor_key=self._concurrent_executor.key,
                 attempt_id=attempt_id,
             )
             if lease is None:
@@ -455,9 +508,7 @@ class ConcurrentRunner(Runner):
         capacity: CapacityManager,
         cancellation: CancellationController,
     ) -> None:
-        active_task_ids = {
-            execution.task_id for execution in active.values() if not execution.timed_out
-        }
+        active_task_ids = {execution.task_id for execution in active.values()}
         for task_id in tuple(sorted(pending_retries, key=str)):
             if cancellation.is_requested:
                 return
@@ -470,7 +521,7 @@ class ConcurrentRunner(Runner):
                 attempt_number=pending.next_attempt_number,
             )
             lease = capacity.try_acquire(
-                executor_key=self._thread_executor.key,
+                executor_key=self._concurrent_executor.key,
                 attempt_id=attempt_id,
             )
             if lease is None:
@@ -523,7 +574,7 @@ class ConcurrentRunner(Runner):
                 for upstream_task_id in graph.upstream_of(task_run.task_id)
             },
         )
-        handle = self._thread_executor.submit(
+        handle = self._concurrent_executor.submit(
             task=task_definition,
             handler=handler,
             context=context,
@@ -550,15 +601,20 @@ class ConcurrentRunner(Runner):
     @staticmethod
     def _completion_wait_timeout(
         active: Mapping[str, _ActiveExecution],
+        *,
+        cancellation_poll_seconds: float | None = None,
     ) -> float | None:
         deadlines = tuple(
             execution.deadline_monotonic
             for execution in active.values()
             if not execution.timed_out and execution.deadline_monotonic is not None
         )
-        if not deadlines:
-            return None
-        return max(0.0, min(deadlines) - monotonic())
+        deadline_wait = max(0.0, min(deadlines) - monotonic()) if deadlines else None
+        if cancellation_poll_seconds is None:
+            return deadline_wait
+        if deadline_wait is None:
+            return cancellation_poll_seconds
+        return min(deadline_wait, cancellation_poll_seconds)
 
     def _expire_due_timeouts(
         self,
@@ -591,6 +647,9 @@ class ConcurrentRunner(Runner):
                 raise RuntimeInvariantError(
                     reason=f"task '{execution.task_id}' reached timeout without timeout_seconds"
                 )
+
+            if task_definition.timeout_mode is TimeoutMode.HARD:
+                self._hard_terminator().terminate(execution.handle)
 
             execution.timed_out = True
             timeout_error = ExecutionTimeoutError(
@@ -808,7 +867,9 @@ class ConcurrentRunner(Runner):
         request = cancellation.request_details
         reason = request.reason if request is not None else "requested"
         cancelled_task_runs: list[TaskRun] = []
-        active_task_ids = {execution.task_id for execution in active.values()}
+        active_task_ids = {
+            execution.task_id for execution in active.values() if not execution.timed_out
+        }
 
         for task_run in task_runs_by_task_id.values():
             should_cancel = task_run.status in {
@@ -827,6 +888,14 @@ class ConcurrentRunner(Runner):
         pending_retries.clear()
         self._persist_cancelled_task_runs(cancelled_task_runs)
 
+        hard_cancelled_handle_ids: set[str] = set()
+        if self._concurrent_executor.capabilities.cancellation is CancellationCapability.HARD:
+            terminator = self._hard_terminator()
+            for execution in tuple(active.values()):
+                terminated = terminator.terminate(execution.handle)
+                if terminated and not execution.timed_out:
+                    hard_cancelled_handle_ids.add(execution.handle.handle_id)
+
         log_runtime(
             logger,
             logging.INFO,
@@ -843,19 +912,27 @@ class ConcurrentRunner(Runner):
         )
 
         while active:
-            completion = self._thread_executor.completion_queue.get()
-            execution = active.pop(completion.handle.handle_id, None)
-            if execution is None:
+            completion = self._concurrent_executor.completion_queue.get()
+            completed_execution = active.get(completion.handle.handle_id)
+            if completed_execution is None:
                 raise RuntimeInvariantError(
                     reason=(
                         "received completion for an execution handle "
                         f"not owned by cancelling run: '{completion.handle.handle_id}'"
                     )
                 )
-            capacity.release(execution.lease)
-            if not execution.timed_out:
+            del active[completion.handle.handle_id]
+            capacity.release(completed_execution.lease)
+            if completed_execution.timed_out:
+                continue
+            if completed_execution.handle.handle_id in hard_cancelled_handle_ids:
+                self._apply_hard_cancellation_completion(
+                    execution=completed_execution,
+                    completion=completion,
+                )
+            else:
                 self._apply_cancellation_completion(
-                    execution=execution,
+                    execution=completed_execution,
                     completion=completion,
                     event_factory=event_factory,
                 )
@@ -894,22 +971,51 @@ class ConcurrentRunner(Runner):
         event_factory: RuntimeEventFactory,
     ) -> None:
         while active:
-            completion = self._thread_executor.completion_queue.get()
-            execution = active.pop(completion.handle.handle_id, None)
-            if execution is None:
+            completion = self._concurrent_executor.completion_queue.get()
+            completed_execution = active.get(completion.handle.handle_id)
+            if completed_execution is None:
                 raise RuntimeInvariantError(
                     reason=(
                         "received completion for an execution handle "
                         f"not owned by terminal run: '{completion.handle.handle_id}'"
                     )
                 )
-            capacity.release(execution.lease)
-            if not execution.timed_out:
+            del active[completion.handle.handle_id]
+            capacity.release(completed_execution.lease)
+            if not completed_execution.timed_out:
                 self._apply_cancellation_completion(
-                    execution=execution,
+                    execution=completed_execution,
                     completion=completion,
                     event_factory=event_factory,
                 )
+
+    def _hard_terminator(self) -> _HardTerminationExecutor:
+        if not isinstance(self._concurrent_executor, _HardTerminationExecutor):
+            raise RuntimeInvariantError(
+                reason=(
+                    f"executor '{self._concurrent_executor.key}' declares hard termination "
+                    "semantics but does not implement terminate(handle)"
+                )
+            )
+        return self._concurrent_executor
+
+    def _apply_hard_cancellation_completion(
+        self,
+        *,
+        execution: _ActiveExecution,
+        completion: AttemptCompletion,
+    ) -> None:
+        if completion.handle != execution.handle:
+            raise RuntimeInvariantError(
+                reason="hard-cancellation completion handle does not match active execution"
+            )
+        cancelled_at = self._clock.now()
+        self._state_machine.cancel_attempt(execution.attempt, at=cancelled_at)
+        self._state_machine.cancel_task(execution.task_run, at=cancelled_at)
+        with self._metadata_store.unit_of_work() as uow:
+            uow.save_task_attempt(execution.attempt)
+            uow.save_task_run(execution.task_run)
+            uow.commit()
 
     def _persist_cancelled_task_runs(
         self,

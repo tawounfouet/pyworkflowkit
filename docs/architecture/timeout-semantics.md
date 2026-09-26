@@ -90,9 +90,29 @@ For a soft timeout, a retry of the same TaskRun is not submitted until the timed
 
 ## HARD timeout
 
-M31 defines and validates the `HARD` semantic level but ThreadExecutor does not implement it.
+`ThreadExecutor` still does not implement hard termination.
 
-Hard timeout requires an executor capable of stronger termination semantics. The roadmap introduces ProcessExecutor in M32, where stronger process-level termination can be implemented without pretending Python threads are killable.
+M32 adds `ProcessExecutor`, which declares `TimeoutCapability.HARD`. When a task requests
+`TimeoutMode.HARD`, `ConcurrentRunner` asks the executor to terminate the active
+execution handle before persisting the ordinary `ExecutionTimeoutError` failure.
+
+```text
+TaskAttempt RUNNING
+        ↓ hard deadline
+terminate process(handle)
+        ↓
+TaskAttempt FAILED
+error_category = timeout
+        ↓
+RetryEngine
+```
+
+The runtime does not add a `TIMED_OUT` lifecycle state. Hard timeout changes physical
+cleanup strength, not the existing failure/evidence contract.
+
+A task that requests `SOFT` timeout under `ProcessExecutor` retains logical soft-timeout
+semantics; the process is not forcibly terminated merely because the executor is capable
+of stronger termination.
 
 ## Interaction with cancellation
 
@@ -115,7 +135,6 @@ M31 does not introduce:
 - hard thread killing;
 - a `TIMED_OUT` lifecycle status;
 - non-blocking retry scheduling;
-- process termination;
 - async cancellation.
 
 Those concerns belong to later executor and recovery milestones.
