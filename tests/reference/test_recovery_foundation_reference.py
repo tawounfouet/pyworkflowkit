@@ -10,6 +10,8 @@ from pyworkflowkit.application.recovery import (
     RecoveryLiveness,
     ResumeEligibility,
 )
+from pyworkflowkit.application.runtime import WorkflowRuntime
+from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import RuntimeEventType, TaskRunStatus, WorkflowRunStatus
 from pyworkflowkit.domain.ids import (
     ExternalRunRefId,
@@ -151,3 +153,27 @@ def test_stale_candidate_without_ambiguous_work_is_structurally_resume_eligible(
         assert assessment.resume_eligibility is ResumeEligibility.ELIGIBLE
         assert assessment.requires_reconciliation is False
         assert assessment.idempotency[0].idempotency_key == "task-run-eligible"
+
+
+
+def test_workflow_runtime_exposes_read_only_recovery_diagnostics() -> None:
+    runtime = WorkflowRuntime()
+    runtime.register("handlers:done", lambda: "done")
+    workflow = WorkflowDefinition(
+        workflow_id=WorkflowId("workflow.facade-recovery"),
+        version="1",
+        tasks=(
+            TaskDefinition(
+                task_id=TaskId("done"),
+                handler_ref="handlers:done",
+            ),
+        ),
+    )
+
+    run = runtime.run(workflow)
+    assessment = runtime.recovery_assessment(run.run_id, stale_after_seconds=300)
+
+    assert run.status is WorkflowRunStatus.SUCCEEDED
+    assert assessment.liveness is RecoveryLiveness.TERMINAL
+    assert assessment.resume_eligibility is ResumeEligibility.NOT_ELIGIBLE
+    assert runtime.stale_run_candidates(stale_after_seconds=300) == ()
