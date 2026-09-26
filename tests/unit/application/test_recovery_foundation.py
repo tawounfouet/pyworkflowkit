@@ -322,7 +322,6 @@ def test_overdue_retry_wait_becomes_resume_eligible_without_reconciliation() -> 
         attempt_started_at=OLD,
         attempt_finished_at=OLD + timedelta(minutes=1),
         retry_eligible_at=eligible_at,
-        external=True,
     )
 
     assessment = _inspector(store).assess(WorkflowRunId("run"))
@@ -332,6 +331,27 @@ def test_overdue_retry_wait_becomes_resume_eligible_without_reconciliation() -> 
     assert assessment.requires_reconciliation is False
     assert assessment.retry_waiting_task_run_ids == ("run:task",)
     assert assessment.unresolved_external_run_ref_count == 0
+
+
+def test_retry_wait_with_external_ref_still_requires_reconciliation() -> None:
+    store = MemoryMetadataStore()
+    eligible_at = OLD + timedelta(minutes=10)
+    _persist_run(
+        store,
+        task_status=TaskRunStatus.RUNNING,
+        task_started_at=OLD,
+        attempt_status=TaskAttemptStatus.FAILED,
+        attempt_started_at=OLD,
+        attempt_finished_at=OLD + timedelta(minutes=1),
+        retry_eligible_at=eligible_at,
+        external=True,
+    )
+
+    assessment = _inspector(store).assess(WorkflowRunId("run"))
+
+    assert assessment.liveness is RecoveryLiveness.STALE_CANDIDATE
+    assert assessment.resume_eligibility is ResumeEligibility.REQUIRES_RECONCILIATION
+    assert assessment.unresolved_external_run_ref_count == 1
 
 def test_find_stale_candidates_excludes_recent_and_terminal_runs() -> None:
     store = MemoryMetadataStore()
