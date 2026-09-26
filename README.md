@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable baseline `0.3.0`; current development line `0.4.0a4`.
-> The 0.4 line introduces bounded concurrency incrementally, starting with explicit
-> executor capability contracts before any concurrent dispatch is enabled.
+> **Status:** stable baseline `0.3.0`; current development line `0.4.0a5`.
+> The 0.4 line now includes bounded concurrent DAG dispatch through ThreadExecutor
+> and ConcurrentRunner; cancellation and terminal timeout semantics are still pending.
 
 ## What 0.3 provides
 
