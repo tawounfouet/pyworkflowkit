@@ -53,9 +53,7 @@ class ExecutionLineageProjector:
                     task_run_id=str(task_run.task_run_id),
                     attempt_ids=tuple(str(value.attempt_id) for value in attempts),
                     artifact_ids=tuple(str(value.artifact_id) for value in artifacts),
-                    external_ref_ids=tuple(
-                        str(value.external_ref_id) for value in external_refs
-                    ),
+                    external_ref_ids=tuple(str(value.external_ref_id) for value in external_refs),
                 )
             )
 
