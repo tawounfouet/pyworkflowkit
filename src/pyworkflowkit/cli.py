@@ -189,9 +189,7 @@ def events(
         _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
 
     payload = {"run_id": run_id, "events": [_event_payload(event) for event in values]}
-    human = "\n".join(
-        f"{event.event_sequence}: {event.event_type.value}" for event in values
-    )
+    human = "\n".join(f"{event.event_sequence}: {event.event_type.value}" for event in values)
     _emit(payload, json_output=json_output, human=human or "<no events>")
 
 
