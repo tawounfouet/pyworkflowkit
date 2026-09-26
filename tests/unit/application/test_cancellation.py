@@ -12,7 +12,13 @@ from pyworkflowkit.application.completion import AttemptCompletion, CompletionQu
 from pyworkflowkit.application.concurrent_runner import ConcurrentRunner
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import RuntimeEventType, TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
+from pyworkflowkit.domain.enums import (
+    BackoffStrategy,
+    RuntimeEventType,
+    TaskAttemptStatus,
+    TaskRunStatus,
+    WorkflowRunStatus,
+)
 from pyworkflowkit.domain.ids import (
     RuntimeEventId,
     TaskAttemptId,
@@ -22,6 +28,7 @@ from pyworkflowkit.domain.ids import (
     WorkflowRunId,
 )
 from pyworkflowkit.domain.runtime import WorkflowRun
+from pyworkflowkit.domain.values import RetryPolicy
 
 NOW = datetime(2026, 9, 26, 14, 0, tzinfo=UTC)
 
@@ -82,6 +89,12 @@ def _task(name: str) -> TaskDefinition:
         task_id=TaskId(name),
         handler_ref=f"handlers:{name}",
         executor_key="thread",
+        retry_policy=RetryPolicy(
+            max_attempts=2,
+            backoff_strategy=BackoffStrategy.FIXED,
+            delay_seconds=0.1,
+            retryable_error_categories=frozenset({"RuntimeError"}),
+        ),
     )
 
 
@@ -149,7 +162,7 @@ def test_pre_requested_cancellation_cancels_all_undispatched_tasks() -> None:
     task_runs = store.list_task_runs(run.run_id)
     assert run.status is WorkflowRunStatus.CANCELLED
     assert {task.status for task in task_runs} == {TaskRunStatus.CANCELLED}
-    assert all(store.list_task_attempts(task.task_run_id) == () for task in task_runs)
+    assert all(not store.list_task_attempts(task.task_run_id) for task in task_runs)
 
     cancelled = [
         event
@@ -199,7 +212,7 @@ def test_external_cancellation_stops_dispatch_and_allows_running_attempt_to_fini
         assert task_runs[TaskId("A")].status is TaskRunStatus.SUCCEEDED
         assert task_runs[TaskId("B")].status is TaskRunStatus.CANCELLED
         assert len(store.list_task_attempts(task_runs[TaskId("A")].task_run_id)) == 1
-        assert store.list_task_attempts(task_runs[TaskId("B")].task_run_id) == ()
+        assert not store.list_task_attempts(task_runs[TaskId("B")].task_run_id)
     finally:
         release.set()
         executor.shutdown()
