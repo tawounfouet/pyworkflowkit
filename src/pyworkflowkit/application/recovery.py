@@ -124,21 +124,17 @@ class RecoveryInspector:
 
         running_task_runs = tuple(
             sorted(
-                (
-                    str(task_run.task_run_id)
-                    for task_run in task_runs
-                    if task_run.status is TaskRunStatus.RUNNING
-                )
+                str(task_run.task_run_id)
+                for task_run in task_runs
+                if task_run.status is TaskRunStatus.RUNNING
             )
         )
         running_attempts = tuple(
             sorted(
-                (
-                    str(attempt.attempt_id)
-                    for attempts in attempts_by_task_run.values()
-                    for attempt in attempts
-                    if attempt.status is TaskAttemptStatus.RUNNING
-                )
+                str(attempt.attempt_id)
+                for attempts in attempts_by_task_run.values()
+                for attempt in attempts
+                if attempt.status is TaskAttemptStatus.RUNNING
             )
         )
 
