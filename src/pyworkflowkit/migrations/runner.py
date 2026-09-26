@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-from importlib.resources import as_file, files
+from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import Engine
 
+MIGRATIONS_ROOT = Path(__file__).resolve().parent
+
 
 def alembic_config(*, engine: Engine | None = None, url: str | None = None) -> Config:
     """Build an Alembic Config from migrations packaged with PyWorkflowKit."""
 
-    migrations_root = files("pyworkflowkit.migrations")
-    with as_file(migrations_root) as path:
-        config = Config()
-        config.set_main_option("script_location", str(path))
-        if url is not None:
-            config.set_main_option("sqlalchemy.url", url)
-        if engine is not None:
-            config.attributes["engine"] = engine
-        return config
+    config = Config()
+    config.set_main_option("script_location", str(MIGRATIONS_ROOT))
+    if url is not None:
+        config.set_main_option("sqlalchemy.url", url)
+    if engine is not None:
+        config.attributes["engine"] = engine
+    return config
 
 
 def upgrade_database(engine: Engine, revision: str = "head") -> None:
@@ -38,4 +38,9 @@ def current_revision(engine: Engine) -> str | None:
         return context.get_current_revision()
 
 
-__all__ = ["alembic_config", "current_revision", "upgrade_database"]
+__all__ = [
+    "MIGRATIONS_ROOT",
+    "alembic_config",
+    "current_revision",
+    "upgrade_database",
+]
