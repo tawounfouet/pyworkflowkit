@@ -122,9 +122,7 @@ class TaskAttemptRow(Base):
 
 class TaskOutputCheckpointRow(Base):
     __tablename__ = "task_output_checkpoints"
-    __table_args__ = (
-        {"schema": DB_SCHEMA},
-    )
+    __table_args__ = ({"schema": DB_SCHEMA},)
 
     task_run_id: Mapped[str] = mapped_column(
         RuntimeIdType(),
