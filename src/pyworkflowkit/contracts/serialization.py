@@ -16,6 +16,7 @@ from pyworkflowkit.domain.enums import (
     SkipReason,
     TaskAttemptStatus,
     TaskRunStatus,
+    TimeoutMode,
     WorkflowRunStatus,
 )
 from pyworkflowkit.errors import SerializationError
@@ -108,6 +109,7 @@ class TaskDefinitionSchema(StrictSchema):
     retry_policy: RetryPolicySchema = RetryPolicySchema()
     executor_key: str = "local"
     timeout_seconds: float | None = None
+    timeout_mode: TimeoutMode = TimeoutMode.NONE
     tags: tuple[str, ...] = ()
     description: str | None = None
 
