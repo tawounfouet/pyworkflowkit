@@ -64,7 +64,7 @@ no RUNNING TaskAttempt
 
 Before eligibility, M37 classifies it as `ACTIVE` with reason `retry_wait_not_yet_eligible`. After the deadline and stale threshold, it becomes a `STALE_CANDIDATE` that is resume-eligible if no other ambiguity exists.
 
-M38 skips this state because it is explicit runtime intent, not ambiguous active external work.
+M38 skips a **pure local** retry wait because it is explicit runtime intent, not ambiguous active work. If the non-terminal TaskRun also carries ExternalRunRef evidence, external reconciliation remains mandatory; retry scheduling never suppresses unresolved side-effect evidence.
 
 M39 resumes the same `WorkflowRun` and same `TaskRun` by creating Attempt N+1 once the deadline is due. If the deadline is still in the future, resume is rejected without mutation.
 
