@@ -73,8 +73,7 @@ def test_process_executor_completes_reference_workflow() -> None:
 
         assert run.status is WorkflowRunStatus.SUCCEEDED
         assert all(
-            task_run.finished_at is not None
-            for task_run in store.list_task_runs(run.run_id)
+            task_run.finished_at is not None for task_run in store.list_task_runs(run.run_id)
         )
         assert executor.active_handles() == ()
     finally:
