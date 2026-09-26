@@ -131,9 +131,7 @@ class ExecutionHandleNotFoundError(ExecutorError):
     def __init__(self, *, executor_key: str, handle_id: str) -> None:
         self.executor_key = executor_key
         self.handle_id = handle_id
-        super().__init__(
-            f"Executor '{executor_key}' does not know execution handle '{handle_id}'."
-        )
+        super().__init__(f"Executor '{executor_key}' does not know execution handle '{handle_id}'.")
 
 
 class DuplicateExecutionSubmissionError(ExecutorError):
@@ -142,9 +140,7 @@ class DuplicateExecutionSubmissionError(ExecutorError):
     def __init__(self, *, executor_key: str, attempt_id: str) -> None:
         self.executor_key = executor_key
         self.attempt_id = attempt_id
-        super().__init__(
-            f"Executor '{executor_key}' already received task attempt '{attempt_id}'."
-        )
+        super().__init__(f"Executor '{executor_key}' already received task attempt '{attempt_id}'.")
 
 
 class ExecutorWorkerError(ExecutorError):
