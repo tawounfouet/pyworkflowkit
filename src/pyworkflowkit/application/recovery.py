@@ -115,9 +115,7 @@ class RecoveryInspector:
             run=run,
             task_runs=task_runs,
             attempts=tuple(
-                attempt
-                for attempts in attempts_by_task_run.values()
-                for attempt in attempts
+                attempt for attempts in attempts_by_task_run.values() for attempt in attempts
             ),
             events=events,
         )
