@@ -65,6 +65,7 @@ class RecoveryAssessment:
     running_task_run_ids: tuple[str, ...]
     running_attempt_ids: tuple[str, ...]
     external_run_ref_count: int
+    unresolved_external_run_ref_count: int
     idempotency: tuple[TaskIdempotencyMetadata, ...]
     reasons: tuple[str, ...]
 
@@ -141,9 +142,23 @@ class RecoveryInspector:
             )
         )
 
-        external_ref_count = sum(
-            len(self._metadata_store.list_external_run_refs(task_run.task_run_id))
+        external_refs_by_task_run = {
+            task_run.task_run_id: tuple(
+                self._metadata_store.list_external_run_refs(task_run.task_run_id)
+            )
             for task_run in task_runs
+        }
+        external_ref_count = sum(len(values) for values in external_refs_by_task_run.values())
+        unresolved_external_ref_count = sum(
+            len(external_refs_by_task_run[task_run.task_run_id])
+            for task_run in task_runs
+            if task_run.status
+            not in {
+                TaskRunStatus.SUCCEEDED,
+                TaskRunStatus.FAILED,
+                TaskRunStatus.SKIPPED,
+                TaskRunStatus.CANCELLED,
+            }
         )
 
         idempotency = tuple(
@@ -163,8 +178,9 @@ class RecoveryInspector:
         )
         eligibility, eligibility_reasons = self._classify_resume_eligibility(
             liveness=liveness,
+            running_task_run_ids=running_task_runs,
             running_attempt_ids=running_attempts,
-            external_run_ref_count=external_ref_count,
+            unresolved_external_run_ref_count=unresolved_external_ref_count,
         )
 
         return RecoveryAssessment(
@@ -180,6 +196,7 @@ class RecoveryInspector:
             running_task_run_ids=running_task_runs,
             running_attempt_ids=running_attempts,
             external_run_ref_count=external_ref_count,
+            unresolved_external_run_ref_count=unresolved_external_ref_count,
             idempotency=idempotency,
             reasons=tuple((*reasons, *eligibility_reasons)),
         )
@@ -229,16 +246,19 @@ class RecoveryInspector:
     def _classify_resume_eligibility(
         *,
         liveness: RecoveryLiveness,
+        running_task_run_ids: tuple[str, ...],
         running_attempt_ids: tuple[str, ...],
-        external_run_ref_count: int,
+        unresolved_external_run_ref_count: int,
     ) -> tuple[ResumeEligibility, tuple[str, ...]]:
         if liveness is not RecoveryLiveness.STALE_CANDIDATE:
             return ResumeEligibility.NOT_ELIGIBLE, ("run_is_not_a_stale_candidate",)
 
         reconciliation_reasons: list[str] = []
+        if running_task_run_ids:
+            reconciliation_reasons.append("running_task_requires_reconciliation")
         if running_attempt_ids:
             reconciliation_reasons.append("running_attempt_requires_reconciliation")
-        if external_run_ref_count:
+        if unresolved_external_run_ref_count:
             reconciliation_reasons.append("external_work_requires_reconciliation")
 
         if reconciliation_reasons:
