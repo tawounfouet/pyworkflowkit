@@ -410,8 +410,6 @@ def test_running_attempt_can_fail_with_structured_error_context() -> None:
         setitem(attempt.error_metadata, "provider_code", "mutated")
 
 
-
-
 def test_failed_attempt_can_receive_retry_eligibility() -> None:
     attempt = make_attempt(TaskAttemptStatus.RUNNING)
     machine = RunStateMachine()
@@ -449,6 +447,7 @@ def test_retry_schedule_rejects_time_before_failure() -> None:
 
     with pytest.raises(ValueError, match="earlier"):
         machine.schedule_retry(attempt, eligible_at=NOW)
+
 
 def test_running_attempt_can_be_cancelled() -> None:
     attempt = make_attempt(TaskAttemptStatus.RUNNING)
