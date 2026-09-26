@@ -99,9 +99,7 @@ class RuntimeInspector:
         deadlocked = bool(nonterminal) and not ready
         reason = None
         if deadlocked:
-            reason = (
-                "non-terminal tasks remain but none has all dependencies in SUCCEEDED state"
-            )
+            reason = "non-terminal tasks remain but none has all dependencies in SUCCEEDED state"
 
         return RuntimeInspection(
             run_id=str(run.run_id),
