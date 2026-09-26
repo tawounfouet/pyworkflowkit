@@ -524,6 +524,8 @@ class ConcurrentRunner(Runner):
                 continue
             task_run = task_runs_by_task_id[task_id]
             pending = pending_retries[task_id]
+            if pending.eligible_monotonic > monotonic():
+                continue
             attempt_id = self._id_factory.new_task_attempt_id(
                 task_run_id=task_run.task_run_id,
                 attempt_number=pending.next_attempt_number,
@@ -610,12 +612,17 @@ class ConcurrentRunner(Runner):
     def _completion_wait_timeout(
         active: Mapping[str, _ActiveExecution],
         *,
+        pending_retries: Mapping[TaskId, _PendingRetry],
         cancellation_poll_seconds: float | None = None,
     ) -> float | None:
-        deadlines = tuple(
+        deadlines = [
             execution.deadline_monotonic
             for execution in active.values()
             if not execution.timed_out and execution.deadline_monotonic is not None
+        ]
+        deadlines.extend(
+            pending.eligible_monotonic
+            for pending in pending_retries.values()
         )
         deadline_wait = max(0.0, min(deadlines) - monotonic()) if deadlines else None
         if cancellation_poll_seconds is None:
@@ -686,6 +693,14 @@ class ConcurrentRunner(Runner):
                     raise RuntimeInvariantError(
                         reason="timeout retry decision is missing next_attempt_number"
                     )
+                eligible_at = retry_eligible_at(
+                    failed_at=failed_at,
+                    decision=decision,
+                )
+                self._state_machine.schedule_retry(
+                    execution.attempt,
+                    eligible_at=eligible_at,
+                )
                 self._persist_retry_failure(
                     attempt=execution.attempt,
                     event=event_factory.create(
@@ -700,15 +715,16 @@ class ConcurrentRunner(Runner):
                             "timeout_mode": task_definition.timeout_mode.value,
                             "timeout_seconds": timeout_seconds,
                             "delay_seconds": decision.delay_seconds,
+                            "retry_eligible_at": eligible_at.isoformat(),
                             "next_attempt_number": decision.next_attempt_number,
                         },
                     ),
                 )
-                if decision.delay_seconds > 0:
-                    self._sleeper.sleep(decision.delay_seconds)
                 pending_retries[execution.task_id] = _PendingRetry(
                     task_id=execution.task_id,
                     next_attempt_number=decision.next_attempt_number,
+                    eligible_at=eligible_at,
+                    eligible_monotonic=monotonic() + decision.delay_seconds,
                 )
                 continue
 
@@ -806,6 +822,14 @@ class ConcurrentRunner(Runner):
         if decision.should_retry and not workflow_already_failed:
             if decision.next_attempt_number is None:
                 raise RuntimeInvariantError(reason="retry decision is missing next_attempt_number")
+            eligible_at = retry_eligible_at(
+                failed_at=failed_at,
+                decision=decision,
+            )
+            self._state_machine.schedule_retry(
+                execution.attempt,
+                eligible_at=eligible_at,
+            )
             self._persist_retry_failure(
                 attempt=execution.attempt,
                 event=event_factory.create(
@@ -818,15 +842,16 @@ class ConcurrentRunner(Runner):
                         "error_type": error_type,
                         "error_category": error_category,
                         "delay_seconds": decision.delay_seconds,
+                        "retry_eligible_at": eligible_at.isoformat(),
                         "next_attempt_number": decision.next_attempt_number,
                     },
                 ),
             )
-            if decision.delay_seconds > 0:
-                self._sleeper.sleep(decision.delay_seconds)
             pending_retries[execution.task_id] = _PendingRetry(
                 task_id=execution.task_id,
                 next_attempt_number=decision.next_attempt_number,
+                eligible_at=eligible_at,
+                eligible_monotonic=monotonic() + decision.delay_seconds,
             )
             return False
 
