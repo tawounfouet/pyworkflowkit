@@ -129,7 +129,6 @@ def test_retry_backoff_respects_max_delay() -> None:
     assert decision.delay_seconds == 5.0
 
 
-
 def test_retry_eligible_at_adds_decision_delay() -> None:
     failed_at = datetime(2026, 9, 27, 0, 30, tzinfo=UTC)
     decision = RetryDecision(
