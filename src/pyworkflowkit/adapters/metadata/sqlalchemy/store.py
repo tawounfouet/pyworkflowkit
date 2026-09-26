@@ -7,15 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
+from pyworkflowkit.adapters.metadata.sqlalchemy import models as orm_models
 from pyworkflowkit.adapters.metadata.sqlalchemy.mapping import SqlAlchemyRowMapper
-from pyworkflowkit.adapters.metadata.sqlalchemy.models import (
-    ArtifactReferenceRow as ORMArtifactReferenceRow,
-    ExternalRunRefRow as ORMExternalRunRefRow,
-    RuntimeEventRow as ORMRuntimeEventRow,
-    TaskAttemptRow as ORMTaskAttemptRow,
-    TaskRunRow as ORMTaskRunRow,
-    WorkflowRunRow as ORMWorkflowRunRow,
-)
 from pyworkflowkit.adapters.persistence.mapping import PersistenceMapper
 from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
@@ -26,7 +19,7 @@ from pyworkflowkit.errors import (
     MetadataStoreError,
     UnitOfWorkStateError,
 )
-from pyworkflowkit.ports.metadata_store import MetadataStore, UnitOfWork
+from pyworkflowkit.ports.metadata_store import UnitOfWork
 
 
 class SqlAlchemyMetadataStore:
@@ -40,7 +33,7 @@ class SqlAlchemyMetadataStore:
 
     def get_workflow_run(self, run_id: WorkflowRunId) -> WorkflowRun:
         with self._session_factory() as session:
-            row = session.get(ORMWorkflowRunRow, str(run_id))
+            row = session.get(orm_models.WorkflowRunRow, str(run_id))
             if row is None:
                 raise MetadataNotFoundError(entity_type="WorkflowRun", entity_id=str(run_id))
             return PersistenceMapper.workflow_run_from_row(
@@ -49,7 +42,7 @@ class SqlAlchemyMetadataStore:
 
     def get_task_run(self, task_run_id: TaskRunId) -> TaskRun:
         with self._session_factory() as session:
-            row = session.get(ORMTaskRunRow, str(task_run_id))
+            row = session.get(orm_models.TaskRunRow, str(task_run_id))
             if row is None:
                 raise MetadataNotFoundError(entity_type="TaskRun", entity_id=str(task_run_id))
             return PersistenceMapper.task_run_from_row(SqlAlchemyRowMapper.task_run_from_orm(row))
@@ -57,7 +50,7 @@ class SqlAlchemyMetadataStore:
     def list_task_runs(self, run_id: WorkflowRunId) -> tuple[TaskRun, ...]:
         with self._session_factory() as session:
             rows = session.scalars(
-                select(ORMTaskRunRow).where(ORMTaskRunRow.run_id == str(run_id))
+                select(orm_models.TaskRunRow).where(orm_models.TaskRunRow.run_id == str(run_id))
             ).all()
         values = (
             PersistenceMapper.task_run_from_row(SqlAlchemyRowMapper.task_run_from_orm(row))
@@ -68,8 +61,8 @@ class SqlAlchemyMetadataStore:
     def list_task_attempts(self, task_run_id: TaskRunId) -> tuple[TaskAttempt, ...]:
         with self._session_factory() as session:
             rows = session.scalars(
-                select(ORMTaskAttemptRow).where(
-                    ORMTaskAttemptRow.task_run_id == str(task_run_id)
+                select(orm_models.TaskAttemptRow).where(
+                    orm_models.TaskAttemptRow.task_run_id == str(task_run_id)
                 )
             ).all()
         values = (
@@ -83,7 +76,9 @@ class SqlAlchemyMetadataStore:
     def list_events(self, run_id: WorkflowRunId) -> tuple[RuntimeEvent, ...]:
         with self._session_factory() as session:
             rows = session.scalars(
-                select(ORMRuntimeEventRow).where(ORMRuntimeEventRow.run_id == str(run_id))
+                select(orm_models.RuntimeEventRow).where(
+                    orm_models.RuntimeEventRow.run_id == str(run_id)
+                )
             ).all()
         values = (
             PersistenceMapper.runtime_event_from_row(
@@ -96,8 +91,8 @@ class SqlAlchemyMetadataStore:
     def list_artifacts(self, task_run_id: TaskRunId) -> tuple[ArtifactReference, ...]:
         with self._session_factory() as session:
             rows = session.scalars(
-                select(ORMArtifactReferenceRow).where(
-                    ORMArtifactReferenceRow.task_run_id == str(task_run_id)
+                select(orm_models.ArtifactReferenceRow).where(
+                    orm_models.ArtifactReferenceRow.task_run_id == str(task_run_id)
                 )
             ).all()
         values = []
@@ -114,8 +109,8 @@ class SqlAlchemyMetadataStore:
     ) -> tuple[ExternalRunRef, ...]:
         with self._session_factory() as session:
             rows = session.scalars(
-                select(ORMExternalRunRefRow).where(
-                    ORMExternalRunRefRow.task_run_id == str(task_run_id)
+                select(orm_models.ExternalRunRefRow).where(
+                    orm_models.ExternalRunRefRow.task_run_id == str(task_run_id)
                 )
             ).all()
         values = []
@@ -156,7 +151,7 @@ class SqlAlchemyUnitOfWork:
     def add_workflow_run(self, run: WorkflowRun) -> None:
         session = self._require_session()
         record = PersistenceMapper.workflow_run_to_row(run)
-        if session.get(ORMWorkflowRunRow, record.run_id) is not None:
+        if session.get(orm_models.WorkflowRunRow, record.run_id) is not None:
             raise DuplicateMetadataError(entity_type="WorkflowRun", entity_id=record.run_id)
         session.add(SqlAlchemyRowMapper.workflow_run_to_orm(record))
         self._flush()
@@ -164,7 +159,7 @@ class SqlAlchemyUnitOfWork:
     def save_workflow_run(self, run: WorkflowRun) -> None:
         session = self._require_session()
         record = PersistenceMapper.workflow_run_to_row(run)
-        target = session.get(ORMWorkflowRunRow, record.run_id)
+        target = session.get(orm_models.WorkflowRunRow, record.run_id)
         if target is None:
             raise MetadataNotFoundError(entity_type="WorkflowRun", entity_id=record.run_id)
         SqlAlchemyRowMapper.apply_workflow_run(target, record)
@@ -173,9 +168,9 @@ class SqlAlchemyUnitOfWork:
     def add_task_run(self, task_run: TaskRun) -> None:
         session = self._require_session()
         record = PersistenceMapper.task_run_to_row(task_run)
-        if session.get(ORMTaskRunRow, record.task_run_id) is not None:
+        if session.get(orm_models.TaskRunRow, record.task_run_id) is not None:
             raise DuplicateMetadataError(entity_type="TaskRun", entity_id=record.task_run_id)
-        if session.get(ORMWorkflowRunRow, record.run_id) is None:
+        if session.get(orm_models.WorkflowRunRow, record.run_id) is None:
             raise MetadataNotFoundError(entity_type="WorkflowRun", entity_id=record.run_id)
         session.add(SqlAlchemyRowMapper.task_run_to_orm(record))
         self._flush()
@@ -183,7 +178,7 @@ class SqlAlchemyUnitOfWork:
     def save_task_run(self, task_run: TaskRun) -> None:
         session = self._require_session()
         record = PersistenceMapper.task_run_to_row(task_run)
-        target = session.get(ORMTaskRunRow, record.task_run_id)
+        target = session.get(orm_models.TaskRunRow, record.task_run_id)
         if target is None:
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=record.task_run_id)
         SqlAlchemyRowMapper.apply_task_run(target, record)
@@ -192,14 +187,14 @@ class SqlAlchemyUnitOfWork:
     def add_task_attempt(self, attempt: TaskAttempt) -> None:
         session = self._require_session()
         record = PersistenceMapper.task_attempt_to_row(attempt)
-        if session.get(ORMTaskAttemptRow, record.attempt_id) is not None:
+        if session.get(orm_models.TaskAttemptRow, record.attempt_id) is not None:
             raise DuplicateMetadataError(entity_type="TaskAttempt", entity_id=record.attempt_id)
-        if session.get(ORMTaskRunRow, record.task_run_id) is None:
+        if session.get(orm_models.TaskRunRow, record.task_run_id) is None:
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=record.task_run_id)
         duplicate = session.scalar(
-            select(ORMTaskAttemptRow).where(
-                ORMTaskAttemptRow.task_run_id == record.task_run_id,
-                ORMTaskAttemptRow.attempt_number == record.attempt_number,
+            select(orm_models.TaskAttemptRow).where(
+                orm_models.TaskAttemptRow.task_run_id == record.task_run_id,
+                orm_models.TaskAttemptRow.attempt_number == record.attempt_number,
             )
         )
         if duplicate is not None:
@@ -213,7 +208,7 @@ class SqlAlchemyUnitOfWork:
     def save_task_attempt(self, attempt: TaskAttempt) -> None:
         session = self._require_session()
         record = PersistenceMapper.task_attempt_to_row(attempt)
-        target = session.get(ORMTaskAttemptRow, record.attempt_id)
+        target = session.get(orm_models.TaskAttemptRow, record.attempt_id)
         if target is None:
             raise MetadataNotFoundError(entity_type="TaskAttempt", entity_id=record.attempt_id)
         SqlAlchemyRowMapper.apply_task_attempt(target, record)
@@ -222,19 +217,19 @@ class SqlAlchemyUnitOfWork:
     def add_event(self, event: RuntimeEvent) -> None:
         session = self._require_session()
         record = PersistenceMapper.runtime_event_to_row(event)
-        if session.get(ORMRuntimeEventRow, record.event_id) is not None:
+        if session.get(orm_models.RuntimeEventRow, record.event_id) is not None:
             raise DuplicateMetadataError(entity_type="RuntimeEvent", entity_id=record.event_id)
-        if session.get(ORMWorkflowRunRow, record.run_id) is None:
+        if session.get(orm_models.WorkflowRunRow, record.run_id) is None:
             raise MetadataNotFoundError(entity_type="WorkflowRun", entity_id=record.run_id)
         if record.task_run_id is not None and session.get(
-            ORMTaskRunRow, record.task_run_id
+            orm_models.TaskRunRow, record.task_run_id
         ) is None:
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=record.task_run_id)
         if record.event_sequence is not None:
             duplicate = session.scalar(
-                select(ORMRuntimeEventRow).where(
-                    ORMRuntimeEventRow.run_id == record.run_id,
-                    ORMRuntimeEventRow.event_sequence == record.event_sequence,
+                select(orm_models.RuntimeEventRow).where(
+                    orm_models.RuntimeEventRow.run_id == record.run_id,
+                    orm_models.RuntimeEventRow.event_sequence == record.event_sequence,
                 )
             )
             if duplicate is not None:
@@ -252,10 +247,10 @@ class SqlAlchemyUnitOfWork:
         artifact: ArtifactReference,
     ) -> None:
         session = self._require_session()
-        if session.get(ORMTaskRunRow, str(task_run_id)) is None:
+        if session.get(orm_models.TaskRunRow, str(task_run_id)) is None:
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=str(task_run_id))
         record = PersistenceMapper.artifact_to_row(task_run_id=task_run_id, value=artifact)
-        if session.get(ORMArtifactReferenceRow, record.artifact_id) is not None:
+        if session.get(orm_models.ArtifactReferenceRow, record.artifact_id) is not None:
             raise DuplicateMetadataError(entity_type="Artifact", entity_id=record.artifact_id)
         session.add(SqlAlchemyRowMapper.artifact_to_orm(record))
         self._flush()
@@ -267,13 +262,13 @@ class SqlAlchemyUnitOfWork:
         external_ref: ExternalRunRef,
     ) -> None:
         session = self._require_session()
-        if session.get(ORMTaskRunRow, str(task_run_id)) is None:
+        if session.get(orm_models.TaskRunRow, str(task_run_id)) is None:
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=str(task_run_id))
         record = PersistenceMapper.external_ref_to_row(
             task_run_id=task_run_id,
             value=external_ref,
         )
-        if session.get(ORMExternalRunRefRow, record.external_ref_id) is not None:
+        if session.get(orm_models.ExternalRunRefRow, record.external_ref_id) is not None:
             raise DuplicateMetadataError(
                 entity_type="ExternalRunRef",
                 entity_id=record.external_ref_id,
@@ -331,9 +326,6 @@ class SqlAlchemyUnitOfWork:
 def _event_sort_key(event: RuntimeEvent) -> tuple[int, str]:
     sequence = event.event_sequence if event.event_sequence is not None else 2**63 - 1
     return sequence, str(event.event_id)
-
-
-assert isinstance(SqlAlchemyMetadataStore.__new__(SqlAlchemyMetadataStore), object)
 
 
 __all__ = ["SqlAlchemyMetadataStore", "SqlAlchemyUnitOfWork"]
