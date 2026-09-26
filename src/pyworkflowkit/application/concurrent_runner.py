@@ -19,6 +19,7 @@ from pyworkflowkit.application.completion import (
 from pyworkflowkit.application.events import RuntimeEventFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.observability import LogContext, log_runtime
+from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
 from pyworkflowkit.application.planning import build_dependency_graph
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
@@ -1124,6 +1125,7 @@ class ConcurrentRunner(Runner):
             uow.save_task_run(task_run)
             uow.add_event(event)
             uow.commit()
+        self._observability.publish(event)
 
 
 def _normalize_executor_error(error: ExecutorError) -> tuple[str, str, str]:
