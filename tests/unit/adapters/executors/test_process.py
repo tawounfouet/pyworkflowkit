@@ -1,0 +1,258 @@
+"""Tests for M32 ProcessExecutor."""
+
+from __future__ import annotations
+
+import os
+import threading
+import time
+
+import pytest
+
+from pyworkflowkit.adapters.executors.process import ProcessExecutor
+from pyworkflowkit.application.completion import CompletionQueue, ExecutionHandle
+from pyworkflowkit.domain.definitions import TaskDefinition
+from pyworkflowkit.domain.ids import (
+    TaskAttemptId,
+    TaskId,
+    TaskRunId,
+    WorkflowRunId,
+)
+from pyworkflowkit.errors import (
+    DuplicateExecutionSubmissionError,
+    ExecutionHandleNotFoundError,
+    ExecutorSerializationError,
+    ExecutorShutdownError,
+    TaskExecutionError,
+)
+from pyworkflowkit.ports.executor import (
+    CancellationCapability,
+    RunContext,
+    TimeoutCapability,
+)
+
+
+def _return_pid() -> int:
+    return os.getpid()
+
+
+def _return_context(context: RunContext) -> dict[str, object]:
+    return {
+        "task_id": str(context.task_id),
+        "attempt_number": context.attempt_number,
+        "parameter": context.workflow_parameters["name"],
+        "upstream": context.dependency_outputs[TaskId("upstream")],
+    }
+
+
+def _raise_runtime_error() -> None:
+    raise RuntimeError("boom")
+
+
+def _sleep_long() -> str:
+    time.sleep(10)
+    return "late"
+
+
+def _return_unserializable() -> object:
+    return threading.Lock()
+
+
+def _task(name: str) -> TaskDefinition:
+    return TaskDefinition(
+        task_id=TaskId(name),
+        handler_ref=f"handlers:{name}",
+        executor_key="process",
+    )
+
+
+def _context(name: str) -> RunContext:
+    return RunContext(
+        workflow_run_id=WorkflowRunId("run"),
+        task_run_id=TaskRunId(f"task-run-{name}"),
+        attempt_id=TaskAttemptId(f"attempt-{name}"),
+        task_id=TaskId(name),
+        attempt_number=1,
+        workflow_parameters={"name": "demo"},
+        dependency_outputs={TaskId("upstream"): {"rows": 3}},
+    )
+
+
+def test_process_executor_declares_hard_process_capabilities() -> None:
+    executor = ProcessExecutor(max_workers=3)
+    try:
+        capabilities = executor.capabilities
+
+        assert capabilities.supports_parallelism is True
+        assert capabilities.max_concurrency == 3
+        assert capabilities.timeout is TimeoutCapability.HARD
+        assert capabilities.cancellation is CancellationCapability.HARD
+    finally:
+        executor.shutdown()
+
+
+def test_process_executor_preserves_explicit_completion_queue() -> None:
+    completion_queue = CompletionQueue()
+    executor = ProcessExecutor(max_workers=1, completion_queue=completion_queue)
+    try:
+        assert executor.completion_queue is completion_queue
+    finally:
+        executor.shutdown()
+
+
+def test_execute_runs_handler_in_an_isolated_process() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        result = executor.execute(
+            task=_task("pid"),
+            handler=_return_pid,
+            context=_context("pid"),
+        )
+
+        assert isinstance(result.output, int)
+        assert result.output != os.getpid()
+    finally:
+        executor.shutdown()
+
+
+def test_run_context_crosses_explicit_process_transport_boundary() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        result = executor.execute(
+            task=_task("context"),
+            handler=_return_context,
+            context=_context("context"),
+        )
+
+        assert result.output == {
+            "task_id": "context",
+            "attempt_number": 1,
+            "parameter": "demo",
+            "upstream": {"rows": 3},
+        }
+    finally:
+        executor.shutdown()
+
+
+def test_task_failure_is_transferred_as_task_execution_error() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        with pytest.raises(TaskExecutionError) as exc_info:
+            executor.execute(
+                task=_task("broken"),
+                handler=_raise_runtime_error,
+                context=_context("broken"),
+            )
+
+        assert exc_info.value.error_type == "RuntimeError"
+        assert exc_info.value.error_message == "boom"
+    finally:
+        executor.shutdown()
+
+
+def test_unpicklable_handler_is_rejected_before_process_start() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        with pytest.raises(ExecutorSerializationError) as exc_info:
+            executor.submit(
+                task=_task("lambda"),
+                handler=lambda: "not portable",
+                context=_context("lambda"),
+            )
+
+        assert exc_info.value.object_name == "handler"
+        assert executor.active_handles() == ()
+    finally:
+        executor.shutdown()
+
+
+def test_unpicklable_result_is_reported_as_serialization_error() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        with pytest.raises(ExecutorSerializationError) as exc_info:
+            executor.execute(
+                task=_task("result"),
+                handler=_return_unserializable,
+                context=_context("result"),
+            )
+
+        assert exc_info.value.object_name == "task result"
+    finally:
+        executor.shutdown()
+
+
+def test_submit_publishes_completion_for_process_result() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        handle = executor.submit(
+            task=_task("async"),
+            handler=_return_pid,
+            context=_context("async"),
+        )
+        completion = executor.completion_queue.get(timeout=5.0)
+
+        assert completion.handle == handle
+        assert completion.succeeded is True
+        assert completion.result is not None
+        assert completion.result.output != os.getpid()
+        assert executor.wait(handle, timeout=1.0) is True
+    finally:
+        executor.shutdown()
+
+
+def test_terminate_hard_stops_active_process() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        handle = executor.submit(
+            task=_task("slow"),
+            handler=_sleep_long,
+            context=_context("slow"),
+        )
+
+        assert executor.terminate(handle) is True
+        completion = executor.completion_queue.get(timeout=5.0)
+
+        assert completion.handle == handle
+        assert completion.succeeded is False
+        assert executor.wait(handle, timeout=1.0) is True
+    finally:
+        executor.shutdown(wait=False)
+
+
+def test_duplicate_attempt_submission_is_rejected() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    task = _task("once")
+    context = _context("once")
+    handle = executor.submit(task=task, handler=_sleep_long, context=context)
+    try:
+        with pytest.raises(DuplicateExecutionSubmissionError):
+            executor.submit(task=task, handler=_sleep_long, context=context)
+    finally:
+        executor.terminate(handle)
+        executor.shutdown(wait=False)
+
+
+def test_wait_rejects_unknown_handle() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        with pytest.raises(ExecutionHandleNotFoundError):
+            executor.wait(
+                ExecutionHandle(
+                    handle_id="process:missing",
+                    attempt_id=TaskAttemptId("missing"),
+                    executor_key="process",
+                )
+            )
+    finally:
+        executor.shutdown()
+
+
+def test_shutdown_rejects_new_submissions() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    executor.shutdown()
+
+    with pytest.raises(ExecutorShutdownError):
+        executor.submit(
+            task=_task("late"),
+            handler=_return_pid,
+            context=_context("late"),
+        )
