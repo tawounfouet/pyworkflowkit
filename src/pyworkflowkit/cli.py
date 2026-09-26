@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from importlib import import_module
 from pathlib import Path
 from typing import Annotated, Any
@@ -274,7 +275,7 @@ def _event_payload(event: RuntimeEvent) -> dict[str, object]:
     }
 
 
-def _emit(payload: dict[str, object], *, json_output: bool, human: str) -> None:
+def _emit(payload: Mapping[str, object], *, json_output: bool, human: str) -> None:
     if json_output:
         typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str))
     else:
