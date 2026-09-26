@@ -328,3 +328,52 @@ def test_worker_transport_result_serialization_path_is_unit_qualified() -> None:
     assert message.result is None
     assert message.error is not None
     assert message.error.kind == "serialization"
+
+
+@pytest.mark.parametrize("max_workers", [True, 1.5, "2"])
+def test_process_executor_rejects_non_integer_worker_counts(max_workers: object) -> None:
+    with pytest.raises(TypeError):
+        ProcessExecutor(max_workers=max_workers)  # type: ignore[arg-type]
+
+
+def test_process_executor_rejects_non_positive_worker_count() -> None:
+    with pytest.raises(ValueError):
+        ProcessExecutor(max_workers=0)
+
+
+def test_process_executor_rejects_unknown_start_method() -> None:
+    with pytest.raises(ValueError):
+        ProcessExecutor(start_method="not-a-real-start-method")
+
+
+@pytest.mark.parametrize("terminate_grace_seconds", [True, "0.2"])
+def test_process_executor_rejects_non_numeric_termination_grace(
+    terminate_grace_seconds: object,
+) -> None:
+    with pytest.raises(TypeError):
+        ProcessExecutor(
+            terminate_grace_seconds=terminate_grace_seconds,  # type: ignore[arg-type]
+        )
+
+
+def test_process_executor_rejects_negative_termination_grace() -> None:
+    with pytest.raises(ValueError):
+        ProcessExecutor(terminate_grace_seconds=-0.1)
+
+
+def test_process_executor_rejects_task_for_another_executor() -> None:
+    executor = ProcessExecutor(max_workers=1)
+    try:
+        task = TaskDefinition(
+            task_id=TaskId("wrong-executor"),
+            handler_ref="handlers:wrong",
+            executor_key="thread",
+        )
+        with pytest.raises(Exception, match="executor key is 'process'"):
+            executor.submit(
+                task=task,
+                handler=_return_pid,
+                context=_context("wrong-executor"),
+            )
+    finally:
+        executor.shutdown()
