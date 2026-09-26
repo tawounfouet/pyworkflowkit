@@ -18,6 +18,7 @@ from pyworkflowkit.errors import (
 from pyworkflowkit.plugins.model import PluginDescriptor, PluginType
 from pyworkflowkit.ports.executor import Executor
 from pyworkflowkit.ports.metadata_store import MetadataStore
+from pyworkflowkit.ports.observability import RuntimeEventSink
 
 T = TypeVar("T")
 PluginFactory = Callable[[], T]
@@ -105,7 +106,7 @@ class PluginCatalog:
             plugin_type=PluginType.METADATA
         )
         self.workloads: PluginRegistry[object] = PluginRegistry(plugin_type=PluginType.WORKLOAD)
-        self.events: PluginRegistry[object] = PluginRegistry(plugin_type=PluginType.EVENT)
+        self.events: PluginRegistry[RuntimeEventSink] = PluginRegistry(plugin_type=PluginType.EVENT)
 
     def registry_for(self, plugin_type: PluginType) -> PluginRegistry[object]:
         """Return a type-erased registry for generic inspection tooling."""
@@ -116,7 +117,7 @@ class PluginCatalog:
             return _erase_registry(self.metadata)
         if plugin_type is PluginType.WORKLOAD:
             return self.workloads
-        return self.events
+        return _erase_registry(self.events)
 
     def descriptors(self) -> tuple[PluginDescriptor, ...]:
         """Return all manually registered descriptors deterministically."""

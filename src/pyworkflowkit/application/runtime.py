@@ -8,6 +8,7 @@ from pyworkflowkit.application.factory import RuntimeComponents, RuntimeFactory
 from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.application.lineage import ExecutionLineageProjector
 from pyworkflowkit.application.manifest import RunManifestBuilder
+from pyworkflowkit.application.observability_plugins import ObservabilityDispatchFailure
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.ids import WorkflowRunId
@@ -15,6 +16,7 @@ from pyworkflowkit.domain.lineage import ExecutionLineage
 from pyworkflowkit.domain.manifest import RunManifest
 from pyworkflowkit.domain.runtime import RuntimeEvent, WorkflowRun
 from pyworkflowkit.ports.executor import TaskHandler
+from pyworkflowkit.ports.observability import RuntimeEventSink
 
 
 class WorkflowRuntime:
@@ -31,6 +33,17 @@ class WorkflowRuntime:
         """Register one callable under an explicit handler reference."""
 
         self._components.handler_registry.register(handler_ref, handler)
+
+    def register_event_sink(self, sink: RuntimeEventSink) -> None:
+        """Register one committed-runtime-event observability sink."""
+
+        self._components.observability.register(sink)
+
+    @property
+    def observability_failures(self) -> tuple[ObservabilityDispatchFailure, ...]:
+        """Return isolated observability sink failures."""
+
+        return self._components.observability.failures
 
     def run(
         self,

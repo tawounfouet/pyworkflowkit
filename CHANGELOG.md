@@ -8,6 +8,12 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M35 committed-runtime-event observability plugin boundary through RuntimeEventSink.
+- ObservabilityDispatcher with deterministic fan-out and isolated sink failures.
+- Runtime-level event sink registration through WorkflowRuntime.register_event_sink().
+- Typed EVENT plugin registry integration for RuntimeEventSink factories and entry points.
+- Post-commit observability dispatch shared by sequential and concurrent runners.
+- Observability acceptance coverage proving durable-event ordering and backend-failure isolation.
 - M34 SubprocessExecutor for shell-free external-program execution through explicit argv.
 - Immutable SubprocessCommand and captured SubprocessResult contracts.
 - Natural stdout, stderr, and return-code capture without global Python stream redirection.
@@ -32,6 +38,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- Runtime events are now published to observability sinks only after their metadata UnitOfWork commit succeeds.
+- Observability plugins are explicitly secondary projections: sink failures do not alter workflow state or durable evidence.
 - The 0.5 executor family now covers in-process threads, isolated Python processes, asyncio workloads, and shell-free external programs behind the same coordinator-owned completion model.
 - ConcurrentRunner now distinguishes hard termination from cooperative executor cancellation while preserving coordinator-owned state transitions.
 - Concurrent timeout retries now wait for physical execution cleanup before redispatching the same task attempt lineage.

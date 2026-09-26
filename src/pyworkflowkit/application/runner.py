@@ -8,6 +8,7 @@ from pyworkflowkit.application.events import RuntimeEventFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.failure import FailurePropagator
 from pyworkflowkit.application.observability import LogContext, log_runtime
+from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
 from pyworkflowkit.application.planning import (
     DAGValidator,
     ExecutionPlanner,
@@ -50,6 +51,7 @@ class Runner:
         clock: Clock,
         id_factory: RuntimeIdFactory,
         sleeper: Sleeper,
+        observability: ObservabilityDispatcher | None = None,
     ) -> None:
         self._metadata_store = metadata_store
         self._handler_registry = handler_registry
@@ -57,6 +59,7 @@ class Runner:
         self._clock = clock
         self._id_factory = id_factory
         self._sleeper = sleeper
+        self._observability = observability or ObservabilityDispatcher()
         self._validator = DAGValidator()
         self._planner = ExecutionPlanner()
         self._ready_resolver = ReadyTaskResolver()
@@ -498,6 +501,7 @@ class Runner:
             uow.save_workflow_run(run)
             uow.add_event(event)
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_task_transition(
         self,
@@ -509,6 +513,7 @@ class Runner:
             uow.save_task_run(task_run)
             uow.add_event(event)
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_task_start(
         self,
@@ -522,6 +527,7 @@ class Runner:
             uow.add_task_attempt(attempt)
             uow.add_event(event)
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_retry_failure(
         self,
@@ -533,6 +539,7 @@ class Runner:
             uow.save_task_attempt(attempt)
             uow.add_event(event)
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_retry_attempt(self, attempt: TaskAttempt) -> None:
         with self._metadata_store.unit_of_work() as uow:
@@ -566,6 +573,7 @@ class Runner:
                     external_ref=external_ref,
                 )
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_terminal_failure(
         self,
@@ -642,6 +650,8 @@ class Runner:
             for event in events:
                 uow.add_event(event)
             uow.commit()
+        for event in events:
+            self._observability.publish(event)
 
 
 def _normalize_executor_error(error: ExecutorError) -> tuple[str, str, str]:
