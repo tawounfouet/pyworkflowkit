@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
+from queue import Empty
+from time import monotonic
 
 from pyworkflowkit.adapters.executors.thread import ThreadExecutor
 from pyworkflowkit.application.cancellation import CancellationController
@@ -20,11 +22,17 @@ from pyworkflowkit.domain.enums import (
     TASK_TERMINAL_STATUSES,
     RuntimeEventType,
     TaskRunStatus,
+    TimeoutMode,
 )
 from pyworkflowkit.domain.graph import DependencyGraph
 from pyworkflowkit.domain.ids import TaskId
 from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
-from pyworkflowkit.errors import ExecutorError, RuntimeInvariantError, TaskExecutionError
+from pyworkflowkit.errors import (
+    ExecutionTimeoutError,
+    ExecutorError,
+    RuntimeInvariantError,
+    TaskExecutionError,
+)
 from pyworkflowkit.ports.executor import RunContext, TaskHandler
 from pyworkflowkit.ports.metadata_store import MetadataStore
 from pyworkflowkit.ports.runtime import Clock, RuntimeIdFactory, Sleeper
@@ -39,6 +47,8 @@ class _ActiveExecution:
     attempt: TaskAttempt
     lease: CapacityLease
     handle: ExecutionHandle
+    deadline_monotonic: float | None = None
+    timed_out: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +108,7 @@ class ConcurrentRunner(Runner):
             supplied=parameters or {},
         )
         handlers = self._preflight_handlers(workflow)
+        self._validate_timeout_capabilities(workflow)
 
         run = WorkflowRun(
             run_id=self._id_factory.new_workflow_run_id(),
@@ -495,12 +506,19 @@ class ConcurrentRunner(Runner):
             raise RuntimeInvariantError(
                 reason=f"execution handle '{handle.handle_id}' was dispatched twice"
             )
+        deadline = (
+            monotonic() + task_definition.timeout_seconds
+            if task_definition.timeout_mode is not TimeoutMode.NONE
+            and task_definition.timeout_seconds is not None
+            else None
+        )
         active[handle.handle_id] = _ActiveExecution(
             task_id=task_run.task_id,
             task_run=task_run,
             attempt=attempt,
             lease=lease,
             handle=handle,
+            deadline_monotonic=deadline,
         )
 
     def _apply_completion(
