@@ -84,9 +84,7 @@ class PersistedProbeSink:
     events: list[RuntimeEvent] = field(default_factory=list)
 
     def emit(self, event: RuntimeEvent) -> None:
-        persisted_ids = {
-            persisted.event_id for persisted in self.store.list_events(event.run_id)
-        }
+        persisted_ids = {persisted.event_id for persisted in self.store.list_events(event.run_id)}
         assert event.event_id in persisted_ids
         self.events.append(event)
 
