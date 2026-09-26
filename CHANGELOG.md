@@ -27,6 +27,14 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Blocking, non-blocking, and drain completion-consumption APIs.
 - M27 acceptance coverage proving completion transfer without worker-owned state transitions.
 
+- ThreadExecutor backed by concurrent.futures.ThreadPoolExecutor.
+- Parallel trusted-Python workload execution with instance-bound max_concurrency.
+- ExecutionHandle submission and CompletionQueue terminal-result transfer.
+- Soft wait semantics that never interrupt an already running thread workload.
+- Explicit executor shutdown lifecycle and duplicate-attempt submission protection.
+- Shared in-process Python handler invocation mechanics across LocalExecutor and ThreadExecutor.
+- M28 acceptance coverage for parallelism, soft timeout behavior, completion errors, and shutdown.
+
 
 ### Changed
 
