@@ -2,8 +2,9 @@
 
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
-from sqlalchemy import JSON, DateTime, MetaData
+from sqlalchemy import JSON, DateTime, MetaData, Text, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.types import TypeDecorator
@@ -19,6 +20,31 @@ NAMING_CONVENTION = {
 }
 
 JSON_VALUE = JSON().with_variant(JSONB(), "postgresql")
+
+
+class RuntimeIdType(TypeDecorator[str]):
+    """Store runtime IDs as native UUID on PostgreSQL and text elsewhere."""
+
+    impl = Text()
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect: Any) -> Any:
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(Uuid(as_uuid=True))
+        return dialect.type_descriptor(Text())
+
+    def process_bind_param(self, value: str | None, dialect: Any) -> str | UUID | None:
+        if value is None:
+            return None
+        if dialect.name == "postgresql":
+            return UUID(value)
+        return value
+
+    def process_result_value(self, value: str | UUID | None, dialect: Any) -> str | None:
+        del dialect
+        if value is None:
+            return None
+        return str(value)
 
 
 class UTCDateTime(TypeDecorator[datetime]):
@@ -50,4 +76,11 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
-__all__ = ["Base", "DB_SCHEMA", "JSON_VALUE", "NAMING_CONVENTION", "UTCDateTime"]
+__all__ = [
+    "Base",
+    "DB_SCHEMA",
+    "JSON_VALUE",
+    "NAMING_CONVENTION",
+    "RuntimeIdType",
+    "UTCDateTime",
+]

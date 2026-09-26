@@ -24,6 +24,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - SQLite connection policy with foreign keys enabled, configurable busy timeout, and optional WAL mode.
 - Automatic parent-directory and schema bootstrap for local persistence.
 - Restart acceptance coverage proving persisted runs, tasks, attempts, and events survive store recreation.
+- Optional PostgreSQL persistence adapter with psycopg driver extra and READ COMMITTED transaction policy.
+- PostgreSQL-native runtime UUID, TIMESTAMPTZ and JSONB mappings.
+- PostgreSQL partial unique index preventing multiple RUNNING attempts for one TaskRun.
+- PostgreSQL row-lock support and live PostgreSQL 15 contract qualification in CI.
 
 ### Changed
 
