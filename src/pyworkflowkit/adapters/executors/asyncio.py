@@ -316,9 +316,10 @@ class AsyncExecutor:
 
         def request_cancellation() -> None:
             with self._lock:
-                if handle.handle_id in self._completed_handle_ids:
-                    outcome.append(False)
-                elif handle.handle_id not in self._active_handles:
+                if (
+                    handle.handle_id in self._completed_handle_ids
+                    or handle.handle_id not in self._active_handles
+                ):
                     outcome.append(False)
                 else:
                     async_task = self._async_tasks.get(handle.handle_id)
