@@ -48,6 +48,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Lazy `@workflow` declaration producing WorkflowBuilder values and immutable WorkflowDefinition materialization.
 - Explicit decorator-level dependency declarations and handler references.
 - Declarative acceptance coverage proving decoration/building never executes task workloads.
+- Local Typer CLI with validate, plan, run, inspect, events, manifest, and version commands.
+- Stable human and JSON CLI output modes with explicit validation/run failure exit codes.
+- Dual console entrypoints `pyworkflow` and `pyworkflowkit` to cover the naming used across the architecture and acceptance corpus.
+- CLI acceptance coverage across validation, deterministic planning, durable SQLite execution inspection, events, and manifest output.
 
 ### Changed
 
