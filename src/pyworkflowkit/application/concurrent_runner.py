@@ -23,7 +23,7 @@ from pyworkflowkit.domain.enums import (
 )
 from pyworkflowkit.domain.graph import DependencyGraph
 from pyworkflowkit.domain.ids import TaskId
-from pyworkflowkit.domain.runtime import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.errors import ExecutorError, RuntimeInvariantError, TaskExecutionError
 from pyworkflowkit.ports.executor import RunContext, TaskHandler
 from pyworkflowkit.ports.metadata_store import MetadataStore
@@ -71,7 +71,9 @@ class ConcurrentRunner(Runner):
             sleeper=sleeper,
         )
         self._thread_executor = executor
-        self._global_limit = global_limit or executor.capabilities.max_concurrency
+        self._global_limit = (
+            executor.capabilities.max_concurrency if global_limit is None else global_limit
+        )
         self._executor_limit = executor_limit
 
     def run(
@@ -572,7 +574,7 @@ class ConcurrentRunner(Runner):
         *,
         task_run: TaskRun,
         attempt: TaskAttempt,
-        event: object,
+        event: RuntimeEvent,
     ) -> None:
         if attempt.finished_at is None:
             raise RuntimeInvariantError(
@@ -582,7 +584,7 @@ class ConcurrentRunner(Runner):
         with self._metadata_store.unit_of_work() as uow:
             uow.save_task_attempt(attempt)
             uow.save_task_run(task_run)
-            uow.add_event(event)  # type: ignore[arg-type]
+            uow.add_event(event)
             uow.commit()
 
 
