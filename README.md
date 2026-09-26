@@ -467,10 +467,15 @@ The CI security job now checks:
 Bandit
 pip-audit
 detect-secrets
-dependency review (pull requests)
+dependency review (pull requests; active when GitHub Dependency Graph is enabled)
 ```
 
-These gates complement — not replace — code review, trusted plugin selection, operating
+Bandit, pip-audit, and detect-secrets are blocking CI gates. Dependency Review is
+configured for pull requests; until GitHub Dependency Graph is enabled for the
+repository, CI emits an explicit warning instead of treating platform unavailability as
+a dependency vulnerability.
+
+These checks complement — not replace — code review, trusted plugin selection, operating
 system isolation, and external secret-management systems.
 
 ## CLI
