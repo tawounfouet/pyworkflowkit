@@ -127,9 +127,7 @@ class RecoveryInspector:
         for task_run in task_runs:
             if task_run.status is not TaskRunStatus.RUNNING:
                 continue
-            scheduled_retry = pending_retry_attempt(
-                attempts_by_task_run[task_run.task_run_id]
-            )
+            scheduled_retry = pending_retry_attempt(attempts_by_task_run[task_run.task_run_id])
             if scheduled_retry is not None:
                 retry_waiting[task_run.task_run_id] = scheduled_retry
         retry_waiting_task_runs = tuple(sorted(str(task_run_id) for task_run_id in retry_waiting))
