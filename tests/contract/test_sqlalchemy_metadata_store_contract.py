@@ -148,7 +148,6 @@ def test_sqlalchemy_contract_task_output_checkpoint_round_trip(
     assert store.get_task_output_checkpoint(TaskRunId("task-run")) is None
 
 
-
 def test_sqlalchemy_contract_retry_eligibility_round_trips(
     store: MetadataStore,
 ) -> None:
