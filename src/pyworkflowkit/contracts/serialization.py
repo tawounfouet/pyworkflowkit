@@ -186,6 +186,7 @@ class TaskAttemptSchema(StrictSchema):
     error_type: str | None = None
     error_message: str | None = None
     error_category: str | None = None
+    retry_eligible_at: datetime | None = None
     error_metadata: dict[str, object]
 
     @field_validator("error_metadata")
@@ -193,7 +194,7 @@ class TaskAttemptSchema(StrictSchema):
     def validate_error_metadata(cls, value: dict[str, object]) -> dict[str, object]:
         return _portable_json_mapping(value, path="task_attempt.error_metadata")
 
-    @field_validator("started_at", "finished_at")
+    @field_validator("started_at", "finished_at", "retry_eligible_at")
     @classmethod
     def normalize_datetimes(
         cls,
