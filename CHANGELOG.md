@@ -28,6 +28,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - PostgreSQL-native runtime UUID, TIMESTAMPTZ and JSONB mappings.
 - PostgreSQL partial unique index preventing multiple RUNNING attempts for one TaskRun.
 - PostgreSQL row-lock support and live PostgreSQL 15 contract qualification in CI.
+- Alembic schema-evolution foundation with an explicit baseline runtime-metadata revision.
+- Programmatic `upgrade_database()` and revision inspection for durable metadata engines.
+- SQLite and PostgreSQL stores now bootstrap durable schemas through Alembic rather than `create_all()`.
+- Fresh-upgrade and idempotent-upgrade migration qualification for SQLite and PostgreSQL.
+- Wheel smoke coverage ensuring migration revision resources are shipped with the installed package.
 
 ### Changed
 

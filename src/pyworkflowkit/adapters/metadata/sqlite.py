@@ -10,11 +10,8 @@ from typing import Any, Self
 from sqlalchemy import URL, Engine, create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-from pyworkflowkit.adapters.metadata.sqlalchemy import (
-    DB_SCHEMA,
-    Base,
-    SqlAlchemyMetadataStore,
-)
+from pyworkflowkit.adapters.metadata.sqlalchemy import DB_SCHEMA, SqlAlchemyMetadataStore
+from pyworkflowkit.migrations import upgrade_database
 
 DEFAULT_SQLITE_PATH = Path(".pyworkflow/state/pyworkflow.sqlite3")
 
@@ -79,7 +76,7 @@ class SQLiteMetadataStore(SqlAlchemyMetadataStore):
         )
         self.engine = create_sqlite_engine(self.settings)
         if create_schema:
-            Base.metadata.create_all(self.engine)
+            upgrade_database(self.engine)
 
         session_factory = sessionmaker(
             bind=self.engine,

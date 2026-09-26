@@ -29,6 +29,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "alembic>=1.16,<2",
   "pydantic>=2.13,<3",
   "sqlalchemy>=2.0,<3",
 ]
@@ -85,6 +86,10 @@ files = ["src"]
 [tool.coverage.run]
 branch = true
 source = ["pyworkflowkit"]
+omit = [
+  "src/pyworkflowkit/migrations/env.py",
+  "src/pyworkflowkit/migrations/versions/*",
+]
 
 [tool.coverage.report]
 show_missing = true

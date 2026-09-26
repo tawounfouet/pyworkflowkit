@@ -90,6 +90,10 @@ jobs:
       - name: Import smoke
         run: python -c "import pyworkflowkit; print(pyworkflowkit.__version__)"
 
+      - name: Migration resources smoke
+        run: |
+          python -c "from importlib.resources import files; assert files('pyworkflowkit.migrations.versions').joinpath('0001_runtime_metadata.py').is_file()"
+
 
   acceptance:
     name: V0.1 reference acceptance
@@ -157,4 +161,4 @@ jobs:
           python -m pip install -e ".[dev,postgres]"
 
       - name: PostgreSQL integration contract
-        run: pytest tests/integration/test_postgres_metadata_store.py -q
+        run: pytest tests/integration/test_postgres_metadata_store.py tests/integration/test_migrations_postgres.py -q
