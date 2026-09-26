@@ -48,6 +48,12 @@ class TaskAttemptRow:
 
 
 @dataclass(frozen=True, slots=True)
+class TaskOutputCheckpointRow:
+    task_run_id: str
+    output: object
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeEventRow:
     event_id: str
     event_type: str
@@ -87,6 +93,7 @@ __all__ = [
     "ExternalRunRefRow",
     "RuntimeEventRow",
     "TaskAttemptRow",
+    "TaskOutputCheckpointRow",
     "TaskRunRow",
     "WorkflowRunRow",
 ]

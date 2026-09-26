@@ -1,9 +1,11 @@
 """Transactional in-memory metadata store."""
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Self
 
+from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.domain.ids import (
     ArtifactId,
     ExternalRunRefId,
@@ -29,6 +31,7 @@ class _MemoryState:
     task_runs: dict[TaskRunId, TaskRun] = field(default_factory=dict)
     task_attempts: dict[TaskAttemptId, TaskAttempt] = field(default_factory=dict)
     events: dict[RuntimeEventId, RuntimeEvent] = field(default_factory=dict)
+    task_outputs: dict[TaskRunId, object] = field(default_factory=dict)
     artifacts: dict[ArtifactId, tuple[TaskRunId, ArtifactReference]] = field(default_factory=dict)
     external_refs: dict[
         ExternalRunRefId,
@@ -86,6 +89,15 @@ class MemoryMetadataStore:
     def list_events(self, run_id: WorkflowRunId) -> tuple[RuntimeEvent, ...]:
         values = (event for event in self._state.events.values() if event.run_id == run_id)
         return tuple(sorted(values, key=_event_sort_key))
+
+    def get_task_output_checkpoint(self, task_run_id: TaskRunId) -> object:
+        try:
+            return deepcopy(self._state.task_outputs[task_run_id])
+        except KeyError as exc:
+            raise MetadataNotFoundError(
+                entity_type="TaskOutputCheckpoint",
+                entity_id=str(task_run_id),
+            ) from exc
 
     def list_artifacts(self, task_run_id: TaskRunId) -> tuple[ArtifactReference, ...]:
         values = (
@@ -234,6 +246,28 @@ class MemoryUnitOfWork:
             )
         state.events[event.event_id] = event
 
+    def add_task_output_checkpoint(
+        self,
+        *,
+        task_run_id: TaskRunId,
+        output: object,
+    ) -> None:
+        state = self._require_state()
+        if task_run_id not in state.task_runs:
+            raise MetadataNotFoundError(
+                entity_type="TaskRun",
+                entity_id=str(task_run_id),
+            )
+        if task_run_id in state.task_outputs:
+            raise DuplicateMetadataError(
+                entity_type="TaskOutputCheckpoint",
+                entity_id=str(task_run_id),
+            )
+        state.task_outputs[task_run_id] = normalize_portable_json_value(
+            output,
+            path=f"task_output_checkpoint.{task_run_id}",
+        )
+
     def add_artifact(
         self,
         *,
@@ -307,6 +341,7 @@ def _clone_state(state: _MemoryState) -> _MemoryState:
             for attempt_id, attempt in state.task_attempts.items()
         },
         events=dict(state.events),
+        task_outputs=deepcopy(state.task_outputs),
         artifacts=dict(state.artifacts),
         external_refs=dict(state.external_refs),
     )

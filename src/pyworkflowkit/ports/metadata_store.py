@@ -45,6 +45,14 @@ class UnitOfWork(Protocol):
     def add_event(self, event: RuntimeEvent) -> None:
         """Stage one immutable runtime event."""
 
+    def add_task_output_checkpoint(
+        self,
+        *,
+        task_run_id: TaskRunId,
+        output: object,
+    ) -> None:
+        """Stage one durable small-output checkpoint for a successful TaskRun."""
+
     def add_artifact(
         self,
         *,
@@ -92,6 +100,9 @@ class MetadataStore(Protocol):
 
     def list_events(self, run_id: WorkflowRunId) -> Sequence[RuntimeEvent]:
         """Return runtime events in deterministic event order."""
+
+    def get_task_output_checkpoint(self, task_run_id: TaskRunId) -> object:
+        """Load the durable small-output checkpoint for one TaskRun."""
 
     def list_artifacts(self, task_run_id: TaskRunId) -> Sequence[ArtifactReference]:
         """Return artifacts associated with one task run."""

@@ -426,6 +426,15 @@ class ReconciliationError(RecoveryError):
         super().__init__(f"Run '{run_id}' cannot be reconciled: {reason}.")
 
 
+class ResumeError(RecoveryError):
+    """Raised when a persisted run cannot be resumed safely."""
+
+    def __init__(self, *, run_id: str, reason: str) -> None:
+        self.run_id = run_id
+        self.reason = reason
+        super().__init__(f"Run '{run_id}' cannot be resumed: {reason}.")
+
+
 class DuplicateReconciliationVerifierError(RecoveryError):
     """Raised when a provider verifier is registered more than once."""
 
@@ -685,6 +694,7 @@ __all__ = [
     "PyWorkflowKitError",
     "ReconciliationError",
     "RecoveryError",
+    "ResumeError",
     "RuntimeErrorBase",
     "RuntimeInvariantError",
     "SerializationError",

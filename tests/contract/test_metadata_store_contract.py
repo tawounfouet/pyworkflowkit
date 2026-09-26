@@ -140,3 +140,24 @@ def test_contract_task_attempt_can_be_updated(store: MetadataStore) -> None:
 
     persisted = store.list_task_attempts(TaskRunId("task-run"))[0]
     assert persisted.status is TaskAttemptStatus.SUCCEEDED
+
+
+def test_contract_task_output_checkpoint_round_trips_and_preserves_none(
+    store: MetadataStore,
+) -> None:
+    with store.unit_of_work() as uow:
+        uow.add_workflow_run(make_run())
+        uow.add_task_run(make_task_run())
+        uow.add_task_output_checkpoint(
+            task_run_id=TaskRunId("task-run"),
+            output={"count": 3, "items": ["a", "b"]},
+        )
+        uow.commit()
+
+    assert store.get_task_output_checkpoint(TaskRunId("task-run")) == {
+        "count": 3,
+        "items": ["a", "b"],
+    }
+
+    with pytest.raises(MetadataNotFoundError):
+        store.get_task_output_checkpoint(TaskRunId("missing"))

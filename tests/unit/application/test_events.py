@@ -98,3 +98,40 @@ def test_event_factory_requires_task_context_for_task_event() -> None:
             event_type=RuntimeEventType.TASK_STARTED,
             occurred_at=NOW,
         )
+
+
+def test_event_factory_can_continue_existing_sequence() -> None:
+    factory = RuntimeEventFactory(
+        run_id=WorkflowRunId("run"),
+        id_factory=DeterministicIdFactory(),
+        starting_sequence=7,
+    )
+
+    event = factory.create(
+        event_type=RuntimeEventType.WORKFLOW_SUCCEEDED,
+        occurred_at=NOW,
+    )
+
+    assert event.event_sequence == 7
+    assert event.event_id == RuntimeEventId("run:event-7")
+
+
+@pytest.mark.parametrize("starting_sequence", [0, -1])
+def test_event_factory_rejects_non_positive_starting_sequence(
+    starting_sequence: int,
+) -> None:
+    with pytest.raises(ValueError, match="greater than or equal to 1"):
+        RuntimeEventFactory(
+            run_id=WorkflowRunId("run"),
+            id_factory=DeterministicIdFactory(),
+            starting_sequence=starting_sequence,
+        )
+
+
+def test_event_factory_rejects_boolean_starting_sequence() -> None:
+    with pytest.raises(TypeError, match="integer"):
+        RuntimeEventFactory(
+            run_id=WorkflowRunId("run"),
+            id_factory=DeterministicIdFactory(),
+            starting_sequence=True,  # type: ignore[arg-type]
+        )

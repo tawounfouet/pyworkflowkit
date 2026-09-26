@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.5.0`; current development line `0.6.0a2`.
-> M37 detects stale recovery candidates; M38 verifies ambiguous external work and
-> classifies reconciliation outcomes. Neither milestone performs resume yet.
+> **Status:** stable release `0.5.0`; current development line `0.6.0a3`.
+> M37 detects stale candidates, M38 reconciles ambiguous external work, and M39 resumes
+> the same persisted WorkflowRun without replaying completed tasks.
 
 ## What 0.5 provides
 
@@ -598,6 +598,129 @@ without external proof → MANUAL_REQUIRED
 Provider exception messages are not copied into the reconciliation report; only the
 exception type is retained as diagnostic evidence.
 
+## Same-run resume in 0.6.0a3
+
+M39 turns recovery evidence into controlled continuation of the **same**
+`WorkflowRun`.
+
+```python
+resumed = runtime.resume_run(
+    workflow,
+    run_id,
+    stale_after_seconds=300,
+)
+```
+
+The semantic distinction is explicit:
+
+```text
+resume
+    same WorkflowRun
+    same TaskRun identities
+    preserve completed tasks
+    new TaskAttempt only for remaining work
+
+rerun
+    new WorkflowRun
+    same WorkflowDefinition
+
+replay
+    new WorkflowRun
+    historical inputs/references
+```
+
+A durable resume pipeline now looks like:
+
+```text
+persisted RUNNING WorkflowRun
+        ↓
+M37 stale-candidate assessment
+        ↓
+M38 external reconciliation
+        ↓
+M39 apply reconciled state
+        ↓
+reload durable dependency outputs
+        ↓
+execute only PENDING / READY work
+        ↓
+same WorkflowRun reaches terminal state
+```
+
+### Durable task-output checkpoints
+
+A successful task may feed a downstream task through `RunContext.dependency_outputs`.
+After a process restart that in-memory Python value no longer exists.
+
+M39 therefore checkpoints **small strict JSON-portable outputs** in
+`task_output_checkpoints` when a task succeeds:
+
+```text
+TaskResult.output
+      ↓
+portable JSON validation
+      ↓
+task_output_checkpoints
+      ↓
+process restart
+      ↓
+resume
+      ↓
+RunContext.dependency_outputs
+```
+
+`None` is a valid checkpointed output; row presence distinguishes it from a missing
+checkpoint.
+
+A nonportable Python object may still be used during the original in-process run, but it
+is not silently pickled or stringified for recovery. If remaining work depends on such
+an output after a crash, M39 raises `ResumeError` instead of re-executing the completed
+producer or fabricating a value.
+
+### Reconciliation application
+
+M39 consumes M38 dispositions conservatively:
+
+```text
+CONFIRMED_SUCCEEDED
+    → existing RUNNING attempt/task become SUCCEEDED
+
+CONFIRMED_FAILED
+    → existing attempt/task fail
+    → fail-fast propagation
+    → same WorkflowRun FAILED
+
+CONFIRMED_CANCELLED
+    → existing attempt/task cancelled
+    → remaining undispatched work cancelled
+    → same WorkflowRun CANCELLED
+
+STILL_RUNNING
+MANUAL_REQUIRED
+    → ResumeError
+    → no resume
+```
+
+A reconciled external success does not invent a Python output checkpoint. If a
+downstream task needs that unavailable value, resume remains blocked unless the workload
+communicates through durable references/artifacts instead.
+
+### Event continuity
+
+Resume does not start a second event stream. `RuntimeEventFactory` continues after the
+highest persisted event sequence:
+
+```text
+before crash: 1 2 3 4
+resume:                 5 6 7 ...
+```
+
+No new recovery-specific RuntimeEvent enum is introduced; existing events carry a
+`recovery` payload marker.
+
+M39 does not add a scheduler, background recovery daemon, heartbeat, lease, or distributed
+ownership protocol. Recovery remains an explicit runtime action.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -766,8 +889,8 @@ control-plane concerns remain outside the core.
 0.2  Durable persistence and evidence
 0.3  Developer framework, CLI, plugins, PyIngestKit boundary
 0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
-0.5  Process/async/subprocess executors and hardening            ← current development
-0.6  Recovery, reconciliation, resume, non-blocking retry
+0.5  Process/async/subprocess executors and hardening            ✓ stable
+0.6  Recovery, reconciliation, resume, non-blocking retry         ← current development
 0.7–0.9  Compatibility and stabilization
 1.0  Stable embedded runtime
 ```
@@ -776,6 +899,6 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 development line now contains **M37 — Recovery Foundation** and
-**M38 — Reconciliation** at **0.6.0a2**. The next milestone is
-**M39 — Resume**.
+The 0.6 development line now contains **M37 — Recovery Foundation**,
+**M38 — Reconciliation**, and **M39 — Resume** at **0.6.0a3**.
+The next milestone is **M40 — Non-blocking Retry**.

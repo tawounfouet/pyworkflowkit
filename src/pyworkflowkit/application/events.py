@@ -37,10 +37,15 @@ class RuntimeEventFactory:
         *,
         run_id: WorkflowRunId,
         id_factory: RuntimeIdFactory,
+        starting_sequence: int = 1,
     ) -> None:
+        if isinstance(starting_sequence, bool) or not isinstance(starting_sequence, int):
+            raise TypeError("starting_sequence must be an integer")
+        if starting_sequence < 1:
+            raise ValueError("starting_sequence must be greater than or equal to 1")
         self._run_id = run_id
         self._id_factory = id_factory
-        self._next_sequence = 1
+        self._next_sequence = starting_sequence
 
     def create(
         self,

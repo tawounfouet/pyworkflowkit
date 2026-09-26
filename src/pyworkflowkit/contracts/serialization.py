@@ -65,6 +65,12 @@ def _portable_json_value(value: object, *, path: str) -> object:
     )
 
 
+def normalize_portable_json_value(value: object, *, path: str) -> object:
+    """Return a detached JSON-portable representation or raise SerializationError."""
+
+    return _portable_json_value(value, path=path)
+
+
 def _portable_json_mapping(values: Mapping[str, object], *, path: str) -> dict[str, object]:
     normalized = _portable_json_value(values, path=path)
     if not isinstance(normalized, dict):
@@ -279,6 +285,7 @@ class SchemaCodec:
 __all__ = [
     "ArtifactReferenceSchema",
     "ExternalRunRefSchema",
+    "normalize_portable_json_value",
     "RetryPolicySchema",
     "RuntimeEventSchema",
     "SchemaCodec",

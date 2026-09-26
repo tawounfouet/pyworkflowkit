@@ -8,13 +8,19 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M39 same-WorkflowRun resume semantics with durable task-output checkpoints.
+- WorkflowRuntime.resume_run() recovery facade.
+- Runner.resume() preserving completed TaskRuns and continuing existing event sequence.
+- Durable JSON-portable output checkpoint storage across Memory, SQLite, and PostgreSQL metadata stores.
+- Alembic revision 0002_task_output_checkpoints.
+- ResumeError for explicit unsafe-resume rejection.
+- ACC-RECOVERY-002 durable SQLite restart acceptance.
 - M38 Reconciliation with provider-specific ExternalRunVerifier contracts and registry.
 - Normalized external statuses: RUNNING, SUCCEEDED, FAILED, CANCELLED, NOT_FOUND, UNKNOWN.
 - ReconciliationService for read-only classification of ambiguous persisted work.
 - Reconciliation dispositions: CONFIRMED_SUCCEEDED, CONFIRMED_FAILED, CONFIRMED_CANCELLED, STILL_RUNNING, MANUAL_REQUIRED.
 - Durable SQLite reconciliation acceptance after restart.
 - WorkflowRuntime register_external_run_verifier() and reconcile_run() facade methods.
-
 - M37 Recovery Foundation with read-only persisted-run recovery assessment.
 - RecoveryLiveness classification: terminal, active, stale_candidate, and unknown.
 - ResumeEligibility classification without performing resume: not_eligible, eligible, and requires_reconciliation.
@@ -26,14 +32,13 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The 0.6 development line advances to 0.6.0a2.
-- M38 verifies external status before any resume decision and still performs no runtime-state mutation.
-- Missing verifiers, provider failures, unknown/not-found states, and conflicting external statuses are classified conservatively as manual action.
-
-### Changed
-
-- The 0.6 development line opens at 0.6.0a1 without automatic state mutation: M37 classifies recovery evidence only.
-- Recovery candidate discovery uses persisted timestamps/events rather than adding heartbeat or lease schema fields.
+- The 0.6 development line advances to 0.6.0a3.
+- Successful small TaskResult outputs are checkpointed only when representable as strict portable JSON.
+- Resume continues the same WorkflowRun and never re-executes already-SUCCEEDED tasks by default.
+- Reconciled external success/failure/cancellation is translated into explicit runtime state transitions before remaining work continues.
+- Missing durable dependency output, STILL_RUNNING external work, MANUAL_REQUIRED reconciliation, workflow-definition mismatch, or inconsistent persisted state blocks resume explicitly.
+- M38 verifies external status before any resume decision.
+- M37 stale detection continues to use durable timestamps/events without heartbeats or leases.
 
 ### Deprecated
 

@@ -8,13 +8,14 @@ from sqlalchemy import inspect
 from pyworkflowkit.adapters.metadata.sqlite import SQLiteSettings, create_sqlite_engine
 from pyworkflowkit.migrations import current_revision, upgrade_database
 
-HEAD_REVISION = "0001_runtime_metadata"
+HEAD_REVISION = "0002_task_output_checkpoints"
 EXPECTED_TABLES = {
     "alembic_version",
     "artifact_references",
     "external_run_refs",
     "runtime_events",
     "task_attempts",
+    "task_output_checkpoints",
     "task_runs",
     "workflow_runs",
 }
@@ -34,6 +35,7 @@ def test_sqlite_fresh_upgrade_reaches_head(tmp_path: Path) -> None:
     engine.dispose()
 
 
-def test_baseline_revision_is_packaged() -> None:
-    revision = files("pyworkflowkit.migrations.versions").joinpath("0001_runtime_metadata.py")
-    assert revision.is_file()
+def test_migration_revisions_are_packaged() -> None:
+    versions = files("pyworkflowkit.migrations.versions")
+    assert versions.joinpath("0001_runtime_metadata.py").is_file()
+    assert versions.joinpath("0002_task_output_checkpoints.py").is_file()

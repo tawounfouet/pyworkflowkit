@@ -6,6 +6,7 @@ from pyworkflowkit.adapters.persistence.records import (
     ExternalRunRefRow,
     RuntimeEventRow,
     TaskAttemptRow,
+    TaskOutputCheckpointRow,
     TaskRunRow,
     WorkflowRunRow,
 )
@@ -130,6 +131,24 @@ class SqlAlchemyRowMapper:
         target.error_message = value.error_message
         target.error_category = value.error_category
         target.error_metadata_json = dict(value.error_metadata)
+
+    @staticmethod
+    def task_output_to_orm(
+        value: TaskOutputCheckpointRow,
+    ) -> orm_models.TaskOutputCheckpointRow:
+        return orm_models.TaskOutputCheckpointRow(
+            task_run_id=value.task_run_id,
+            output_json=value.output,
+        )
+
+    @staticmethod
+    def task_output_from_orm(
+        value: orm_models.TaskOutputCheckpointRow,
+    ) -> TaskOutputCheckpointRow:
+        return TaskOutputCheckpointRow(
+            task_run_id=value.task_run_id,
+            output=value.output_json,
+        )
 
     @staticmethod
     def runtime_event_to_orm(value: RuntimeEventRow) -> orm_models.RuntimeEventRow:
