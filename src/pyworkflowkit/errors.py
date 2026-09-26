@@ -161,6 +161,27 @@ class ExecutorWorkerError(ExecutorError):
         )
 
 
+class ExecutorSerializationError(ExecutorError):
+    """Raised when a value cannot cross an executor serialization boundary."""
+
+    def __init__(
+        self,
+        *,
+        executor_key: str,
+        object_name: str,
+        error_type: str,
+        error_message: str,
+    ) -> None:
+        self.executor_key = executor_key
+        self.object_name = object_name
+        self.error_type = error_type
+        self.error_message = error_message
+        super().__init__(
+            f"Executor '{executor_key}' cannot serialize {object_name}: "
+            f"{error_type}: {error_message}"
+        )
+
+
 class TimeoutCapabilityError(ExecutorError):
     """Raised when a task requests timeout semantics unsupported by its executor."""
 
@@ -560,6 +581,7 @@ __all__ = [
     "ExecutionTimeoutError",
     "ExecutorError",
     "ExecutorNotFoundError",
+    "ExecutorSerializationError",
     "ExecutorShutdownError",
     "ExecutorWorkerError",
     "GraphError",
