@@ -547,6 +547,139 @@ class ConcurrentRunner(Runner):
             deadline_monotonic=deadline,
         )
 
+    @staticmethod
+    def _completion_wait_timeout(
+        active: Mapping[str, _ActiveExecution],
+    ) -> float | None:
+        deadlines = tuple(
+            execution.deadline_monotonic
+            for execution in active.values()
+            if not execution.timed_out and execution.deadline_monotonic is not None
+        )
+        if not deadlines:
+            return None
+        return max(0.0, min(deadlines) - monotonic())
+
+    def _expire_due_timeouts(
+        self,
+        *,
+        run: WorkflowRun,
+        graph: DependencyGraph,
+        plan_task_ids: tuple[TaskId, ...],
+        task_runs_by_task_id: Mapping[TaskId, TaskRun],
+        task_definitions: Mapping[TaskId, TaskDefinition],
+        active: Mapping[str, _ActiveExecution],
+        pending_retries: dict[TaskId, _PendingRetry],
+        event_factory: RuntimeEventFactory,
+        workflow_already_failed: bool,
+    ) -> bool:
+        now_monotonic = monotonic()
+        terminal_failure = False
+
+        for handle_id in sorted(active):
+            execution = active[handle_id]
+            if (
+                execution.timed_out
+                or execution.deadline_monotonic is None
+                or execution.deadline_monotonic > now_monotonic
+            ):
+                continue
+
+            task_definition = task_definitions[execution.task_id]
+            timeout_seconds = task_definition.timeout_seconds
+            if timeout_seconds is None:
+                raise RuntimeInvariantError(
+                    reason=f"task '{execution.task_id}' reached timeout without timeout_seconds"
+                )
+
+            execution.timed_out = True
+            timeout_error = ExecutionTimeoutError(
+                task_id=execution.task_id,
+                handler_ref=task_definition.handler_ref,
+                timeout_seconds=timeout_seconds,
+                timeout_mode=task_definition.timeout_mode.value,
+            )
+            failed_at = self._clock.now()
+            self._state_machine.fail_attempt(
+                execution.attempt,
+                at=failed_at,
+                error_type=timeout_error.error_type,
+                error_message=timeout_error.error_message,
+                error_category=timeout_error.error_category,
+            )
+
+            decision = self._retry_engine.decide(
+                policy=task_definition.retry_policy,
+                attempt_number=execution.attempt.attempt_number,
+                error=timeout_error,
+            )
+
+            if decision.should_retry and not workflow_already_failed and not terminal_failure:
+                if decision.next_attempt_number is None:
+                    raise RuntimeInvariantError(
+                        reason="timeout retry decision is missing next_attempt_number"
+                    )
+                self._persist_retry_failure(
+                    attempt=execution.attempt,
+                    event=event_factory.create(
+                        event_type=RuntimeEventType.TASK_RETRYING,
+                        occurred_at=failed_at,
+                        task_run_id=execution.task_run.task_run_id,
+                        task_id=execution.task_id,
+                        attempt_number=execution.attempt.attempt_number,
+                        payload={
+                            "error_type": timeout_error.error_type,
+                            "error_category": timeout_error.error_category,
+                            "timeout_mode": task_definition.timeout_mode.value,
+                            "timeout_seconds": timeout_seconds,
+                            "delay_seconds": decision.delay_seconds,
+                            "next_attempt_number": decision.next_attempt_number,
+                        },
+                    ),
+                )
+                if decision.delay_seconds > 0:
+                    self._sleeper.sleep(decision.delay_seconds)
+                pending_retries[execution.task_id] = _PendingRetry(
+                    task_id=execution.task_id,
+                    next_attempt_number=decision.next_attempt_number,
+                )
+                continue
+
+            if workflow_already_failed or terminal_failure:
+                self._persist_running_sibling_failure(
+                    task_run=execution.task_run,
+                    attempt=execution.attempt,
+                    event=event_factory.create(
+                        event_type=RuntimeEventType.TASK_FAILED,
+                        occurred_at=failed_at,
+                        task_run_id=execution.task_run.task_run_id,
+                        task_id=execution.task_id,
+                        attempt_number=execution.attempt.attempt_number,
+                        payload={
+                            "error_type": timeout_error.error_type,
+                            "error_category": timeout_error.error_category,
+                            "timeout_mode": task_definition.timeout_mode.value,
+                            "timeout_seconds": timeout_seconds,
+                        },
+                    ),
+                )
+                continue
+
+            self._persist_terminal_failure(
+                run=run,
+                task_run=execution.task_run,
+                attempt=execution.attempt,
+                graph=graph,
+                plan_task_ids=plan_task_ids,
+                task_runs_by_task_id=task_runs_by_task_id,
+                event_factory=event_factory,
+                error_type=timeout_error.error_type,
+                error_category=timeout_error.error_category,
+            )
+            terminal_failure = True
+
+        return terminal_failure
+
     def _apply_completion(
         self,
         *,
