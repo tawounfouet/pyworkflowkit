@@ -69,7 +69,10 @@ def test_postgres_runtime_round_trip_and_native_types() -> None:
                         FROM information_schema.columns
                         WHERE table_schema = 'pyworkflowkit'
                           AND (
-                            (table_name = 'workflow_runs' AND column_name IN ('run_id', 'created_at', 'parameters_json'))
+                            (
+                              table_name = 'workflow_runs'
+                              AND column_name IN ('run_id', 'created_at', 'parameters_json')
+                            )
                             OR (table_name = 'task_runs' AND column_name = 'task_run_id')
                           )
                         """
