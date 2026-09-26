@@ -1,8 +1,10 @@
 """Synchronous same-process LocalExecutor."""
 
+import logging
 from inspect import Parameter, Signature, signature
 from typing import cast
 
+from pyworkflowkit.application.observability import LogContext, log_runtime
 from pyworkflowkit.domain.definitions import TaskDefinition
 from pyworkflowkit.domain.values import TaskResult
 from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
@@ -13,6 +15,8 @@ from pyworkflowkit.ports.executor import (
     TaskHandler,
     ZeroArgumentHandler,
 )
+
+logger = logging.getLogger("pyworkflowkit.executor.local")
 
 
 class LocalExecutor:
@@ -52,6 +56,14 @@ class LocalExecutor:
             task=task,
             handler=handler,
         )
+        log_context = LogContext(
+            run_id=str(context.workflow_run_id),
+            task_run_id=str(context.task_run_id),
+            task_id=str(context.task_id),
+            attempt_number=context.attempt_number,
+            executor_key=self.key,
+        )
+        log_runtime(logger, logging.DEBUG, "Executor invocation started", context=log_context)
 
         try:
             if invocation_arity == 0:
@@ -59,6 +71,13 @@ class LocalExecutor:
             else:
                 raw_result = cast(ContextHandler, handler)(context)
         except Exception as exc:
+            log_runtime(
+                logger,
+                logging.WARNING,
+                "Executor invocation failed",
+                context=log_context,
+                fields={"error_type": type(exc).__name__},
+            )
             raise TaskExecutionError(
                 task_id=task.task_id,
                 handler_ref=task.handler_ref,
@@ -67,7 +86,9 @@ class LocalExecutor:
                 error_category=type(exc).__name__,
             ) from exc
 
-        return self._normalize_result(raw_result)
+        result = self._normalize_result(raw_result)
+        log_runtime(logger, logging.DEBUG, "Executor invocation succeeded", context=log_context)
+        return result
 
     @staticmethod
     def _resolve_invocation_arity(

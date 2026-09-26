@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from pyworkflowkit.application.factory import RuntimeComponents, RuntimeFactory
+from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.application.lineage import ExecutionLineageProjector
 from pyworkflowkit.application.manifest import RunManifestBuilder
 from pyworkflowkit.config import RuntimeSettings
@@ -59,6 +60,18 @@ class WorkflowRuntime:
         """Build final portable evidence for a terminal run."""
 
         return RunManifestBuilder(metadata_store=self._components.metadata_store).build(
+            workflow=workflow,
+            run_id=WorkflowRunId(str(run_id)),
+        )
+
+    def inspect_runtime(
+        self,
+        workflow: WorkflowDefinition,
+        run_id: WorkflowRunId | str,
+    ) -> RuntimeInspection:
+        """Build a structured runtime diagnostic snapshot."""
+
+        return RuntimeInspector(metadata_store=self._components.metadata_store).inspect(
             workflow=workflow,
             run_id=WorkflowRunId(str(run_id)),
         )

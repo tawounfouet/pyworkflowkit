@@ -52,6 +52,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Stable human and JSON CLI output modes with explicit validation/run failure exit codes.
 - Dual console entrypoints `pyworkflow` and `pyworkflowkit` to cover the naming used across the architecture and acceptance corpus.
 - CLI acceptance coverage across validation, deterministic planning, durable SQLite execution inspection, events, and manifest output.
+- Structured LogContext correlation fields with recursive key-based secret redaction.
+- Runner, LocalExecutor, and RetryEngine lifecycle diagnostics using stdlib logging.
+- RuntimeInspector snapshots with ready/blocked task analysis and deadlock diagnostics.
+- WorkflowRuntime.inspect_runtime() facade for structured persisted-run diagnostics.
+- Observability acceptance coverage proving retry correlation without leaking sensitive workflow parameters.
 
 ### Changed
 
