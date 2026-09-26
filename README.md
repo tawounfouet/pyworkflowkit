@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`; current development line `0.5.0a2`.
-> M33 adds native asyncio workload execution with cooperative per-handle cancellation,
-> while retaining the M32 process-isolation and hard-termination capabilities.
+> **Status:** stable release `0.4.0`; current development line `0.5.0a3`.
+> M34 adds shell-free external-program execution with captured process evidence and
+> hard per-handle termination, alongside the process and asyncio executors.
 
 ## What 0.4 provides
 
@@ -273,6 +273,66 @@ drained before the same task lineage can be retried.
 `AsyncExecutor` remains an advanced module import and is not added to the package-root
 API.
 
+## External subprocess execution in 0.5.0a3
+
+M34 adds an advanced executor for CLI commands and external programs:
+
+```python
+import sys
+
+from pyworkflowkit.adapters.executors.subprocess import (
+    SubprocessCommand,
+    SubprocessExecutor,
+)
+
+def command() -> SubprocessCommand:
+    return SubprocessCommand(
+        argv=(sys.executable, "-c", "print('hello from external program')"),
+    )
+
+executor = SubprocessExecutor(max_workers=4)
+```
+
+The command boundary is explicit:
+
+```text
+Python command factory
+        ↓
+SubprocessCommand(argv=...)
+        ↓
+Popen(..., shell=False)
+        ↓
+stdout / stderr / returncode
+        ↓
+SubprocessResult
+        ↓
+TaskResult
+```
+
+`shell=True` is not exposed by the adapter. Command arguments are passed as an argv
+sequence, so shell metacharacters such as `;`, `&&`, and `$()` remain ordinary
+arguments instead of becoming shell syntax.
+
+A successful command returns a `SubprocessResult` containing the exact argv, return
+code, stdout, and stderr. A non-zero exit raises `SubprocessExecutionError` with the
+captured evidence and retry category `subprocess_exit`.
+
+The executor declares:
+
+```text
+parallelism   = true
+async         = false
+timeout       = hard
+cancellation  = hard
+```
+
+Hard timeout and cancellation apply to the directly owned child process. Process-tree
+sandboxing, output quotas, executable allowlists, and broader command-security policy
+remain part of M36 Security Hardening.
+
+`SubprocessExecutor` remains an advanced module import and is not added to the
+package-root API.
+
 ## CLI
 
 Both console names currently route to the same CLI:
@@ -447,6 +507,6 @@ control-plane concerns remain outside the core.
 1.0  Stable embedded runtime
 ```
 
-M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**. M33 — AsyncExecutor advances
-the development line to **0.5.0a2**. The next planned milestone is **M34 —
-SubprocessExecutor**.
+M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**; M33 — AsyncExecutor advanced
+it to **0.5.0a2**; M34 — SubprocessExecutor advances it to **0.5.0a3**. The next
+planned milestone is **M35 — Observability Plugins**.
