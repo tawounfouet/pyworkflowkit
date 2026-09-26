@@ -65,11 +65,13 @@ def test_sqlite_run_survives_store_restart(tmp_path: Path) -> None:
 def test_sqlite_connection_pragmas_are_configured(tmp_path: Path) -> None:
     database = tmp_path / "pragmas.sqlite3"
 
-    with SQLiteMetadataStore(database, busy_timeout_ms=4_321, wal=True) as store:
-        with store.engine.connect() as connection:
-            foreign_keys = connection.execute(text("PRAGMA foreign_keys")).scalar_one()
-            busy_timeout = connection.execute(text("PRAGMA busy_timeout")).scalar_one()
-            journal_mode = connection.execute(text("PRAGMA journal_mode")).scalar_one()
+    with (
+        SQLiteMetadataStore(database, busy_timeout_ms=4_321, wal=True) as store,
+        store.engine.connect() as connection,
+    ):
+        foreign_keys = connection.execute(text("PRAGMA foreign_keys")).scalar_one()
+        busy_timeout = connection.execute(text("PRAGMA busy_timeout")).scalar_one()
+        journal_mode = connection.execute(text("PRAGMA journal_mode")).scalar_one()
 
     assert foreign_keys == 1
     assert busy_timeout == 4_321
