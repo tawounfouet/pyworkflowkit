@@ -82,8 +82,7 @@ class CapacityManager:
         unknown_limits = sorted(set(configured_limits) - set(normalized_capabilities))
         if unknown_limits:
             raise CapacityConfigurationError(
-                "per_executor_limits contains unknown executors: "
-                + ", ".join(unknown_limits)
+                "per_executor_limits contains unknown executors: " + ", ".join(unknown_limits)
             )
 
         effective_limits: dict[str, int] = {}
@@ -124,9 +123,7 @@ class CapacityManager:
             self._require_known_executor(executor_key)
 
             if attempt_id in self._active_by_attempt:
-                raise CapacityInvariantError(
-                    f"attempt '{attempt_id}' already owns a capacity slot"
-                )
+                raise CapacityInvariantError(f"attempt '{attempt_id}' already owns a capacity slot")
 
             if len(self._active_by_attempt) >= self._global_limit:
                 return None
@@ -205,9 +202,7 @@ def _validate_positive_limit(value: int, *, field_name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"{field_name} must be an integer")
     if value < 1:
-        raise CapacityConfigurationError(
-            f"{field_name} must be greater than or equal to 1"
-        )
+        raise CapacityConfigurationError(f"{field_name} must be greater than or equal to 1")
     return value
 
 
