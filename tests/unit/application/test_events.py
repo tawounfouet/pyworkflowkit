@@ -46,7 +46,6 @@ class DeterministicIdFactory:
     ) -> RuntimeEventId:
         return RuntimeEventId(f"{run_id}:event-{event_sequence}")
 
-
 def test_event_factory_assigns_monotonic_sequence_and_deterministic_ids() -> None:
     ids = DeterministicIdFactory()
     assert isinstance(ids, RuntimeIdFactory)
@@ -71,7 +70,6 @@ def test_event_factory_assigns_monotonic_sequence_and_deterministic_ids() -> Non
     assert second.event_sequence == 2
     assert second.event_id == RuntimeEventId("run:event-2")
 
-
 def test_event_factory_rejects_task_context_on_workflow_event() -> None:
     factory = RuntimeEventFactory(
         run_id=WorkflowRunId("run"),
@@ -86,7 +84,6 @@ def test_event_factory_rejects_task_context_on_workflow_event() -> None:
             task_id=TaskId("A"),
         )
 
-
 def test_event_factory_requires_task_context_for_task_event() -> None:
     factory = RuntimeEventFactory(
         run_id=WorkflowRunId("run"),
@@ -98,7 +95,6 @@ def test_event_factory_requires_task_context_for_task_event() -> None:
             event_type=RuntimeEventType.TASK_STARTED,
             occurred_at=NOW,
         )
-
 
 
 def test_event_factory_can_continue_existing_sequence() -> None:
@@ -127,7 +123,6 @@ def test_event_factory_rejects_non_positive_starting_sequence(
             id_factory=DeterministicIdFactory(),
             starting_sequence=starting_sequence,
         )
-
 
 def test_event_factory_rejects_boolean_starting_sequence() -> None:
     with pytest.raises(TypeError, match="integer"):
