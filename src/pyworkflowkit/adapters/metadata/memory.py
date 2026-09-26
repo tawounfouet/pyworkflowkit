@@ -384,6 +384,7 @@ def _clone_task_attempt(attempt: TaskAttempt) -> TaskAttempt:
         error_type=attempt.error_type,
         error_message=attempt.error_message,
         error_category=attempt.error_category,
+        retry_eligible_at=attempt.retry_eligible_at,
         error_metadata=dict(attempt.error_metadata),
     )
 
