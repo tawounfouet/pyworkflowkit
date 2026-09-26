@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
 from queue import Empty
 from time import monotonic
+from typing import Protocol, runtime_checkable
 
 from pyworkflowkit.application.cancellation import CancellationController
 from pyworkflowkit.application.capacity import CapacityLease, CapacityManager
@@ -54,13 +54,16 @@ class _ConcurrentExecutor(Protocol):
     """Structural contract required by the concurrent coordinator."""
 
     @property
-    def key(self) -> str: ...
+    def key(self) -> str:
+        ...
 
     @property
-    def capabilities(self) -> ExecutorCapabilities: ...
+    def capabilities(self) -> ExecutorCapabilities:
+        ...
 
     @property
-    def completion_queue(self) -> CompletionQueue: ...
+    def completion_queue(self) -> CompletionQueue:
+        ...
 
     def execute(
         self,
@@ -68,7 +71,8 @@ class _ConcurrentExecutor(Protocol):
         task: TaskDefinition,
         handler: TaskHandler,
         context: RunContext,
-    ) -> TaskResult: ...
+    ) -> TaskResult:
+        ...
 
     def submit(
         self,
@@ -76,12 +80,14 @@ class _ConcurrentExecutor(Protocol):
         task: TaskDefinition,
         handler: TaskHandler,
         context: RunContext,
-    ) -> ExecutionHandle: ...
+    ) -> ExecutionHandle:
+        ...
 
 
 @runtime_checkable
 class _HardTerminationExecutor(Protocol):
-    def terminate(self, handle: ExecutionHandle) -> bool: ...
+    def terminate(self, handle: ExecutionHandle) -> bool:
+        ...
 
 
 @dataclass(slots=True)
@@ -609,11 +615,7 @@ class ConcurrentRunner(Runner):
             for execution in active.values()
             if not execution.timed_out and execution.deadline_monotonic is not None
         )
-        deadline_wait = (
-            max(0.0, min(deadlines) - monotonic())
-            if deadlines
-            else None
-        )
+        deadline_wait = max(0.0, min(deadlines) - monotonic()) if deadlines else None
         if cancellation_poll_seconds is None:
             return deadline_wait
         if deadline_wait is None:
@@ -895,10 +897,7 @@ class ConcurrentRunner(Runner):
         self._persist_cancelled_task_runs(cancelled_task_runs)
 
         hard_cancelled_handle_ids: set[str] = set()
-        if (
-            self._concurrent_executor.capabilities.cancellation
-            is CancellationCapability.HARD
-        ):
+        if self._concurrent_executor.capabilities.cancellation is CancellationCapability.HARD:
             terminator = self._hard_terminator()
             for execution in tuple(active.values()):
                 terminated = terminator.terminate(execution.handle)
