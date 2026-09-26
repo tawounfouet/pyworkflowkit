@@ -81,9 +81,7 @@ class ObservabilityDispatcher:
                     context=LogContext(
                         run_id=str(event.run_id),
                         task_run_id=(
-                            str(event.task_run_id)
-                            if event.task_run_id is not None
-                            else None
+                            str(event.task_run_id) if event.task_run_id is not None else None
                         ),
                         task_id=str(event.task_id) if event.task_id is not None else None,
                         attempt_number=event.attempt_number,
