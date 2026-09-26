@@ -124,9 +124,7 @@ class RecoveryInspector:
         )
 
         retry_waiting = {
-            task_run.task_run_id: pending_retry_attempt(
-                attempts_by_task_run[task_run.task_run_id]
-            )
+            task_run.task_run_id: pending_retry_attempt(attempts_by_task_run[task_run.task_run_id])
             for task_run in task_runs
             if task_run.status is TaskRunStatus.RUNNING
         }
@@ -135,9 +133,7 @@ class RecoveryInspector:
             for task_run_id, attempt in retry_waiting.items()
             if attempt is not None
         }
-        retry_waiting_task_runs = tuple(
-            sorted(str(task_run_id) for task_run_id in retry_waiting)
-        )
+        retry_waiting_task_runs = tuple(sorted(str(task_run_id) for task_run_id in retry_waiting))
         retry_eligible_times = tuple(
             attempt.retry_eligible_at
             for attempt in retry_waiting.values()
@@ -261,10 +257,7 @@ class RecoveryInspector:
             return RecoveryLiveness.UNKNOWN, ("missing_timestamp_evidence",)
 
         effective_evidence = latest_evidence
-        if (
-            next_retry_eligible_at is not None
-            and next_retry_eligible_at > effective_evidence
-        ):
+        if next_retry_eligible_at is not None and next_retry_eligible_at > effective_evidence:
             effective_evidence = next_retry_eligible_at
 
         age = observed_at - effective_evidence
