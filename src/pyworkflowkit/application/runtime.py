@@ -8,6 +8,7 @@ from pyworkflowkit.application.factory import RuntimeComponents, RuntimeFactory
 from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.application.lineage import ExecutionLineageProjector
 from pyworkflowkit.application.manifest import RunManifestBuilder
+from pyworkflowkit.application.observability_plugins import ObservabilityDispatchFailure
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.ids import WorkflowRunId
@@ -39,7 +40,7 @@ class WorkflowRuntime:
         self._components.observability.register(sink)
 
     @property
-    def observability_failures(self):
+    def observability_failures(self) -> tuple[ObservabilityDispatchFailure, ...]:
         """Return isolated observability sink failures."""
 
         return self._components.observability.failures
