@@ -124,8 +124,7 @@ def _resolve_command(
         raise InvalidHandlerError(
             task_id=task.task_id,
             reason=(
-                f"task requests executor '{task.executor_key}', "
-                "but executor key is 'subprocess'"
+                f"task requests executor '{task.executor_key}', but executor key is 'subprocess'"
             ),
         )
 
