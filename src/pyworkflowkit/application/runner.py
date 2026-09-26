@@ -573,6 +573,7 @@ class Runner:
                     external_ref=external_ref,
                 )
             uow.commit()
+        self._observability.publish(event)
 
     def _persist_terminal_failure(
         self,
@@ -651,7 +652,6 @@ class Runner:
             uow.commit()
         for event in events:
             self._observability.publish(event)
-        self._observability.publish(event)
 
 
 def _normalize_executor_error(error: ExecutorError) -> tuple[str, str, str]:
