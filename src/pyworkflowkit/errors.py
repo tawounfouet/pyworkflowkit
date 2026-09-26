@@ -182,31 +182,6 @@ class TimeoutCapabilityError(ExecutorError):
         )
 
 
-class ExecutionTimeoutError(TaskExecutionError):
-    """Logical task-attempt timeout normalized through the ordinary retry path."""
-
-    def __init__(
-        self,
-        *,
-        task_id: TaskId,
-        handler_ref: str | None,
-        timeout_seconds: float,
-        timeout_mode: str,
-    ) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.timeout_mode = timeout_mode
-        super().__init__(
-            task_id=task_id,
-            handler_ref=handler_ref,
-            error_type="ExecutionTimeoutError",
-            error_message=(
-                f"execution exceeded {timeout_seconds} seconds "
-                f"under {timeout_mode} timeout semantics"
-            ),
-            error_category="timeout",
-        )
-
-
 class DuplicateHandlerRegistrationError(ExecutorError):
     """Raised when a handler reference is registered more than once."""
 
@@ -252,6 +227,31 @@ class TaskExecutionError(ExecutorError):
         rendered_ref = handler_ref or "<direct-handler>"
         super().__init__(
             f"Task '{task_id}' handler '{rendered_ref}' failed with {error_type}: {error_message}"
+        )
+
+
+class ExecutionTimeoutError(TaskExecutionError):
+    """Logical task-attempt timeout normalized through the ordinary retry path."""
+
+    def __init__(
+        self,
+        *,
+        task_id: TaskId,
+        handler_ref: str | None,
+        timeout_seconds: float,
+        timeout_mode: str,
+    ) -> None:
+        self.timeout_seconds = timeout_seconds
+        self.timeout_mode = timeout_mode
+        super().__init__(
+            task_id=task_id,
+            handler_ref=handler_ref,
+            error_type="ExecutionTimeoutError",
+            error_message=(
+                f"execution exceeded {timeout_seconds} seconds "
+                f"under {timeout_mode} timeout semantics"
+            ),
+            error_category="timeout",
         )
 
 
