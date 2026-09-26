@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import Future, ThreadPoolExecutor
+from functools import partial
 from concurrent.futures import wait as wait_futures
 from threading import RLock
 
@@ -141,12 +142,7 @@ class ThreadExecutor:
             self._submitted_attempt_ids.add(context.attempt_id)
             self._handles[handle.handle_id] = handle
             self._active_futures[handle.handle_id] = future
-            future.add_done_callback(
-                lambda completed, submitted_handle=handle: self._publish_completion(
-                    submitted_handle,
-                    completed,
-                )
-            )
+            future.add_done_callback(partial(self._publish_completion, handle))
 
         return handle
 
