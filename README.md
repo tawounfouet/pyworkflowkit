@@ -828,10 +828,13 @@ now >= T and durable evidence is stale
     → ELIGIBLE
 ```
 
-M38 does not reconcile this state as ambiguous external work, because the runtime already
-knows why the `TaskRun` remains RUNNING.
+For a pure local retry wait, M38 does not classify the RUNNING TaskRun as ambiguous work,
+because the runtime already knows why it remains RUNNING. If the non-terminal task also
+has `ExternalRunRef` evidence, reconciliation remains mandatory; a retry deadline never
+suppresses unresolved external side effects.
 
-M39 can therefore resume the same run directly as Attempt N+1 once the retry is eligible.
+M39 can resume the same run directly as Attempt N+1 once the retry is eligible and no
+other recovery ambiguity remains.
 
 ### Persistence
 
