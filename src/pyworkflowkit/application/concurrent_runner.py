@@ -19,7 +19,6 @@ from pyworkflowkit.domain.enums import (
     TASK_TERMINAL_STATUSES,
     RuntimeEventType,
     TaskRunStatus,
-    WorkflowRunStatus,
 )
 from pyworkflowkit.domain.graph import DependencyGraph
 from pyworkflowkit.domain.ids import TaskId
