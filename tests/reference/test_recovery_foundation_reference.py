@@ -41,57 +41,56 @@ def test_persisted_crash_state_is_detected_after_sqlite_restart_without_mutation
     run_id = WorkflowRunId("run-crashed")
     task_run_id = TaskRunId("task-run-crashed")
 
-    with SQLiteMetadataStore(database) as store:
-        with store.unit_of_work() as uow:
-            uow.add_workflow_run(
-                WorkflowRun(
-                    run_id=run_id,
-                    workflow_id=WorkflowId("workflow.recovery"),
-                    workflow_version="1",
-                    status=WorkflowRunStatus.RUNNING,
-                    created_at=OLD,
-                    started_at=OLD,
-                )
+    with SQLiteMetadataStore(database) as store, store.unit_of_work() as uow:
+        uow.add_workflow_run(
+            WorkflowRun(
+                run_id=run_id,
+                workflow_id=WorkflowId("workflow.recovery"),
+                workflow_version="1",
+                status=WorkflowRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
             )
-            uow.add_task_run(
-                TaskRun(
-                    task_run_id=task_run_id,
-                    run_id=run_id,
-                    task_id=TaskId("external-task"),
-                    status=TaskRunStatus.RUNNING,
-                    created_at=OLD,
-                    started_at=OLD,
-                )
-            )
-            uow.add_task_attempt(
-                TaskAttempt(
-                    attempt_id=TaskAttemptId("attempt-crashed"),
-                    task_run_id=task_run_id,
-                    attempt_number=1,
-                    started_at=OLD,
-                )
-            )
-            uow.add_event(
-                RuntimeEvent(
-                    event_id=RuntimeEventId("event-started"),
-                    event_type=RuntimeEventType.TASK_STARTED,
-                    run_id=run_id,
-                    occurred_at=OLD,
-                    event_sequence=1,
-                    task_run_id=task_run_id,
-                    task_id=TaskId("external-task"),
-                    attempt_number=1,
-                )
-            )
-            uow.add_external_run_ref(
+        )
+        uow.add_task_run(
+            TaskRun(
                 task_run_id=task_run_id,
-                external_ref=ExternalRunRef(
-                    external_ref_id=ExternalRunRefId("external-crashed"),
-                    provider="remote-system",
-                    external_run_id="remote-123",
-                ),
+                run_id=run_id,
+                task_id=TaskId("external-task"),
+                status=TaskRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
             )
-            uow.commit()
+        )
+        uow.add_task_attempt(
+            TaskAttempt(
+                attempt_id=TaskAttemptId("attempt-crashed"),
+                task_run_id=task_run_id,
+                attempt_number=1,
+                started_at=OLD,
+            )
+        )
+        uow.add_event(
+            RuntimeEvent(
+                event_id=RuntimeEventId("event-started"),
+                event_type=RuntimeEventType.TASK_STARTED,
+                run_id=run_id,
+                occurred_at=OLD,
+                event_sequence=1,
+                task_run_id=task_run_id,
+                task_id=TaskId("external-task"),
+                attempt_number=1,
+            )
+        )
+        uow.add_external_run_ref(
+            task_run_id=task_run_id,
+            external_ref=ExternalRunRef(
+                external_ref_id=ExternalRunRefId("external-crashed"),
+                provider="remote-system",
+                external_run_id="remote-123",
+            ),
+        )
+        uow.commit()
 
     with SQLiteMetadataStore(database) as reopened:
         assessment = RecoveryInspector(
@@ -120,28 +119,27 @@ def test_stale_candidate_without_ambiguous_work_is_structurally_resume_eligible(
     run_id = WorkflowRunId("run-eligible")
     task_run_id = TaskRunId("task-run-eligible")
 
-    with SQLiteMetadataStore(database) as store:
-        with store.unit_of_work() as uow:
-            uow.add_workflow_run(
-                WorkflowRun(
-                    run_id=run_id,
-                    workflow_id=WorkflowId("workflow.recovery"),
-                    workflow_version="1",
-                    status=WorkflowRunStatus.RUNNING,
-                    created_at=OLD,
-                    started_at=OLD,
-                )
+    with SQLiteMetadataStore(database) as store, store.unit_of_work() as uow:
+        uow.add_workflow_run(
+            WorkflowRun(
+                run_id=run_id,
+                workflow_id=WorkflowId("workflow.recovery"),
+                workflow_version="1",
+                status=WorkflowRunStatus.RUNNING,
+                created_at=OLD,
+                started_at=OLD,
             )
-            uow.add_task_run(
-                TaskRun(
-                    task_run_id=task_run_id,
-                    run_id=run_id,
-                    task_id=TaskId("pending-work"),
-                    status=TaskRunStatus.READY,
-                    created_at=OLD,
-                )
+        )
+        uow.add_task_run(
+            TaskRun(
+                task_run_id=task_run_id,
+                run_id=run_id,
+                task_id=TaskId("pending-work"),
+                status=TaskRunStatus.READY,
+                created_at=OLD,
             )
-            uow.commit()
+        )
+        uow.commit()
 
         assessment = RecoveryInspector(
             metadata_store=store,
