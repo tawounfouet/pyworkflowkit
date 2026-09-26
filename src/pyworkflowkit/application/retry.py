@@ -1,10 +1,14 @@
 """Retry decisions and deterministic backoff calculations."""
 
+import logging
 from dataclasses import dataclass
 
+from pyworkflowkit.application.observability import log_runtime
 from pyworkflowkit.domain.enums import BackoffStrategy
 from pyworkflowkit.domain.values import RetryPolicy
 from pyworkflowkit.errors import ExecutorError, TaskExecutionError
+
+logger = logging.getLogger("pyworkflowkit.retry")
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,7 +45,14 @@ class RetryEngine:
         error: ExecutorError,
     ) -> RetryDecision:
         if attempt_number >= policy.max_attempts:
-            return RetryDecision(should_retry=False)
+            decision = RetryDecision(should_retry=False)
+            log_runtime(
+                logger,
+                logging.DEBUG,
+                "Retry declined: max attempts reached",
+                fields={"attempt_number": attempt_number, "max_attempts": policy.max_attempts},
+            )
+            return decision
 
         if not isinstance(error, TaskExecutionError):
             return RetryDecision(should_retry=False)
@@ -52,7 +63,7 @@ class RetryEngine:
         ):
             return RetryDecision(should_retry=False)
 
-        return RetryDecision(
+        decision = RetryDecision(
             should_retry=True,
             delay_seconds=self._backoff_delay(
                 policy=policy,
@@ -60,6 +71,18 @@ class RetryEngine:
             ),
             next_attempt_number=attempt_number + 1,
         )
+        log_runtime(
+            logger,
+            logging.DEBUG,
+            "Retry scheduled",
+            fields={
+                "attempt_number": attempt_number,
+                "next_attempt_number": decision.next_attempt_number,
+                "delay_seconds": decision.delay_seconds,
+                "error_category": error.error_category,
+            },
+        )
+        return decision
 
     @staticmethod
     def _backoff_delay(
