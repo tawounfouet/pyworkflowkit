@@ -336,9 +336,9 @@ timeout       = hard
 cancellation  = hard
 ```
 
-Hard timeout and cancellation apply to the directly owned child process. Process-tree
-sandboxing, output quotas, executable allowlists, and broader command-security policy
-remain part of M36 Security Hardening.
+Hard timeout and cancellation apply to the directly owned child process. M36 adds
+executable/cwd/environment guardrails plus captured-output boundary limits, while
+process-tree sandboxing and operating-system resource quotas remain outside the core.
 
 `SubprocessExecutor` remains an advanced module import and is not added to the
 package-root API.
