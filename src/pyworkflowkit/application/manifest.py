@@ -205,14 +205,16 @@ class RunManifestBuilder:
         if not events:
             raise ManifestInvariantError(reason="terminal run has no runtime events")
 
-        for expected_sequence, event in enumerate(events, start=1):
-            if event.event_sequence != expected_sequence:
+        previous_sequence = 0
+        for event in events:
+            if event.event_sequence is None or event.event_sequence <= previous_sequence:
                 raise ManifestInvariantError(
                     reason=(
-                        "runtime event sequence is not contiguous: "
-                        f"expected {expected_sequence}, got {event.event_sequence}"
+                        "runtime event sequence is not strictly increasing: "
+                        f"previous {previous_sequence}, got {event.event_sequence}"
                     )
                 )
+            previous_sequence = event.event_sequence
 
         expected_terminal_event = {
             WorkflowRunStatus.SUCCEEDED: RuntimeEventType.WORKFLOW_SUCCEEDED,
