@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from datetime import datetime
 
 from pyworkflowkit.application.events import RuntimeEventFactory
+from pyworkflowkit.contracts.serialization import normalize_portable_json_value
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.failure import FailurePropagator
 from pyworkflowkit.application.observability import LogContext, log_runtime
@@ -29,6 +30,7 @@ from pyworkflowkit.errors import (
     InvalidHandlerError,
     InvalidWorkflowParametersError,
     RuntimeInvariantError,
+    SerializationError,
     TaskExecutionError,
     TimeoutCapabilityError,
 )
@@ -558,10 +560,25 @@ class Runner:
         self._state_machine.succeed_attempt(attempt, at=finished_at)
         self._state_machine.succeed_task(task_run, at=finished_at)
 
+        output_checkpoint: object | None = None
+        output_checkpoint_available = True
+        try:
+            output_checkpoint = normalize_portable_json_value(
+                result.output,
+                path=f"task_result.{task_run.task_run_id}.output",
+            )
+        except SerializationError:
+            output_checkpoint_available = False
+
         with self._metadata_store.unit_of_work() as uow:
             uow.save_task_attempt(attempt)
             uow.save_task_run(task_run)
             uow.add_event(event)
+            if output_checkpoint_available:
+                uow.add_task_output_checkpoint(
+                    task_run_id=task_run.task_run_id,
+                    output=output_checkpoint,
+                )
             for artifact in result.artifacts:
                 uow.add_artifact(
                     task_run_id=task_run.task_run_id,
