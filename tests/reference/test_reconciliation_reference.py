@@ -179,7 +179,4 @@ def test_external_work_still_running_remains_non_resolved_after_restart(tmp_path
 
         assert report.has_still_running is True
         assert report.fully_resolved is False
-        assert (
-            report.task_reconciliations[0].disposition
-            is ReconciliationDisposition.STILL_RUNNING
-        )
+        assert report.task_reconciliations[0].disposition is ReconciliationDisposition.STILL_RUNNING
