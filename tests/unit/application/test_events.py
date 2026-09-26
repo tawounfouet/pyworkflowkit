@@ -100,7 +100,6 @@ def test_event_factory_requires_task_context_for_task_event() -> None:
         )
 
 
-
 def test_event_factory_can_continue_existing_sequence() -> None:
     factory = RuntimeEventFactory(
         run_id=WorkflowRunId("run"),
