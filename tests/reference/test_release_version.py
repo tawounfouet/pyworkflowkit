@@ -15,7 +15,7 @@ def test_package_metadata_and_public_version_match_release_version() -> None:
     assert pyworkflowkit.__version__ == EXPECTED_VERSION
 
 
-def test_cli_version_matches_development_version() -> None:
+def test_cli_version_matches_release_version() -> None:
     result = CliRunner().invoke(app, ["version"])
 
     assert result.exit_code == 0
