@@ -221,11 +221,11 @@ class MemoryUnitOfWork:
             for existing in state.events.values()
             if existing.run_id == event.run_id and existing.event_sequence is not None
         ]
-        expected_sequence = max(existing_sequences, default=0) + 1
-        if event.event_sequence != expected_sequence:
+        previous_sequence = max(existing_sequences, default=0)
+        if event.event_sequence is None or event.event_sequence <= previous_sequence:
             raise InvalidEventSequenceError(
                 run_id=str(event.run_id),
-                expected_sequence=expected_sequence,
+                previous_sequence=previous_sequence,
                 actual_sequence=event.event_sequence,
             )
         state.events[event.event_id] = event
