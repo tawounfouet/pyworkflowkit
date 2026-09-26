@@ -57,6 +57,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - RuntimeInspector snapshots with ready/blocked task analysis and deadlock diagnostics.
 - WorkflowRuntime.inspect_runtime() facade for structured persisted-run diagnostics.
 - Observability acceptance coverage proving retry correlation without leaking sensitive workflow parameters.
+- PluginType and immutable PluginDescriptor contracts with explicit plugin API version 1.
+- Generic typed PluginRegistry and lazy RegisteredPlugin factories for manual registration.
+- PluginCatalog with separate executor, metadata, workload, and event registries.
+- Public PluginError hierarchy for duplicate, missing, and type-mismatched registrations.
+- M22 acceptance coverage proving manual registration is explicit and performs no automatic discovery.
 
 ### Changed
 
