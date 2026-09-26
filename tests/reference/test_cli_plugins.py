@@ -1,7 +1,7 @@
 """CLI acceptance for M23 plugin discovery diagnostics."""
 
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
 from typer.testing import CliRunner
 
