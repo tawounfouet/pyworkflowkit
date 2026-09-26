@@ -10,7 +10,7 @@ from pyworkflowkit.application.recovery import (
     RecoveryInspector,
     RecoveryLiveness,
 )
-from pyworkflowkit.domain.enums import TASK_TERMINAL_STATUSES, TaskRunStatus
+from pyworkflowkit.domain.enums import TASK_TERMINAL_STATUSES, TaskAttemptStatus, TaskRunStatus
 from pyworkflowkit.domain.ids import WorkflowRunId
 from pyworkflowkit.domain.values import ExternalRunRef
 from pyworkflowkit.errors import (
@@ -153,7 +153,7 @@ class ReconciliationService:
             running_attempt_ids = tuple(
                 str(attempt.attempt_id)
                 for attempt in attempts
-                if attempt.status.value == "RUNNING"
+                if attempt.status is TaskAttemptStatus.RUNNING
             )
             external_refs = tuple(
                 self._metadata_store.list_external_run_refs(task_run.task_run_id)
