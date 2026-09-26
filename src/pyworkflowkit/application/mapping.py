@@ -197,6 +197,7 @@ class DomainSchemaMapper:
             error_type=value.error_type,
             error_message=value.error_message,
             error_category=value.error_category,
+            retry_eligible_at=value.retry_eligible_at,
             error_metadata=dict(value.error_metadata),
         )
 
@@ -212,6 +213,7 @@ class DomainSchemaMapper:
             error_type=value.error_type,
             error_message=value.error_message,
             error_category=value.error_category,
+            retry_eligible_at=value.retry_eligible_at,
             error_metadata=dict(value.error_metadata),
         )
 
