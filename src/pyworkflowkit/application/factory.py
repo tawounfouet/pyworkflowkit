@@ -12,6 +12,7 @@ from pyworkflowkit.adapters.metadata.sqlite import SQLiteMetadataStore
 from pyworkflowkit.adapters.runtime import SystemClock, SystemSleeper, UuidRuntimeIdFactory
 from pyworkflowkit.application.execution import HandlerRegistry
 from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
+from pyworkflowkit.application.reconciliation import ExternalRunVerifierRegistry
 from pyworkflowkit.application.runner import Runner
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.ports.executor import Executor
@@ -30,6 +31,7 @@ class RuntimeComponents:
     executor: Executor
     observability: ObservabilityDispatcher
     clock: Clock
+    reconciliation_verifiers: ExternalRunVerifierRegistry
 
 
 class RuntimeFactory:
@@ -48,6 +50,7 @@ class RuntimeFactory:
         metadata_store = cls._build_metadata_store(resolved)
         observability = ObservabilityDispatcher()
         clock = SystemClock()
+        reconciliation_verifiers = ExternalRunVerifierRegistry()
 
         runner = Runner(
             metadata_store=metadata_store,
@@ -67,6 +70,7 @@ class RuntimeFactory:
             executor=executor,
             observability=observability,
             clock=clock,
+            reconciliation_verifiers=reconciliation_verifiers,
         )
 
     @staticmethod
