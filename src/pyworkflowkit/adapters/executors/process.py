@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 import pickle
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from multiprocessing import get_all_start_methods, get_context
 from multiprocessing.connection import Connection
-from multiprocessing.context import BaseContext
 from multiprocessing.process import BaseProcess
 from threading import RLock, Thread
+from typing import Protocol, cast
 
 from pyworkflowkit.adapters.executors._python import (
     invoke_python_handler,
@@ -51,6 +52,22 @@ from pyworkflowkit.ports.executor import (
 )
 
 logger = logging.getLogger("pyworkflowkit.executor.process")
+
+
+class _ProcessFactory(Protocol):
+    def __call__(
+        self,
+        *,
+        target: Callable[..., object],
+        args: tuple[object, ...],
+        name: str,
+    ) -> BaseProcess: ...
+
+
+class _ProcessContext(Protocol):
+    Process: _ProcessFactory
+
+    def Pipe(self, duplex: bool = True) -> tuple[Connection, Connection]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -376,7 +393,7 @@ class ProcessExecutor:
             raise ValueError("terminate_grace_seconds must be greater than or equal to 0")
 
         self._max_workers = max_workers
-        self._mp_context: BaseContext = get_context(start_method)
+        self._mp_context = cast(_ProcessContext, get_context(start_method))
         self._completion_queue = (
             completion_queue if completion_queue is not None else CompletionQueue()
         )
