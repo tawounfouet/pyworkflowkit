@@ -66,9 +66,7 @@ class SqlAlchemyMetadataStore:
                 )
             ).all()
         values = (
-            PersistenceMapper.task_attempt_from_row(
-                SqlAlchemyRowMapper.task_attempt_from_orm(row)
-            )
+            PersistenceMapper.task_attempt_from_row(SqlAlchemyRowMapper.task_attempt_from_orm(row))
             for row in rows
         )
         return tuple(sorted(values, key=lambda value: value.attempt_number))
@@ -221,9 +219,10 @@ class SqlAlchemyUnitOfWork:
             raise DuplicateMetadataError(entity_type="RuntimeEvent", entity_id=record.event_id)
         if session.get(orm_models.WorkflowRunRow, record.run_id) is None:
             raise MetadataNotFoundError(entity_type="WorkflowRun", entity_id=record.run_id)
-        if record.task_run_id is not None and session.get(
-            orm_models.TaskRunRow, record.task_run_id
-        ) is None:
+        if (
+            record.task_run_id is not None
+            and session.get(orm_models.TaskRunRow, record.task_run_id) is None
+        ):
             raise MetadataNotFoundError(entity_type="TaskRun", entity_id=record.task_run_id)
         if record.event_sequence is not None:
             duplicate = session.scalar(
