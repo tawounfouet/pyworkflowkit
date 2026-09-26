@@ -7,14 +7,15 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.4.0`; current development line `0.5.0a5`.
-> M36 hardens subprocess, observability, and supply-chain boundaries without presenting
-> PyWorkflowKit as a sandbox for untrusted Python code.
+> **Status:** stable release `0.5.0`.
+> The 0.5 line completes multi-executor hardening, observability plugin projection, and
+> production-oriented security controls while preserving PyWorkflowKit as an embedded
+> runtime rather than a workflow platform.
 
-## What 0.4 provides
+## What 0.5 provides
 
-The `0.4.x` line keeps the complete local developer framework from 0.3 and adds
-bounded concurrent execution:
+The `0.5.x` line keeps the complete local developer framework and concurrency foundation
+from 0.4, then adds hardened execution and integration:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
 - deterministic DAG validation and topological planning;
@@ -38,7 +39,14 @@ bounded concurrent execution:
 - coordinator-owned concurrent fan-out/fan-in execution through `ConcurrentRunner`;
 - graceful workflow cancellation that stops new dispatch and drains already-running work;
 - explicit `NONE` / `SOFT` / `HARD` timeout semantics with capability validation;
-- timeout failures normalized through the existing retry engine.
+- timeout failures normalized through the existing retry engine;
+- isolated Python execution through `ProcessExecutor`;
+- native awaitable workloads through `AsyncExecutor`;
+- shell-free external program execution through `SubprocessExecutor`;
+- committed-event observability sinks with failure isolation;
+- subprocess executable/cwd/environment/I/O guardrails;
+- observability payload and sink-error redaction;
+- blocking Bandit, pip-audit, and detect-secrets CI security gates.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.
@@ -167,7 +175,7 @@ For `ThreadExecutor`, timeout support is intentionally **SOFT**: the logical att
 fail on deadline while the Python thread finishes later. Hard thread termination is not
 simulated, and `HARD` timeout requests are rejected by capability validation.
 
-## Process execution in 0.5.0a1
+## Process execution in 0.5
 
 M32 adds an advanced process-isolated executor:
 
@@ -216,7 +224,7 @@ timeout keeps the existing logical-timeout semantics.
 API.
 
 
-## Async execution in 0.5.0a2
+## Async execution in 0.5
 
 M33 adds an advanced asyncio executor for I/O-bound and natively asynchronous workloads:
 
@@ -273,7 +281,7 @@ drained before the same task lineage can be retried.
 `AsyncExecutor` remains an advanced module import and is not added to the package-root
 API.
 
-## External subprocess execution in 0.5.0a3
+## External subprocess execution in 0.5
 
 M34 adds an advanced executor for CLI commands and external programs:
 
@@ -328,14 +336,14 @@ timeout       = hard
 cancellation  = hard
 ```
 
-Hard timeout and cancellation apply to the directly owned child process. Process-tree
-sandboxing, output quotas, executable allowlists, and broader command-security policy
-remain part of M36 Security Hardening.
+Hard timeout and cancellation apply to the directly owned child process. M36 adds
+executable/cwd/environment guardrails plus captured-output boundary limits, while
+process-tree sandboxing and operating-system resource quotas remain outside the core.
 
 `SubprocessExecutor` remains an advanced module import and is not added to the
 package-root API.
 
-## Observability plugins in 0.5.0a4
+## Observability plugins in 0.5
 
 M35 turns the existing runtime-event extension category into a typed observability
 boundary:
@@ -393,7 +401,7 @@ factory result: RuntimeEventSink
 M35 does not add a dependency on OpenTelemetry, Prometheus, Datadog, or another
 observability backend.
 
-## Security hardening in 0.5.0a5
+## Security hardening in 0.5
 
 M36 adds explicit guardrails around the two extension boundaries most likely to leak
 privilege or sensitive information: external subprocess execution and observability
@@ -652,8 +660,8 @@ control-plane concerns remain outside the core.
 1.0  Stable embedded runtime
 ```
 
-M32 — ProcessExecutor opened the 0.5 line at **0.5.0a1**; M33 — AsyncExecutor advanced
-it to **0.5.0a2**; M34 — SubprocessExecutor advanced it to **0.5.0a3**; M35 —
-Observability Plugins advanced it to **0.5.0a4**; M36 — Security Hardening advances it
-to **0.5.0a5**. The next step is transverse qualification and promotion to **0.5.0
-stable**.
+The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
+SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
+qualification promoted the line to **0.5.0 stable**.
+
+The next roadmap line is **0.6.x — Recovery / Resume / Reconciliation**.

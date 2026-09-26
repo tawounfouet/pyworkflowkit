@@ -1,7 +1,6 @@
 # Security Policy
 
-PyWorkflowKit is currently on a pre-stable development line. The latest stable line is
-0.4.x while 0.5.x is being hardened for promotion.
+PyWorkflowKit 0.5.x is the current stable release line for the pre-1.0 project.
 
 ## Security model
 
@@ -27,7 +26,7 @@ SubprocessExecutor
 
 ## Subprocess boundary
 
-0.5.0a5 introduces `SubprocessSecurityPolicy`.
+0.5.0 includes `SubprocessSecurityPolicy`.
 
 The default policy:
 
@@ -100,5 +99,6 @@ the maintainer's GitHub profile before publishing sensitive details.
 
 ## Supported versions
 
-The 0.4.x line is the current stable development baseline. The 0.5.x line remains
-pre-stable until its transverse release qualification is complete.
+The 0.5.x line is the current supported stable release line. Pre-1.0 semantic stability
+does not imply a frozen 1.0 public-core contract; that broader compatibility freeze
+remains a later roadmap objective.

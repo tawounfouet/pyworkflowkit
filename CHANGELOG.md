@@ -8,6 +8,20 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.5.0 - 2026-09-26
+
+### Added
+
 - M36 SubprocessSecurityPolicy with executable, cwd, environment, stdin, and captured-output guardrails.
 - Default subprocess environment isolation: parent environment variables are not inherited unless explicitly enabled.
 - SubprocessSecurityError with stable security_policy retry/error category.
