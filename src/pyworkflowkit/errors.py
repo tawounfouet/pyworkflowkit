@@ -165,6 +165,50 @@ class TaskExecutionError(ExecutorError):
         )
 
 
+class IntegrationError(PyWorkflowKitError):
+    """Base class for optional runtime-integration boundary errors."""
+
+
+class PyIngestKitAdapterError(IntegrationError):
+    """Translated failure from one atomic PyIngestKit workload."""
+
+    def __init__(
+        self,
+        *,
+        job_ref: str,
+        error_type: str,
+        error_message: str,
+        error_category: str,
+        external_run_id: str | None = None,
+    ) -> None:
+        self.job_ref = job_ref
+        self.error_type = error_type
+        self.error_message = error_message
+        self.error_category = error_category
+        self.external_run_id = external_run_id
+        run_suffix = (
+            f" external_run_id='{external_run_id}'"
+            if external_run_id is not None
+            else ""
+        )
+        super().__init__(
+            f"PyIngestKit job '{job_ref}' failed with {error_type}: "
+            f"{error_message}.{run_suffix}"
+        )
+
+
+class PyIngestKitRetryOwnershipError(IntegrationError):
+    """Raised when both runtimes would independently retry the same workload."""
+
+    def __init__(self, *, retry_owner: str, max_attempts: int) -> None:
+        self.retry_owner = retry_owner
+        self.max_attempts = max_attempts
+        super().__init__(
+            "PyIngestKit-owned retry requires PyWorkflowKit max_attempts=1; "
+            f"got max_attempts={max_attempts} with retry_owner='{retry_owner}'."
+        )
+
+
 class RuntimeErrorBase(PyWorkflowKitError):
     """Base class for workflow runtime orchestration errors."""
 
@@ -403,6 +447,7 @@ __all__ = [
     "InvalidHandlerError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
+    "IntegrationError",
     "InvalidWorkflowParametersError",
     "ManifestError",
     "ManifestInvariantError",
@@ -419,6 +464,8 @@ __all__ = [
     "PluginLoadError",
     "PluginNotFoundError",
     "PluginTypeMismatchError",
+    "PyIngestKitAdapterError",
+    "PyIngestKitRetryOwnershipError",
     "PyWorkflowKitError",
     "RuntimeErrorBase",
     "RuntimeInvariantError",
