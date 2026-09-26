@@ -44,6 +44,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - WorkflowRuntime public application facade for handler registration, execution, run lookup, events, manifests, and lineage.
 - Intentional package-root API exposing workflow definitions, runtime settings, retry/result values, identifiers, and the public error root.
 - Public API acceptance coverage proving end-to-end execution using only package-root imports.
+- Lazy `@task` declaration producing explicit TaskHandle metadata without handler execution.
+- Lazy `@workflow` declaration producing WorkflowBuilder values and immutable WorkflowDefinition materialization.
+- Explicit decorator-level dependency declarations and handler references.
+- Declarative acceptance coverage proving decoration/building never executes task workloads.
 
 ### Changed
 

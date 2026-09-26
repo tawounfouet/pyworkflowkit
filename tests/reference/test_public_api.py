@@ -58,12 +58,16 @@ def test_root_import_surface_is_intentional() -> None:
         "RunContext",
         "RuntimeSettings",
         "TaskDefinition",
+        "TaskHandle",
         "TaskId",
         "TaskResult",
+        "WorkflowBuilder",
         "WorkflowDefinition",
         "WorkflowId",
         "WorkflowParameter",
         "WorkflowRuntime",
+        "task",
+        "workflow",
         "__version__",
     }
 
