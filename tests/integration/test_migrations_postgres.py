@@ -11,7 +11,7 @@ from pyworkflowkit.adapters.metadata.postgres import PostgresSettings, create_po
 from pyworkflowkit.migrations import current_revision, upgrade_database
 
 POSTGRES_DSN = os.environ.get("PYWORKFLOWKIT_TEST_POSTGRES_DSN")
-HEAD_REVISION = "0002_task_output_checkpoints"
+HEAD_REVISION = "0003_retry_eligible_at"
 EXPECTED_TABLES = {
     "alembic_version",
     "artifact_references",
@@ -54,6 +54,13 @@ def test_postgres_fresh_upgrade_reaches_head() -> None:
     assert columns["run_id"] == "UUID"
     assert "TIMESTAMP" in columns["created_at"]
     assert columns["parameters_json"] == "JSONB"
+
+    task_attempt_columns = {
+        column["name"]: str(column["type"]).upper()
+        for column in inspector.get_columns("task_attempts", schema="pyworkflowkit")
+    }
+    assert "retry_eligible_at" in task_attempt_columns
+    assert "TIMESTAMP" in task_attempt_columns["retry_eligible_at"]
 
     upgrade_database(engine)
     assert current_revision(engine) == HEAD_REVISION
