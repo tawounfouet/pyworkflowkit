@@ -140,6 +140,28 @@ class WorkflowRuntime:
             stale_after=timedelta(seconds=stale_after_seconds),
         ).reconcile(WorkflowRunId(str(run_id)))
 
+    def resume_run(
+        self,
+        workflow: WorkflowDefinition,
+        run_id: WorkflowRunId | str,
+        *,
+        stale_after_seconds: float = 300.0,
+    ) -> WorkflowRun:
+        """Resume one stale persisted WorkflowRun after reconciliation."""
+
+        resolved_run_id = WorkflowRunId(str(run_id))
+        reconciliation = ReconciliationService(
+            metadata_store=self._components.metadata_store,
+            clock=self._components.clock,
+            verifier_registry=self._components.reconciliation_verifiers,
+            stale_after=timedelta(seconds=stale_after_seconds),
+        ).reconcile(resolved_run_id)
+        return self._components.runner.resume(
+            workflow,
+            run_id=resolved_run_id,
+            reconciliation=reconciliation,
+        )
+
     def lineage(
         self,
         workflow: WorkflowDefinition,
