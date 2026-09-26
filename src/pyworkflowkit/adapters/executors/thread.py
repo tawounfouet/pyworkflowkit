@@ -57,7 +57,7 @@ class ThreadExecutor:
             max_workers=max_workers,
             thread_name_prefix=thread_name_prefix,
         )
-        self._completion_queue = completion_queue or CompletionQueue()
+        self._completion_queue = completion_queue if completion_queue is not None else CompletionQueue()
         self._capabilities = ExecutorCapabilities(
             supports_parallelism=True,
             timeout=TimeoutCapability.SOFT,
