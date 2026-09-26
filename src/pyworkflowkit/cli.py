@@ -172,9 +172,13 @@ def inspect(
 
 @app.command()
 def events(
-    run_id: str = typer.Argument(..., help="Workflow run identifier."),
-    config: Path | None = typer.Option(None, "--config", help="TOML runtime configuration."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
 ) -> None:
     """List persisted runtime events."""
 
