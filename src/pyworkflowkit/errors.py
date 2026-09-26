@@ -186,14 +186,9 @@ class PyIngestKitAdapterError(IntegrationError):
         self.error_message = error_message
         self.error_category = error_category
         self.external_run_id = external_run_id
-        run_suffix = (
-            f" external_run_id='{external_run_id}'"
-            if external_run_id is not None
-            else ""
-        )
+        run_suffix = f" external_run_id='{external_run_id}'" if external_run_id is not None else ""
         super().__init__(
-            f"PyIngestKit job '{job_ref}' failed with {error_type}: "
-            f"{error_message}.{run_suffix}"
+            f"PyIngestKit job '{job_ref}' failed with {error_type}: {error_message}.{run_suffix}"
         )
 
 
