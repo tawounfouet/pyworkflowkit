@@ -70,6 +70,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - Failure isolation so non-enabled or broken plugins do not implicitly break the runtime.
 - CLI `plugins` command for non-loading entry-point inventory.
 - CLI `doctor --enable type:name` compatibility diagnostics for explicit plugin activation.
+- PyIngestKit anti-corruption adapter treating one ingestion job as one atomic workflow task.
+- Normalized PyIngestKitRunResult to TaskResult translation with ExternalRunRef evidence.
+- PyIngestKit integration error translation into public PyWorkflowKit integration errors.
+- Explicit retry ownership preventing nested PyWorkflowKit × PyIngestKit retry multiplication.
+- PyIngestKit adapter guide documenting the no-core-dependency boundary and retry contract.
 
 ### Changed
 
