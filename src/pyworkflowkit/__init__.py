@@ -6,7 +6,7 @@ from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.declarative import TaskHandle, WorkflowBuilder, task, workflow
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.enums import BackoffStrategy, FailurePolicy
+from pyworkflowkit.domain.enums import BackoffStrategy, FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.ids import ArtifactId, ExternalRunRefId, TaskId, WorkflowId
 from pyworkflowkit.domain.values import (
     ArtifactReference,
@@ -38,6 +38,7 @@ __all__ = [
     "TaskHandle",
     "TaskId",
     "TaskResult",
+    "TimeoutMode",
     "WorkflowBuilder",
     "WorkflowDefinition",
     "WorkflowId",
