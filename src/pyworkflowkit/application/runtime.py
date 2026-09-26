@@ -10,6 +10,7 @@ from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspe
 from pyworkflowkit.application.lineage import ExecutionLineageProjector
 from pyworkflowkit.application.manifest import RunManifestBuilder
 from pyworkflowkit.application.observability_plugins import ObservabilityDispatchFailure
+from pyworkflowkit.application.reconciliation import ReconciliationReport, ReconciliationService
 from pyworkflowkit.application.recovery import RecoveryAssessment, RecoveryInspector
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.domain.definitions import WorkflowDefinition
@@ -19,6 +20,7 @@ from pyworkflowkit.domain.manifest import RunManifest
 from pyworkflowkit.domain.runtime import RuntimeEvent, WorkflowRun
 from pyworkflowkit.ports.executor import TaskHandler
 from pyworkflowkit.ports.observability import RuntimeEventSink
+from pyworkflowkit.ports.reconciliation import ExternalRunVerifier
 
 
 class WorkflowRuntime:
@@ -40,6 +42,11 @@ class WorkflowRuntime:
         """Register one committed-runtime-event observability sink."""
 
         self._components.observability.register(sink)
+
+    def register_external_run_verifier(self, verifier: ExternalRunVerifier) -> None:
+        """Register one provider-specific external-run status verifier."""
+
+        self._components.reconciliation_verifiers.register(verifier)
 
     @property
     def observability_failures(self) -> tuple[ObservabilityDispatchFailure, ...]:
@@ -117,6 +124,21 @@ class WorkflowRuntime:
             clock=self._components.clock,
             stale_after=timedelta(seconds=stale_after_seconds),
         ).find_stale_candidates()
+
+    def reconcile_run(
+        self,
+        run_id: WorkflowRunId | str,
+        *,
+        stale_after_seconds: float = 300.0,
+    ) -> ReconciliationReport:
+        """Verify ambiguous external work without mutating persisted runtime state."""
+
+        return ReconciliationService(
+            metadata_store=self._components.metadata_store,
+            clock=self._components.clock,
+            verifier_registry=self._components.reconciliation_verifiers,
+            stale_after=timedelta(seconds=stale_after_seconds),
+        ).reconcile(WorkflowRunId(str(run_id)))
 
     def lineage(
         self,
