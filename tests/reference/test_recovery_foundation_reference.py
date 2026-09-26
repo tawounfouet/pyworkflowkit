@@ -153,7 +153,6 @@ def test_stale_candidate_without_ambiguous_work_is_structurally_resume_eligible(
         assert assessment.idempotency[0].idempotency_key == "task-run-eligible"
 
 
-
 def test_workflow_runtime_exposes_read_only_recovery_diagnostics() -> None:
     runtime = WorkflowRuntime()
     runtime.register("handlers:done", lambda: "done")
