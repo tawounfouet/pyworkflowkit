@@ -117,3 +117,44 @@ jobs:
         run: |
           python examples/00_hello_world.py > /tmp/pyworkflowkit-manifest.json
           python -c "import json; json.load(open('/tmp/pyworkflowkit-manifest.json', encoding='utf-8'))"
+
+
+  postgres:
+    name: PostgreSQL contract
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: pyworkflowkit
+          POSTGRES_PASSWORD: pyworkflowkit
+          POSTGRES_DB: pyworkflowkit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pyworkflowkit -d pyworkflowkit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PYWORKFLOWKIT_TEST_POSTGRES_DSN: postgresql+psycopg://pyworkflowkit:pyworkflowkit@127.0.0.1:5432/pyworkflowkit
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install PostgreSQL test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,postgres]"
+
+      - name: PostgreSQL integration contract
+        run: pytest tests/integration/test_postgres_metadata_store.py -q
