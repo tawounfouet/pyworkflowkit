@@ -163,7 +163,6 @@ def test_contract_task_output_checkpoint_round_trips_and_preserves_none(
         store.get_task_output_checkpoint(TaskRunId("missing"))
 
 
-
 def test_contract_retry_eligibility_round_trips(
     store: MetadataStore,
 ) -> None:
