@@ -1,4 +1,4 @@
-"""0.9.0rc2 development metadata consistency checks."""
+"""1.0.0 development metadata consistency checks."""
 
 from importlib.metadata import version
 
@@ -7,15 +7,15 @@ from typer.testing import CliRunner
 import pyworkflowkit
 from pyworkflowkit.cli import app
 
-EXPECTED_VERSION = "0.9.0rc2"
+EXPECTED_VERSION = "1.0.0"
 
 
-def test_package_metadata_and_public_version_match_development_version() -> None:
+def test_package_metadata_and_public_version_match_stable_release() -> None:
     assert version("pyworkflowkit") == EXPECTED_VERSION
     assert pyworkflowkit.__version__ == EXPECTED_VERSION
 
 
-def test_cli_version_matches_development_version() -> None:
+def test_cli_version_matches_stable_release() -> None:
     result = CliRunner().invoke(app, ["version"])
 
     assert result.exit_code == 0
