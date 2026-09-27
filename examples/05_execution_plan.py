@@ -36,8 +36,7 @@ print(
     json.dumps(
         {
             "groups": [
-                {"index": group.index, "tasks": list(group.task_ids)}
-                for group in inspection.groups
+                {"index": group.index, "tasks": list(group.task_ids)} for group in inspection.groups
             ],
             "task_order": list(inspection.task_order),
         },

@@ -40,9 +40,7 @@ print(
     json.dumps(
         {
             "leaves": sorted(str(task_id) for task_id in task_ids - depended_on),
-            "roots": sorted(
-                str(task.task_id) for task in definition.tasks if not task.depends_on
-            ),
+            "roots": sorted(str(task.task_id) for task in definition.tasks if not task.depends_on),
             "tasks": sorted(str(task_id) for task_id in task_ids),
         },
         sort_keys=True,

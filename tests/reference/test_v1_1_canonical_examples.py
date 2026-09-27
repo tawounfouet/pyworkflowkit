@@ -73,9 +73,7 @@ GUIDE_EXAMPLE_REFERENCES = {
     "20_EXTERNAL_WORKLOADS.md": ("examples/18_external_workload.py",),
     "21_CUSTOM_EXECUTOR.md": ("examples/20_custom_executor.py",),
     "23_CONTROL_PLANE.md": ("examples/21_control_plane.py",),
-    "24_PYINGESTKIT_INTEGRATION.md": (
-        "examples/integrations/pyingestkit/atomic_job.py",
-    ),
+    "24_PYINGESTKIT_INTEGRATION.md": ("examples/integrations/pyingestkit/atomic_job.py",),
     "27_PRODUCTION_PATTERNS.md": ("examples/complete/data_pipeline.py",),
     "99_COMPLETE_REFERENCE_APPLICATION.md": ("examples/complete/data_pipeline.py",),
 }

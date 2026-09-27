@@ -31,9 +31,7 @@ workflow_definition: dict[str, object] = {
 }
 
 inspection = WorkflowRuntimeProvider(WorkflowRuntime()).inspect_workflow(workflow_definition)
-parallel_groups = [
-    list(group.task_ids) for group in inspection.groups if len(group.task_ids) > 1
-]
+parallel_groups = [list(group.task_ids) for group in inspection.groups if len(group.task_ids) > 1]
 
 print(
     json.dumps(

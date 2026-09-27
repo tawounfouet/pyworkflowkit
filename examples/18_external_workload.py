@@ -45,9 +45,7 @@ lineage = runtime.lineage(definition, run.run_id)
 print(
     json.dumps(
         {
-            "external_reference_count": sum(
-                len(task.external_ref_ids) for task in lineage.tasks
-            ),
+            "external_reference_count": sum(len(task.external_ref_ids) for task in lineage.tasks),
             "status": run.status.value,
         },
         sort_keys=True,
