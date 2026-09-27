@@ -94,6 +94,8 @@ manifest
 
 This order narrows the failing layer before you reach for internal implementation details.
 
+Use the [canonical example index](../../examples/README.md) to reproduce concepts in isolation before debugging a larger application.
+
 ## Next chapter
 
 Continue with [27 — Production Patterns](27_PRODUCTION_PATTERNS.md).

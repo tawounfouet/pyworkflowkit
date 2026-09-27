@@ -98,7 +98,7 @@ Those values are run-specific. They do not mutate the workflow definition.
 
 ## Related example
 
-DX04 target: `examples/06_runtime.py`.
+Canonical companion: [`examples/06_runtime.py`](../../examples/06_runtime.py).
 
 ## Related notebook
 

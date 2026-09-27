@@ -75,9 +75,9 @@ silently coupling to internals.
 
 ## Related example
 
-Current repository example: `examples/03_ecosystem_plugin.py`.
+Canonical companion: [`examples/19_plugin.py`](../../examples/19_plugin.py).
 
-DX04 target: `examples/19_plugin.py`.
+The historical `examples/03_ecosystem_plugin.py` example remains available for compatibility.
 
 ## Next chapter
 

@@ -51,7 +51,7 @@ remains the embedded workflow runtime underneath it.
 
 ## Related example
 
-DX04 target: `examples/21_control_plane.py`.
+Canonical companion: [`examples/21_control_plane.py`](../../examples/21_control_plane.py).
 
 ## Next chapter
 

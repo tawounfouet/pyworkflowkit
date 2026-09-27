@@ -45,6 +45,10 @@ The external run reference preserves the PyIngestKit run identity and optional U
 The specialized adapter remains supported, while new foreign runtimes should generally
 target the generic `ExternalWorkload` contract described in chapter 20.
 
+## Related example
+
+Canonical integration companion: [`examples/integrations/pyingestkit/atomic_job.py`](../../examples/integrations/pyingestkit/atomic_job.py).
+
 ## Related notebook
 
 DX05 target: `17 - PyIngestKit Integration.ipynb`.

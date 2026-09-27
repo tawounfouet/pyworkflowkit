@@ -8,7 +8,7 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0a3` — Zero-to-Hero documentation architecture.
+> **Current development:** `1.1.0b1` — Canonical executable examples.
 > The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
@@ -96,7 +96,10 @@ The supported first-use path is documented in
 The historical `docs/guides/getting-started.md` path remains available as a compatibility
 redirect into this canonical learning journey.
 
-The minimal public-API example is executable:
+The canonical executable companion suite is indexed in
+[`examples/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/examples/README.md).
+
+Start with the minimal public-API example:
 
 ```bash
 python examples/00_hello_world.py

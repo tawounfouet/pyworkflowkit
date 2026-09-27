@@ -100,9 +100,12 @@ except PyWorkflowKitError as exc:
 
 ## Related example
 
-Current repository example: `examples/01_failure_and_retry.py`.
+Canonical companions:
 
-DX04 target: `examples/09_retry.py`.
+- [`examples/08_failure.py`](../../examples/08_failure.py)
+- [`examples/09_retry.py`](../../examples/09_retry.py)
+
+The historical `examples/01_failure_and_retry.py` example remains available for compatibility.
 
 ## Related notebook
 

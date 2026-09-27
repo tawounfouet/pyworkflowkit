@@ -118,11 +118,7 @@ pwk plan workflow:demo
 
 ## Related example
 
-DX04 target:
-
-```text
-examples/01_tasks_and_handlers.py
-```
+Canonical companion: [`examples/01_tasks_and_handlers.py`](../../examples/01_tasks_and_handlers.py).
 
 ## Related notebook
 

@@ -96,11 +96,7 @@ Validation failure occurs before a workload should be executed.
 
 ## Related example
 
-DX04 target:
-
-```text
-examples/02_workflow_definitions.py
-```
+Canonical companion: [`examples/02_workflow_definitions.py`](../../examples/02_workflow_definitions.py).
 
 ## Related notebook
 

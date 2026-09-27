@@ -101,9 +101,9 @@ pwk events <RUN_ID> --config pyworkflowkit.toml
 
 ## Related example
 
-Current repository example: `examples/02_sqlite_persistence.py`.
+Canonical companion: [`examples/12_sqlite.py`](../../examples/12_sqlite.py).
 
-DX04 target: `examples/12_sqlite.py`.
+The historical `examples/02_sqlite_persistence.py` example remains available for compatibility.
 
 ## Next chapter
 

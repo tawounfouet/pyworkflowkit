@@ -105,7 +105,7 @@ PyWorkflowKit deliberately supports the straightforward `handler()` and
 
 ## Related example
 
-DX04 target: `examples/07_run_context.py`.
+Canonical companion: [`examples/07_run_context.py`](../../examples/07_run_context.py).
 
 ## Related notebook
 

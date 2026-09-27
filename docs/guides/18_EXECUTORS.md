@@ -85,7 +85,12 @@ external CLI/program       → subprocess
 
 ## Related example
 
-DX04 examples 15–18 cover concurrency, timeout, cancellation, and external workloads.
+Canonical companions:
+
+- [`examples/15_concurrency.py`](../../examples/15_concurrency.py)
+- [`examples/16_timeout.py`](../../examples/16_timeout.py)
+- [`examples/17_cancellation.py`](../../examples/17_cancellation.py)
+- [`examples/18_external_workload.py`](../../examples/18_external_workload.py)
 
 ## Related notebook
 

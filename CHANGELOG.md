@@ -18,6 +18,38 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0b1 - 2026-09-28
+
+### Added
+
+- Canonical executable example index under `examples/README.md`.
+- Numbered example suite `00_hello_world.py` through `21_control_plane.py`.
+- Atomic PyIngestKit integration example and complete durable data-pipeline reference application.
+- DX04 acceptance that launches every canonical example in a clean Python process and validates JSON output.
+- Release note `docs/releases/1.1.0b1.md`.
+
+### Changed
+
+- The 1.1 development line moves from alpha documentation architecture to beta executable learning artifacts.
+- Canonical examples use frozen public facades instead of internal runtime imports.
+- PostgreSQL and PyIngestKit examples clearly separate optional infrastructure from core smoke execution.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- No runtime security contract changes.
+
 ## 1.1.0a3 - 2026-09-27
 
 ### Added
