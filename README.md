@@ -8,7 +8,7 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0a2` — Developer Experience with the canonical `pwk` CLI and Rich human rendering.
+> **Current development:** `1.1.0a3` — Zero-to-Hero documentation architecture.
 > The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
@@ -91,7 +91,7 @@ python -m pip install "pyworkflowkit[postgres]"
 ## Start here
 
 The supported first-use path is documented in
-[`docs/guides/getting-started.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/getting-started.md).
+[`docs/guides/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/README.md).
 
 The minimal public-API example is executable:
 
