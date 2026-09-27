@@ -128,6 +128,22 @@ def test_rq02_only_facade_reexported_exceptions_are_1_0_stable() -> None:
 
 
 def test_rq02_internal_module_prefixes_do_not_overlap_frozen_facades() -> None:
+    assert INTERNAL_MODULE_PREFIXES == (
+        "pyworkflowkit.adapters",
+        "pyworkflowkit.application",
+        "pyworkflowkit.cli",
+        "pyworkflowkit.cli_contract",
+        "pyworkflowkit.compatibility",
+        "pyworkflowkit.config",
+        "pyworkflowkit.contracts",
+        "pyworkflowkit.declarative",
+        "pyworkflowkit.domain",
+        "pyworkflowkit.errors",
+        "pyworkflowkit.migrations",
+        "pyworkflowkit.ports",
+        "pyworkflowkit.release_contract",
+    )
+
     for module_name in PUBLIC_API_SURFACES:
         assert all(
             module_name != prefix and not module_name.startswith(f"{prefix}.")
