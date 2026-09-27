@@ -681,6 +681,19 @@ class PluginLoadError(PluginError):
         super().__init__(f"Plugin '{plugin_name}' failed to load: {reason}.")
 
 
+class ControlPlaneProviderError(PyWorkflowKitError):
+    """Base class for control-plane provider contract failures."""
+
+
+class ControlPlaneCapabilityError(ControlPlaneProviderError):
+    """Raised when a provider operation is explicitly unsupported."""
+
+    def __init__(self, *, operation: str, reason: str) -> None:
+        self.operation = operation
+        self.reason = reason
+        super().__init__(f"Control-plane operation '{operation}' is unsupported: {reason}.")
+
+
 class DomainError(PyWorkflowKitError):
     """Base class for runtime domain-invariant violations."""
 
@@ -734,6 +747,8 @@ __all__ = [
     "CapacityError",
     "CapacityInvariantError",
     "CapacityReleaseError",
+    "ControlPlaneCapabilityError",
+    "ControlPlaneProviderError",
     "CycleDetectedError",
     "DefinitionError",
     "DomainError",
