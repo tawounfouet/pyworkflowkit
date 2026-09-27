@@ -21,8 +21,7 @@ from pyworkflowkit import BackoffStrategy, RetryPolicy, task
         retryable_error_categories=frozenset({"RuntimeError"}),
     )
 )
-def unstable() -> str:
-    ...
+def unstable() -> str: ...
 ```
 
 `max_attempts` includes the initial attempt. A value of `2` therefore permits one
