@@ -100,7 +100,7 @@ This avoids states such as “task succeeded but the success event is missing”
 
 ## Related example
 
-DX04 persistence examples begin with `examples/12_sqlite.py`.
+Canonical persistence companion: [`examples/12_sqlite.py`](../../examples/12_sqlite.py).
 
 ## Related notebook
 
