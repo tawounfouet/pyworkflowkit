@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from importlib import import_module
 from pathlib import Path
 from typing import Annotated, Any
@@ -20,6 +20,16 @@ from pyworkflowkit.application.planning import (
 )
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.cli_contract import CLI_EXIT_CODES
+from pyworkflowkit.cli_rendering import (
+    render_doctor,
+    render_error,
+    render_events,
+    render_manifest,
+    render_plan,
+    render_plugins,
+    render_run,
+    render_validation,
+)
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.declarative import WorkflowBuilder
 from pyworkflowkit.domain.definitions import WorkflowDefinition
@@ -73,11 +83,7 @@ def validate(
         "workflow_version": definition.version,
         "task_count": len(definition.tasks),
     }
-    _emit(
-        payload,
-        json_output=json_output,
-        human=f"VALID {definition.workflow_id}@{definition.version}",
-    )
+    _emit(payload, json_output=json_output, renderer=render_validation)
 
 
 @app.command()
@@ -104,16 +110,7 @@ def plan(
         "workflow_version": execution_plan.workflow_version,
         "groups": groups,
     }
-    human = "\n".join(
-        [
-            f"Workflow {execution_plan.workflow_id}@{execution_plan.workflow_version}",
-            *[
-                f"[{group.index}] " + ", ".join(str(task_id) for task_id in group.task_ids)
-                for group in execution_plan.groups
-            ],
-        ]
-    )
-    _emit(payload, json_output=json_output, human=human)
+    _emit(payload, json_output=json_output, renderer=render_plan)
 
 
 @app.command("run")
@@ -145,7 +142,7 @@ def run_command(
     _emit(
         payload,
         json_output=json_output,
-        human=f"{result.status.value} run={result.run_id} workflow={result.workflow_id}",
+        renderer=lambda value: render_run(value, title="Workflow Run"),
     )
     if result.status is not WorkflowRunStatus.SUCCEEDED:
         raise typer.Exit(RUN_FAILURE_EXIT)
@@ -173,10 +170,7 @@ def inspect(
     _emit(
         payload,
         json_output=json_output,
-        human=(
-            f"run={run.run_id} workflow={run.workflow_id}@{run.workflow_version} "
-            f"status={run.status.value}"
-        ),
+        renderer=lambda value: render_run(value, title="Persisted Workflow Run"),
     )
 
 
@@ -199,8 +193,7 @@ def events(
         _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
 
     payload = {"run_id": run_id, "events": [_event_payload(event) for event in values]}
-    human = "\n".join(f"{event.event_sequence}: {event.event_type.value}" for event in values)
-    _emit(payload, json_output=json_output, human=human or "<no events>")
+    _emit(payload, json_output=json_output, renderer=render_events)
 
 
 @app.command()
@@ -225,9 +218,15 @@ def manifest(
     if json_output:
         typer.echo(serializer.to_json(value))
     else:
-        typer.echo(
-            f"run={value.run_id} workflow={value.workflow_id}@{value.workflow_version} "
-            f"status={value.status} tasks={len(value.tasks)} events={len(value.events)}"
+        render_manifest(
+            {
+                "run_id": str(value.run_id),
+                "workflow_id": str(value.workflow_id),
+                "workflow_version": value.workflow_version,
+                "status": value.status,
+                "task_count": len(value.tasks),
+                "event_count": len(value.events),
+            }
         )
 
 
@@ -255,10 +254,7 @@ def plugins_command(
         "count": len(plugins_payload),
         "plugins": plugins_payload,
     }
-    human = "\n".join(
-        f"{plugin.plugin_type.value}:{plugin.name} -> {plugin.value}" for plugin in discovered
-    )
-    _emit(payload, json_output=json_output, human=human or "<no plugins discovered>")
+    _emit(payload, json_output=json_output, renderer=render_plugins)
 
 
 @app.command()
@@ -313,13 +309,7 @@ def doctor(
         "plugin_api_version": PLUGIN_API_VERSION,
         "plugins": result_payload,
     }
-    human_lines = ["OK" if healthy else "FAILED"]
-    human_lines.extend(
-        f"{item['type']}:{item['name']} {item['status']}"
-        + (f" - {item['error']}" if item["error"] else "")
-        for item in result_payload
-    )
-    _emit(payload, json_output=json_output, human="\n".join(human_lines))
+    _emit(payload, json_output=json_output, renderer=render_doctor)
 
     if not healthy:
         raise typer.Exit(DOCTOR_FAILURE_EXIT)
@@ -405,11 +395,16 @@ def _event_payload(event: RuntimeEvent) -> dict[str, object]:
     }
 
 
-def _emit(payload: Mapping[str, object], *, json_output: bool, human: str) -> None:
+def _emit(
+    payload: Mapping[str, object],
+    *,
+    json_output: bool,
+    renderer: Callable[[Mapping[str, object]], None],
+) -> None:
     if json_output:
         typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str))
     else:
-        typer.echo(human)
+        renderer(payload)
 
 
 def _fail(message: str, *, code: int, json_output: bool) -> None:
@@ -423,7 +418,7 @@ def _fail(message: str, *, code: int, json_output: bool) -> None:
             err=True,
         )
     else:
-        typer.echo(f"ERROR: {message}", err=True)
+        render_error(message)
     raise typer.Exit(code)
 
 
