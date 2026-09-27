@@ -72,7 +72,7 @@ runtime.
 
 ## Related example
 
-DX04 target: `examples/18_external_workload.py`.
+Canonical companion: [`examples/18_external_workload.py`](../../examples/18_external_workload.py).
 
 ## Related notebook
 
