@@ -35,7 +35,7 @@ def test_rq03_pep561_marker_is_packaged() -> None:
 
 
 def test_rq03_all_frozen_facades_are_typing_targets() -> None:
-    assert TYPING_FACADES == tuple(sorted(PUBLIC_API_SURFACES))
+    assert tuple(sorted(PUBLIC_API_SURFACES)) == TYPING_FACADES
 
 
 def test_rq03_ecosystem_protocol_support_types_are_public() -> None:
