@@ -165,7 +165,7 @@ with different responsibilities.
 examples/00_hello_world.py
 ```
 
-DX04 will provide the canonical `01_tasks_and_handlers.py` companion.
+Canonical companion: [`examples/01_tasks_and_handlers.py`](../../examples/01_tasks_and_handlers.py).
 
 ## Related notebook
 
