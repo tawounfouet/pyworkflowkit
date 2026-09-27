@@ -104,7 +104,7 @@ Canonical companion: [`examples/14_configuration.py`](../../examples/14_configur
 
 ## Related notebook
 
-DX05 target: `12 - Configuration.ipynb`.
+Canonical notebook: [`12 - Configuration.ipynb`](<../../notebooks/12 - Configuration.ipynb>).
 
 ## Next chapter
 

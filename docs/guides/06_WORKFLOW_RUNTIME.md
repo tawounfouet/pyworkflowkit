@@ -102,7 +102,7 @@ Canonical companion: [`examples/06_runtime.py`](../../examples/06_runtime.py).
 
 ## Related notebook
 
-DX05 target: `06 - Workflow Runtime.ipynb`.
+Canonical notebook: [`06 - Workflow Runtime.ipynb`](<../../notebooks/06 - Workflow Runtime.ipynb>).
 
 ## Next chapter
 

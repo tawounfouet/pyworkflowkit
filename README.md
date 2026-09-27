@@ -8,7 +8,7 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0b1` — Canonical executable examples.
+> **Current development:** `1.1.0b2` — Interactive notebooks.
 > The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
@@ -98,6 +98,9 @@ redirect into this canonical learning journey.
 
 The canonical executable companion suite is indexed in
 [`examples/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/examples/README.md).
+
+The interactive exploration path is indexed in
+[`notebooks/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/notebooks/README.md).
 
 Start with the minimal public-API example:
 

@@ -100,11 +100,7 @@ Canonical companion: [`examples/02_workflow_definitions.py`](../../examples/02_w
 
 ## Related notebook
 
-DX05 target:
-
-```text
-03 - Workflow Definitions.ipynb
-```
+Canonical notebook: [`03 - Workflow Definitions.ipynb`](<../../notebooks/03 - Workflow Definitions.ipynb>).
 
 ## Next chapter
 

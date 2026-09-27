@@ -104,7 +104,7 @@ Canonical persistence companion: [`examples/12_sqlite.py`](../../examples/12_sql
 
 ## Related notebook
 
-DX05 target: `11 - SQLite Persistence.ipynb`.
+Canonical notebook: [`11 - SQLite Persistence.ipynb`](<../../notebooks/11 - SQLite Persistence.ipynb>).
 
 ## Next chapter
 

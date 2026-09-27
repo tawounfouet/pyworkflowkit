@@ -127,11 +127,7 @@ Canonical companions:
 
 ## Related notebook
 
-DX05 target:
-
-```text
-04 - Dependencies and DAG.ipynb
-```
+Canonical notebook: [`04 - Dependencies and DAG.ipynb`](<../../notebooks/04 - Dependencies and DAG.ipynb>).
 
 ## Next chapter
 

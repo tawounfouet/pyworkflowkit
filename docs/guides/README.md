@@ -91,7 +91,7 @@ Each major chapter aims to provide:
 10. a related notebook;
 11. the next chapter.
 
-Executable companions now live under [`examples/`](../../examples/README.md) as DX04. Interactive notebook companions remain the separate DX05 roadmap lot.
+Executable companions live under [`examples/`](../../examples/README.md) and interactive exploration companions live under [`notebooks/`](../../notebooks/README.md).
 
 ## Product boundary
 

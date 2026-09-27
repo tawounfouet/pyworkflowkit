@@ -94,7 +94,7 @@ Canonical companion: [`examples/05_execution_plan.py`](../../examples/05_executi
 
 ## Related notebook
 
-DX05 target: `05 - Execution Planning.ipynb`.
+Canonical notebook: [`05 - Execution Planning.ipynb`](<../../notebooks/05 - Execution Planning.ipynb>).
 
 ## Next chapter
 

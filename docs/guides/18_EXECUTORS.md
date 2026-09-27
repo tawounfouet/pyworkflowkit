@@ -94,7 +94,7 @@ Canonical companions:
 
 ## Related notebook
 
-DX05 target: `14 - Executors.ipynb`.
+Canonical notebook: [`14 - Executors.ipynb`](<../../notebooks/14 - Executors.ipynb>).
 
 ## Next chapter
 

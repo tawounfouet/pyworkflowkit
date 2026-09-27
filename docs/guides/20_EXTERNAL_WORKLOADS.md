@@ -76,7 +76,7 @@ Canonical companion: [`examples/18_external_workload.py`](../../examples/18_exte
 
 ## Related notebook
 
-DX05 target: `16 - External Workloads.ipynb`.
+Canonical notebook: [`16 - External Workloads.ipynb`](<../../notebooks/16 - External Workloads.ipynb>).
 
 ## Next chapter
 

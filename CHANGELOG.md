@@ -18,6 +18,37 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0b2 - 2026-09-28
+
+### Added
+
+- Canonical interactive notebook index under `notebooks/README.md`.
+- Nineteen Notebook v4 learning artifacts from environment setup through the complete workflow lab.
+- DX05 acceptance for notebook topology, Notebook v4 structure, clean saved state, public import boundaries, guide/script references, and execution of every code cell.
+- Release note `docs/releases/1.1.0b2.md`.
+
+### Changed
+
+- The 1.1 beta learning path now includes an interactive exploration surface alongside guides and executable scripts.
+- Notebook code remains ordinary Python so CI can execute the learning path without adding Jupyter to PyWorkflowKit runtime dependencies.
+- Zero-to-Hero guides now link to their canonical notebook companions where relevant.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- No runtime security contract changes.
+
 ## 1.1.0b1 - 2026-09-28
 
 ### Added
