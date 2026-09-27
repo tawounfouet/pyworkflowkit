@@ -207,12 +207,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build pytest dist/*.whl
 
-      - name: Build ecosystem template
-        run: python -m build --wheel --outdir /tmp/ecosystem-dist ecosystem-template
+      - name: Build compatibility fixtures
+        run: |
+          python -m build --wheel --outdir /tmp/ecosystem-dist ecosystem-template
+          python -m build --wheel --outdir /tmp/executor-dist qualification-integrations/reference-executor
 
-      - name: Install ecosystem template with normal dependency resolution
+      - name: Install compatibility fixtures with normal dependency resolution
         run: |
           python -m pip install /tmp/ecosystem-dist/*.whl
+          python -m pip install /tmp/executor-dist/*.whl
           python -m pip check
 
       - name: Qualify RQ-02 against installed wheel
