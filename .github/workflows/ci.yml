@@ -203,6 +203,52 @@ jobs:
         run: pytest tests/reference/test_v0_9_compatibility_deprecation.py -q
 
 
+  static-typing:
+    name: Static typing (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Verify PEP 561 marker
+        run: |
+          python -c "from importlib.resources import files; assert files('pyworkflowkit').joinpath('py.typed').is_file()"
+
+      - name: Qualify RQ-03 reference contract
+        run: pytest tests/reference/test_v0_9_typing_static_contracts.py -q
+
+      - name: Type-check public consumer
+        run: |
+          mypy --strict --python-version "${{ matrix.python-version }}" typing-fixtures/public_consumer.py
+          mypy --strict --python-version "${{ matrix.python-version }}" ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py
+          mypy --strict --python-version "${{ matrix.python-version }}" qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py
+          mypy --strict --python-version "${{ matrix.python-version }}" reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py
+
+      - name: Reject unsupported task handler signature
+        shell: bash
+        run: |
+          if mypy --strict --python-version "${{ matrix.python-version }}" typing-fixtures/invalid_task_handler.py; then
+            echo "invalid two-argument @task handler unexpectedly passed static typing"
+            exit 1
+          fi
+
+
   transverse-v0-8:
     name: 0.8 transverse qualification
     runs-on: ubuntu-latest
