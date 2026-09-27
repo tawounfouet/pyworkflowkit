@@ -180,6 +180,29 @@ jobs:
         run: pytest tests/reference/test_v0_9_public_api_freeze.py -q
 
 
+  compatibility-deprecation:
+    name: 1.0 compatibility & deprecation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Qualify RQ-02 compatibility contract
+        run: pytest tests/reference/test_v0_9_compatibility_deprecation.py -q
+
+
   transverse-v0-8:
     name: 0.8 transverse qualification
     runs-on: ubuntu-latest
