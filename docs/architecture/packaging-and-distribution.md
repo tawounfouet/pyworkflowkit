@@ -188,11 +188,12 @@ resolution and must satisfy:
 
 ```text
 pip check
-pyworkflow version
+pwk version
 pyworkflowkit version
+pyworkflow version
 ```
 
-Both console names must report the current package version.
+All three console names must report the current package version.
 
 ## Extras installation
 

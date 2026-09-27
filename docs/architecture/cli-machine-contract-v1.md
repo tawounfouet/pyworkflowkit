@@ -42,11 +42,12 @@ doctor
 version
 ~~~
 
-Both console entry points remain aliases of the same application:
+All console entry points resolve to the same application. `pwk` is the canonical short command:
 
 ~~~text
-pyworkflow
+pwk
 pyworkflowkit
+pyworkflow
 ~~~
 
 ## Exit codes

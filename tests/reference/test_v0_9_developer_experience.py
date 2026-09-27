@@ -73,7 +73,9 @@ def test_rq04_readme_points_to_getting_started_path() -> None:
 
     assert "docs/guides/getting-started.md" in readme
     assert "examples/00_hello_world.py" in readme
-    assert "pyworkflow validate" in readme
+    assert "pwk validate" in readme
+    assert "pyworkflowkit" in readme
+    assert "pyworkflow" in readme
 
 
 def test_rq04_is_stable_compatibility_evidence() -> None:

@@ -47,6 +47,7 @@ class CompatibilitySubject:
 
 CONSOLE_SCRIPT_ALIASES: Mapping[str, str] = MappingProxyType(
     {
+        "pwk": "pyworkflowkit.cli:main",
         "pyworkflow": "pyworkflowkit.cli:main",
         "pyworkflowkit": "pyworkflowkit.cli:main",
     }

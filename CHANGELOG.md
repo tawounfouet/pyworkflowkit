@@ -18,6 +18,37 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0a1 - 2026-09-27
+
+### Added
+
+- Canonical short CLI entry point `pwk`.
+- Installed console-script parity qualification across `pwk`, `pyworkflowkit`, and `pyworkflow`.
+- DX01 release qualification for version, JSON output, command behavior, and exit-code parity.
+
+### Changed
+
+- Beginner-facing CLI documentation now uses `pwk` by default.
+- The frozen 1.0 release-candidate qualification is treated as a historical 1.x compatibility baseline instead of requiring the current package version to remain exactly `1.0.0`.
+- CI and packaging qualification derive the current package version from release metadata instead of hard-coding `1.0.0`.
+- Development Status classifier moves to Alpha for the 1.1 pre-release line.
+
+### Deprecated
+
+- No CLI alias is deprecated. `pyworkflowkit` and `pyworkflow` remain supported.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Future 1.x releases are no longer blocked by 1.0-only package-version assertions in CI qualification.
+
+### Security
+
+- No security contract changes.
+
 ## 1.0.0 - 2026-09-27
 
 ### Added

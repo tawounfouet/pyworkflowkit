@@ -13,10 +13,10 @@ python -m pip install pyworkflowkit
 Confirm the installation:
 
 ```bash
-pyworkflow version
+pwk version
 ```
 
-The `pyworkflowkit` command is a supported alias of `pyworkflow`.
+`pwk` is the canonical CLI command. `pyworkflowkit` and `pyworkflow` remain supported compatibility aliases.
 
 ## 2. Define tasks and a workflow
 

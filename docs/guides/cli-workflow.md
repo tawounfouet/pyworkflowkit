@@ -2,7 +2,7 @@
 
 The CLI is intended for local validation, planning, execution, and inspection.
 
-The canonical console command is `pyworkflow`. `pyworkflowkit` is a supported alias.
+The canonical console command is `pwk`. `pyworkflowkit` and `pyworkflow` remain supported compatibility aliases.
 
 ## Workflow target format
 
@@ -21,13 +21,13 @@ examples.getting_started_workflow:demo
 ## Validate
 
 ```bash
-pyworkflow validate examples.getting_started_workflow:demo --json
+pwk validate examples.getting_started_workflow:demo --json
 ```
 
 ## Plan
 
 ```bash
-pyworkflow plan examples.getting_started_workflow:demo --json
+pwk plan examples.getting_started_workflow:demo --json
 ```
 
 ## Configure SQLite persistence
@@ -50,7 +50,7 @@ sqlite_wal = false
 ## Run
 
 ```bash
-pyworkflow run \
+pwk run \
   examples.getting_started_workflow:demo \
   --config pyworkflowkit.toml \
   --json
@@ -63,9 +63,9 @@ The JSON result contains the `run_id`.
 Replace `<RUN_ID>` with the identifier returned by `run`:
 
 ```bash
-pyworkflow inspect <RUN_ID> --config pyworkflowkit.toml --json
-pyworkflow events <RUN_ID> --config pyworkflowkit.toml --json
-pyworkflow manifest \
+pwk inspect <RUN_ID> --config pyworkflowkit.toml --json
+pwk events <RUN_ID> --config pyworkflowkit.toml --json
+pwk manifest \
   examples.getting_started_workflow:demo \
   <RUN_ID> \
   --config pyworkflowkit.toml \
@@ -77,13 +77,13 @@ pyworkflow manifest \
 List discovered plugin entry points without loading them:
 
 ```bash
-pyworkflow plugins --json
+pwk plugins --json
 ```
 
 Check plugin compatibility:
 
 ```bash
-pyworkflow doctor --json
+pwk doctor --json
 ```
 
 ## Machine-facing behavior

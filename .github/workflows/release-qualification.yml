@@ -396,8 +396,10 @@ jobs:
           /tmp/rq05-core/bin/python -m pip install --upgrade pip
           /tmp/rq05-core/bin/python -m pip install "$wheel"
           /tmp/rq05-core/bin/python -m pip check
-          test "$(/tmp/rq05-core/bin/pyworkflow version)" = "1.0.0"
-          test "$(/tmp/rq05-core/bin/pyworkflowkit version)" = "1.0.0"
+          expected_version=$(python scripts/verify_release_metadata.py --print-version)
+          test "$(/tmp/rq05-core/bin/pwk version)" = "$expected_version"
+          test "$(/tmp/rq05-core/bin/pyworkflow version)" = "$expected_version"
+          test "$(/tmp/rq05-core/bin/pyworkflowkit version)" = "$expected_version"
 
       - name: Install published extras
         shell: bash
@@ -429,8 +431,11 @@ jobs:
           /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0'"
           /tmp/rq05-upgrade/bin/python -m pip install --upgrade --no-deps "$current_wheel"
           /tmp/rq05-upgrade/bin/python -m pip check
-          /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '1.0.0'"
-          test "$(/tmp/rq05-upgrade/bin/pyworkflow version)" = "1.0.0"
+          expected_version=$(python scripts/verify_release_metadata.py --print-version)
+          /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '$expected_version'"
+          test "$(/tmp/rq05-upgrade/bin/pwk version)" = "$expected_version"
+          test "$(/tmp/rq05-upgrade/bin/pyworkflow version)" = "$expected_version"
+          test "$(/tmp/rq05-upgrade/bin/pyworkflowkit version)" = "$expected_version"
 
       - name: Qualify RQ-05 contract against installed wheel
         shell: bash

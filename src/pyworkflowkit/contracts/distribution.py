@@ -23,6 +23,7 @@ STABLE_UPGRADE_BASELINE_COMMIT = "".join(_STABLE_UPGRADE_BASELINE_COMMIT_PARTS)
 DISTRIBUTION_ARTIFACTS: tuple[str, ...] = ("wheel", "sdist")
 CONSOLE_SCRIPTS: Mapping[str, str] = MappingProxyType(
     {
+        "pwk": "pyworkflowkit.cli:main",
         "pyworkflow": "pyworkflowkit.cli:main",
         "pyworkflowkit": "pyworkflowkit.cli:main",
     }

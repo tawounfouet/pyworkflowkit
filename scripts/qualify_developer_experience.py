@@ -25,6 +25,17 @@ def _run(*args: str, cwd: Path = ROOT) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _run_unchecked(*args: str, cwd: Path = ROOT) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args,
+        cwd=cwd,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=os.environ.copy(),
+    )
+
+
 def _json_stdout(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
     value = json.loads(result.stdout)
     if not isinstance(value, dict):
@@ -68,15 +79,39 @@ def _qualify_examples() -> dict[str, object]:
 def _qualify_cli() -> dict[str, object]:
     target = "examples.getting_started_workflow:demo"
 
-    version = _run("pyworkflow", "version").stdout.strip()
-    alias_version = _run("pyworkflowkit", "version").stdout.strip()
+    aliases = ("pwk", "pyworkflowkit", "pyworkflow")
+    version_results = {alias: _run(alias, "version") for alias in aliases}
+    version = version_results["pwk"].stdout.strip()
     assert version
-    assert alias_version == version
+    for result in version_results.values():
+        assert result.stdout.strip() == version
+        assert result.stderr == ""
 
-    validated = _json_stdout(_run("pyworkflow", "validate", target, "--json"))
+    for args in (
+        ("validate", target, "--json"),
+        ("plan", target, "--json"),
+    ):
+        results = [_run(alias, *args) for alias in aliases]
+        canonical = results[0]
+        for result in results[1:]:
+            assert result.returncode == canonical.returncode == 0
+            assert result.stdout == canonical.stdout
+            assert result.stderr == canonical.stderr
+
+    invalid_results = [
+        _run_unchecked(alias, "validate", "invalid-target", "--json") for alias in aliases
+    ]
+    canonical_invalid = invalid_results[0]
+    assert canonical_invalid.returncode == 2
+    for result in invalid_results[1:]:
+        assert result.returncode == canonical_invalid.returncode
+        assert result.stdout == canonical_invalid.stdout
+        assert result.stderr == canonical_invalid.stderr
+
+    validated = _json_stdout(_run("pwk", "validate", target, "--json"))
     assert validated["valid"] is True
 
-    planned = _json_stdout(_run("pyworkflow", "plan", target, "--json"))
+    planned = _json_stdout(_run("pwk", "plan", target, "--json"))
     assert planned["groups"] == [
         {"index": 0, "tasks": ["fetch"]},
         {"index": 1, "tasks": ["publish"]},
@@ -98,7 +133,7 @@ def _qualify_cli() -> dict[str, object]:
 
         executed = _json_stdout(
             _run(
-                "pyworkflow",
+                "pwk",
                 "run",
                 target,
                 "--config",
@@ -109,19 +144,15 @@ def _qualify_cli() -> dict[str, object]:
         assert executed["status"] == "SUCCEEDED"
         run_id = str(executed["run_id"])
 
-        inspected = _json_stdout(
-            _run("pyworkflow", "inspect", run_id, "--config", str(config), "--json")
-        )
+        inspected = _json_stdout(_run("pwk", "inspect", run_id, "--config", str(config), "--json"))
         assert inspected["status"] == "SUCCEEDED"
 
-        events = _json_stdout(
-            _run("pyworkflow", "events", run_id, "--config", str(config), "--json")
-        )
+        events = _json_stdout(_run("pwk", "events", run_id, "--config", str(config), "--json"))
         assert events["events"]
 
         manifest = _json_stdout(
             _run(
-                "pyworkflow",
+                "pwk",
                 "manifest",
                 target,
                 run_id,
@@ -134,6 +165,9 @@ def _qualify_cli() -> dict[str, object]:
 
     return {
         "version": version,
+        "canonical_cli": "pwk",
+        "aliases": list(aliases),
+        "alias_parity": True,
         "validated": True,
         "planned_groups": planned["groups"],
         "status": "SUCCEEDED",
