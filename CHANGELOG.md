@@ -18,6 +18,36 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0rc2 - 2026-09-27
+
+### Added
+
+- Second 1.0 release candidate qualification after the stable-promotion compatibility audit.
+- Full RQ-06 requalification for the corrected Ecosystem SDK v1 runtime window.
+
+### Changed
+
+- Ecosystem SDK v1 compatibility series expands from `0.8-0.9` to `0.8-1.x`.
+- Ecosystem SDK v1 maximum exclusive runtime version expands from `1.0` to `2.0`.
+- Reference/template/qualification integration package ceilings expand from `<1.0` to `<2.0`.
+- Release-candidate identity advances from `0.9.0rc1` to `0.9.0rc2`.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No runtime capability is removed.
+
+### Fixed
+
+- The intended stable `1.0.0` runtime is no longer excluded by the Ecosystem SDK v1 compatibility contract or reference integration dependency ranges.
+
+### Security
+
+- RC2 inherits the complete RQ-06 security qualification corpus.
+
 ## 0.9.0rc1 - 2026-09-27
 
 ### Added
