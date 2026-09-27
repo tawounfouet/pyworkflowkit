@@ -61,8 +61,19 @@ production patterns
 | [13](13_POSTGRESQL_PERSISTENCE.md) | PostgreSQL persistence | Available |
 | [14](14_CONFIGURATION.md) | Configuration | Available |
 | [15](15_CLI_ZERO_TO_HERO.md) | CLI Zero-to-Hero | Available |
-| 16–27 | Advanced runtime, integrations and production patterns | Planned in DX03 |
-| 99 | Complete reference application | Planned in DX03 |
+| [16](16_CONCURRENCY.md) | Concurrency | Available |
+| [17](17_TIMEOUTS_AND_CANCELLATION.md) | Timeouts and cancellation | Available |
+| [18](18_EXECUTORS.md) | Executors | Available |
+| [19](19_PLUGINS_AND_ECOSYSTEM.md) | Plugins and ecosystem | Available |
+| [20](20_EXTERNAL_WORKLOADS.md) | External workloads | Available |
+| [21](21_CUSTOM_EXECUTOR.md) | Custom executor | Available |
+| [22](22_CUSTOM_METADATA_STORE.md) | Custom MetadataStore | Available |
+| [23](23_CONTROL_PLANE.md) | Control plane | Available |
+| [24](24_PYINGESTKIT_INTEGRATION.md) | PyIngestKit integration | Available |
+| [25](25_TESTING_WORKFLOWS.md) | Testing workflows | Available |
+| [26](26_DEBUGGING_AND_TROUBLESHOOTING.md) | Debugging and troubleshooting | Available |
+| [27](27_PRODUCTION_PATTERNS.md) | Production patterns | Available |
+| [99](99_COMPLETE_REFERENCE_APPLICATION.md) | Complete reference application | Available |
 
 ## Guide contract
 
