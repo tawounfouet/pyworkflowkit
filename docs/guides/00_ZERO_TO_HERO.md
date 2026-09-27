@@ -149,17 +149,11 @@ RunManifest
 
 ## Related executable example
 
-Current repository reference:
-
-```text
-examples/00_hello_world.py
-```
-
-The complete canonical example set is delivered by DX04.
+Canonical companion: [`examples/00_hello_world.py`](../../examples/00_hello_world.py).
 
 ## Related notebook
 
-The notebook learning path is delivered by DX05.
+Canonical companion: [`00 - Environment and Setup.ipynb`](<../../notebooks/00 - Environment and Setup.ipynb>).
 
 ## Next chapter
 

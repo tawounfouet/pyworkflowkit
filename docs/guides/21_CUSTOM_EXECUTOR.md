@@ -63,6 +63,11 @@ plugin, the ecosystem conformance checks.
 
 Canonical companion: [`examples/20_custom_executor.py`](../../examples/20_custom_executor.py).
 
+## Related notebook
+
+Use [`14 - Executors.ipynb`](<../../notebooks/14 - Executors.ipynb>) to inspect executor
+capabilities interactively before implementing a custom executor.
+
 ## Next chapter
 
 Continue with [22 — Custom Metadata Store](22_CUSTOM_METADATA_STORE.md).

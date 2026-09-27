@@ -228,3 +228,92 @@ built-wheel Release Qualification gate is green
 ## Next
 
 RQ-05 — Packaging & Distribution.
+
+---
+
+# Developer Experience Contract v2 — 1.1.0
+
+DX06 extends the same internal contract module without rewriting the stable 1.0 contract.
+
+The historical contract remains:
+
+```python
+DX_CONTRACT_VERSION = "1"
+DX_TARGET_RELEASE = "1.0.0"
+```
+
+The 1.1 cross-surface contract adds:
+
+```python
+DX_V2_CONTRACT_VERSION = "2"
+DX_V2_TARGET_RELEASE = "1.1.0"
+```
+
+## v2 scope
+
+Developer Experience Contract v2 records and qualifies:
+
+```text
+CLI identity + aliases
+CLI JSON machine behavior
+Rich human rendering
+29 canonical guides
+24 canonical executable examples
+19 interactive notebooks
+cross-reference integrity
+first-use journey
+advanced-use journey
+```
+
+The contract remains internal release metadata. User-facing compatibility continues to be
+expressed through the frozen package, ecosystem, control-plane, integration, CLI, and schema
+contracts.
+
+## Cross-surface model
+
+A concept is complete only when the relevant surfaces agree:
+
+```text
+guide
+  ↓
+canonical .py example
+  ↓
+interactive notebook
+  ↓
+CLI where relevant
+  ↓
+reference acceptance
+```
+
+DX06 freezes 18 explicit concept mappings, including tasks, DAGs, planning, runtime,
+RunContext, retries, events, manifests, SQLite, configuration, concurrency, executors,
+plugins, external workloads, PyIngestKit, and the complete workflow lab.
+
+## Qualification strategy
+
+Regular CI executes:
+
+```text
+test_v1_1_cross_surface_dx.py
+qualify_v1_1_developer_experience.py --json
+```
+
+Release Qualification repeats the same v2 contract after installing the built wheel while
+reading the repository learning artifacts from the checked-out source tree.
+
+This proves that:
+
+```text
+repository learning surfaces
+        +
+built release artifact
+        +
+installed CLI entry points
+        ↓
+one coherent 1.1 Developer Experience
+```
+
+## Stable-promotion rule
+
+`1.1.0rc1` is the transverse Developer Experience candidate. Promotion to `1.1.0`
+must be metadata-only with no new runtime behavior and no new learning surface.

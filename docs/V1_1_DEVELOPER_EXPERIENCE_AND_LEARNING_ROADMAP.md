@@ -833,22 +833,21 @@ PyWorkflowKit `1.1.0` is complete when:
 | DX03 | 1.1.0a3 | Zero-to-Hero guides | Complete |
 | DX04 | 1.1.0b1 | Canonical Python examples | Complete |
 | DX05 | 1.1.0b2 | Interactive notebooks | Complete |
-| DX06 | 1.1.0rc1 | Transverse DX qualification | Planned |
+| DX06 | 1.1.0rc1 | Transverse DX qualification | Complete |
 | Stable | 1.1.0 | Developer Experience & Learning | Planned |
 
 ---
 
 ## 17. Immediate next action
 
-After DX05 is merged, the next implementation action is:
+After DX06 is merged and `1.1.0rc1` remains fully green, the next action is:
 
 ```text
-LOT-DX06
+1.1.0 stable promotion
     ↓
-1.1.0rc1
+same qualified implementation
     ↓
-Qualify the complete Developer Experience across CLI, guides, examples, notebooks, and tests
+version / release metadata only
 ```
 
-DX06 must freeze cross-surface terminology, references, first-use journeys, and advanced-use
-journeys before the stable `1.1.0` promotion.
+Stable promotion must not add runtime behavior or new Developer Experience surfaces.
