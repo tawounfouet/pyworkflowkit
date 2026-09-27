@@ -269,7 +269,7 @@ but telemetry identifiers never replace PyWorkflowKit domain identities.
 M49 is complete when telemetry failure cannot mutate workflow state, redaction remains
 effective, and at least one optional reference adapter proves the contract.
 
-## M50 — Reference Integration Packages — 0.8.0a4
+## M50 — Reference Integration Packages — 0.8.0a4 ✅
 
 ### Objective
 
@@ -619,7 +619,9 @@ M48 External References & Portable Evidence    ✅
     ↓
 M49 Observability Interoperability              ✅
     ↓
-M50 Reference Integration Packages              NEXT
+M50 Reference Integration Packages              ✅
+    ↓
+M51 Control-Plane Provider Contract              NEXT
 ~~~
 
 M47 defines the generic synchronous external-workload protocol, normalized result,
@@ -630,6 +632,10 @@ M48 freezes portable provider naming, absolute URI expectations, JSON metadata
 portability, manifest reference redaction, exact foreign identity preservation and
 deterministic reference lineage.
 
-M49 now adds committed-event telemetry projection, stable domain correlation,
+M49 adds committed-event telemetry projection, stable domain correlation,
 bounded-cardinality workflow/task metrics, redaction-preserving failure isolation and a
 dependency-free OpenTelemetry reference adapter.
+
+M50 now proves the ecosystem boundary through four independently built wheels using real
+Python entry points, explicit enablement, uninstall isolation, and a cross-project
+PyIngestKit 1.0.1 job executed behind one atomic ExternalWorkload.

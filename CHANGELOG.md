@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M50 independently packaged reference integration wheels for workload, event sink, metadata, and PyIngestKit boundaries.
+- Isolated-venv integration qualification covering wheel build, install, real entry-point discovery, explicit enablement, scenario execution, uninstall, disappearance from discovery, and core-only execution after removal.
+- Real PyIngestKit 1.0.1 cross-project qualification pinned to commit `a19264845e10769fb8fd8cd42c83193ae011f702`, executed as one atomic ExternalWorkload.
+- Dedicated Reference integration packages CI job and required Release Qualification gate.
 - M49 Observability Interoperability Contract v1 with vendor-neutral telemetry events, correlations, metrics, projections, backends, and RuntimeTelemetrySink.
 - Generic runtime counters/histograms for committed events, workflow/task lifecycle, retries, and durations with bounded-cardinality labels.
 - Dependency-free OpenTelemetryBackend accepting injected tracer/meter objects instead of making OpenTelemetry a core dependency.
@@ -24,6 +28,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The development line advances to `0.8.0a4`; ecosystem interoperability is now exercised through independently built and removable wheels.
+- Optional integrations remain explicitly installed/enabled by the application; PyWorkflowKit does not dynamically install plugins.
+- The PyIngestKit reference adapter now lives outside the core wheel and consumes the real PyIngestKit public runtime API during conformance.
 - The development line advances to `0.8.0a3`; telemetry remains a secondary projection over durable RuntimeEvent evidence.
 - Runtime identifiers are carried as event/span correlation attributes but are deliberately excluded from metric labels to avoid high-cardinality series.
 - OpenTelemetry interoperability is provided through injected API objects rather than a mandatory package dependency.

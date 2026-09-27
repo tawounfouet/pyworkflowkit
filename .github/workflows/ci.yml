@@ -148,14 +148,36 @@ jobs:
 
       - name: Development metadata smoke
         run: |
-          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.8.0a3'"
-          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0a3'"
-          pyworkflow version | grep -Fx "0.8.0a3"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.8.0a4'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0a4'"
+          pyworkflow version | grep -Fx "0.8.0a4"
 
       - name: Migration resources smoke
         run: |
           python -c "from importlib.resources import files; versions=files('pyworkflowkit.migrations.versions'); assert versions.joinpath('0001_runtime_metadata.py').is_file(); assert versions.joinpath('0002_task_output_checkpoints.py').is_file(); assert versions.joinpath('0003_retry_eligible_at.py').is_file()"
 
+
+  reference-integrations:
+    name: Reference integration packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build hatchling
+
+      - name: Build, install, discover, execute, uninstall
+        run: python scripts/qualify_reference_integrations.py
 
   acceptance:
     name: Reference acceptance

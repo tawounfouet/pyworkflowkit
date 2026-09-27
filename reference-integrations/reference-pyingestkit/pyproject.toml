@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyworkflowkit-reference-pyingestkit"
+version = "0.1.0"
+description = "Reference PyIngestKit adapter package for PyWorkflowKit."
+requires-python = ">=3.11"
+dependencies = ["pyworkflowkit>=0.8.0a4,<0.9"]
+
+[project.optional-dependencies]
+pyingestkit = ["pyingestkit>=1.0.1,<2"]
+
+[project.entry-points."pyworkflowkit.workloads"]
+pyingestkit-reference = "pyworkflowkit_reference_pyingestkit:plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyworkflowkit_reference_pyingestkit"]
