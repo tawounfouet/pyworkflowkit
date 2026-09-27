@@ -37,6 +37,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
     assert snapshot["contracts"] == {
         "cli_machine": "1",
         "developer_experience": "1",
+        "distribution": "1",
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
