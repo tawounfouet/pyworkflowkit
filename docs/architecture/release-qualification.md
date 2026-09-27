@@ -1,6 +1,6 @@
 # Release Qualification and Upgrade Matrix
 
-Status: M46 — 0.7.0b1
+Status: M46 completed in 0.7.0b1; qualified baseline: 0.7.0
 
 ## Purpose
 
@@ -40,7 +40,7 @@ Persistence schema contract version
 migration head
 ~~~
 
-For 0.7.0b1:
+For the stable 0.7.0 baseline:
 
 ~~~text
 Python              3.11 / 3.12 / 3.13
@@ -234,8 +234,8 @@ This provides a single branch-protection / release-readiness signal.
 For a tagged qualification:
 
 ~~~text
-package version = 0.7.0b1
-tag             = v0.7.0b1
+package version = 0.7.0
+tag             = v0.7.0
 ~~~
 
 Any mismatch fails before artifact qualification.

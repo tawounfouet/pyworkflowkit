@@ -8,6 +8,20 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.7.0 - 2026-09-27
+
+### Added
+
 - M46 release qualification contract v1 aggregating supported Python, CLI, manifest, plugin, persistence, and migration-head compatibility metadata.
 - Dedicated Release Qualification workflow with wheel/sdist build, Twine metadata validation, SHA-256 checksums, artifact upload, installed-artifact smoke tests, contract snapshots, SQLite/PostgreSQL upgrade matrices, security gates, and a single aggregate release gate.
 - Release metadata verifier enforcing version/release-note/CHANGELOG consistency and optional `v<version>` tag matching.
@@ -30,7 +44,7 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The development line advances to `0.7.0b1`; M46 turns M41-M45 compatibility evidence into a dedicated artifact-oriented release qualification pipeline.
+- The 0.7 compatibility/stabilization line is transversely qualified and promoted from `0.7.0b1` to stable `0.7.0`.
 - Release qualification validates tags but deliberately does not publish to PyPI, create GitHub Releases, or push tags.
 - Durable stores now reject unknown/future Alembic revisions before attempting an upgrade rather than delegating ambiguous compatibility to Alembic internals.
 - Plugin registration validation remains side-effect-free and never invokes plugin factories; instance conformance is an explicit caller-controlled step.
