@@ -137,12 +137,16 @@ jobs:
               "manifest": "1",
               "persistence": "1",
               "plugin_api": "1",
+              "typing": "1",
           }
           assert snapshot["migration_head"] == "0003_retry_eligible_at"
           assert snapshot["compatibility"]["contract_version"] == "1"
           assert snapshot["compatibility"]["target_release"] == "1.0.0"
           assert snapshot["compatibility"]["by_status"]["deprecated"] == []
           assert snapshot["compatibility"]["by_status"]["remove-before-1.0"] == []
+          assert snapshot["typing"]["contract_version"] == "1"
+          assert snapshot["typing"]["target_release"] == "1.0.0"
+          assert files("pyworkflowkit").joinpath("py.typed").is_file()
 
           versions = files("pyworkflowkit.migrations.versions")
           assert versions.joinpath("0001_runtime_metadata.py").is_file()
@@ -223,6 +227,67 @@ jobs:
         run: |
           cd /tmp
           pytest "$GITHUB_WORKSPACE/tests/reference/test_v0_9_compatibility_deprecation.py" -q
+
+
+  static-typing:
+    name: Static typing (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pyworkflowkit-dist
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+
+      - name: Install built wheel and static checker
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mypy dist/*.whl
+
+      - name: Verify installed PEP 561 marker
+        shell: bash
+        run: |
+          cd /tmp
+          python -c "from importlib.resources import files; assert files('pyworkflowkit').joinpath('py.typed').is_file()"
+
+      - name: Type-check public consumer against installed wheel
+        shell: bash
+        run: |
+          cd /tmp
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/typing-fixtures/public_consumer.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py"
+
+      - name: Reject unsupported task handler signature
+        shell: bash
+        run: |
+          cd /tmp
+          if mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/typing-fixtures/invalid_task_handler.py"; then
+            echo "invalid two-argument @task handler unexpectedly passed static typing"
+            exit 1
+          fi
+
+      - name: Qualify RQ-03 snapshot against installed wheel
+        shell: bash
+        run: |
+          cd /tmp
+          python -m pip install pytest
+          pytest "$GITHUB_WORKSPACE/tests/reference/test_v0_9_typing_static_contracts.py" -q
 
   transverse-v0-8:
     name: 0.8 transverse qualification
@@ -495,6 +560,7 @@ jobs:
       - artifact-install
       - public-api-freeze
       - compatibility-deprecation
+      - static-typing
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -513,6 +579,7 @@ jobs:
           test "${{ needs.artifact-install.result }}" = "success"
           test "${{ needs.public-api-freeze.result }}" = "success"
           test "${{ needs.compatibility-deprecation.result }}" = "success"
+          test "${{ needs.static-typing.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"
