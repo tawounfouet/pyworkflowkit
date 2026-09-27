@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from importlib.metadata import PackageNotFoundError, version
 
-from pyworkflowkit.application.lineage import ExecutionLineage
+from pyworkflowkit.domain.lineage import ExecutionLineage
 from pyworkflowkit.application.manifest import RunManifestSerializer
 from pyworkflowkit.application.mapping import DomainSchemaMapper
 from pyworkflowkit.application.observability import redact_mapping
