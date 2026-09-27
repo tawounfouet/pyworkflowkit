@@ -8,6 +8,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M44 public plugin compatibility contract suite with reusable registration reports, stable diagnostic issue codes, explicit entry-point group/type mappings, and opt-in instance conformance checks.
+- Third-party plugin contract documentation showing direct compatibility tests without requiring installed entry-point metadata.
+- M44 reference coverage freezing Plugin API v1 categories, descriptor shape, entry-point groups, diagnostics, and external-author conformance workflow.
 - M43 CLI machine-contract v1 with explicit command inventory, application exit codes, required JSON top-level/nested keys, shared handled-error shape, and executable CLI acceptance snapshots.
 - M43 documentation defining compatible additive JSON evolution versus breaking command/key/type/stream/exit-code changes.
 - M42 deprecation infrastructure with typed categories, visible warning classes, versioned DeprecationSpec metadata, once-per-identity emission, decorator support, and an explicit active-deprecation catalog.
@@ -19,7 +22,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The development line advances to `0.7.0a3`; M43 freezes the existing CLI machine surface without changing runtime behavior or existing payload shapes.
+- The development line advances to `0.7.0a4`; M44 extracts plugin compatibility from private discovery logic into a public contract suite used by both runtime discovery and third-party tests.
+- Plugin registration validation remains side-effect-free and never invokes plugin factories; instance conformance is an explicit caller-controlled step.
 - `manifest --json` is explicitly governed by RunManifest schema v1 rather than a competing CLI-specific manifest schema.
 - README roadmap now marks 0.6 stable and 0.7 as the active compatibility-contract line.
 

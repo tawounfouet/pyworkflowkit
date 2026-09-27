@@ -121,3 +121,31 @@ manifest JSON change that bypasses RunManifest schema versioning
 
 Machine success JSON is written to stdout. Handled JSON errors are written to stderr
 and retain the shared `error` + `exit_code` contract.
+
+
+## M44 plugin ecosystem compatibility rules
+
+Plugin API v1 now has a public conformance surface shared by runtime discovery and
+third-party plugin tests.
+
+Stable-intent plugin contracts include:
+
+~~~text
+PluginType values
+PluginDescriptor field meanings
+ENTRY_POINT_GROUPS
+PLUGIN_TYPE_BY_ENTRY_POINT_GROUP
+RegisteredPlugin provider shape
+PLUGIN_API_VERSION exact compatibility rule
+PluginContractIssueCode meanings
+Executor / MetadataStore / RuntimeEventSink structural instance checks
+~~~
+
+Registration validation is side-effect-free: it never invokes the plugin factory.
+
+Third-party authors may explicitly instantiate their plugin and then run instance
+conformance. The generic workload category intentionally has no extra runtime Protocol
+in Plugin API v1.
+
+Changing these contracts requires the M42 deprecation process where applicable or a
+Plugin API version transition.

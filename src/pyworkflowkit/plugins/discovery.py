@@ -13,16 +13,12 @@ from pyworkflowkit.errors import (
     PluginLoadError,
     PluginNotFoundError,
 )
-from pyworkflowkit.plugins.model import PLUGIN_API_VERSION, PluginDescriptor, PluginType
+from pyworkflowkit.plugins.contracts import (
+    ENTRY_POINT_GROUPS,
+    assert_plugin_registration_compatible,
+)
+from pyworkflowkit.plugins.model import PluginDescriptor, PluginType
 from pyworkflowkit.plugins.registry import PluginCatalog, RegisteredPlugin
-
-ENTRY_POINT_GROUPS: Mapping[PluginType, str] = {
-    PluginType.EXECUTOR: "pyworkflowkit.executors",
-    PluginType.METADATA: "pyworkflowkit.metadata",
-    PluginType.WORKLOAD: "pyworkflowkit.workloads",
-    PluginType.EVENT: "pyworkflowkit.events",
-}
-
 
 class PluginDiscoveryStatus(StrEnum):
     """Lifecycle state of one discovered package entry point."""
@@ -174,7 +170,11 @@ class PluginDiscovery:
                 )
 
             descriptor = registration.descriptor
-            self._validate_compatibility(candidate=candidate, descriptor=descriptor)
+            assert_plugin_registration_compatible(
+                registration,
+                entry_point_name=candidate.name,
+                entry_point_group=candidate.group,
+            )
             catalog.registry_for(candidate.plugin_type).register(
                 descriptor,
                 registration.factory,
@@ -204,38 +204,6 @@ class PluginDiscovery:
                 status=PluginDiscoveryStatus.FAILED,
                 error=str(error),
             )
-
-    @staticmethod
-    def _validate_compatibility(
-        *,
-        candidate: DiscoveredPlugin,
-        descriptor: PluginDescriptor,
-    ) -> None:
-        if descriptor.name != candidate.name:
-            raise PluginCompatibilityError(
-                plugin_name=candidate.name,
-                reason=(
-                    f"descriptor name '{descriptor.name}' does not match "
-                    f"entry-point name '{candidate.name}'"
-                ),
-            )
-        if descriptor.plugin_type is not candidate.plugin_type:
-            raise PluginCompatibilityError(
-                plugin_name=candidate.name,
-                reason=(
-                    f"descriptor type '{descriptor.plugin_type.value}' does not match "
-                    f"entry-point group type '{candidate.plugin_type.value}'"
-                ),
-            )
-        if descriptor.api_version != PLUGIN_API_VERSION:
-            raise PluginCompatibilityError(
-                plugin_name=candidate.name,
-                reason=(
-                    f"plugin API version '{descriptor.api_version}' is incompatible with "
-                    f"runtime API version '{PLUGIN_API_VERSION}'"
-                ),
-            )
-
 
 __all__ = [
     "ENTRY_POINT_GROUPS",
