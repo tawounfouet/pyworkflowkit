@@ -105,4 +105,4 @@ DX05 target: `10 - Run Manifest.ipynb`.
 
 ## Next chapter
 
-The next DX03 chapter is `11_METADATA_STORE.md`.
+Continue with [11 — MetadataStore](11_METADATA_STORE.md).
