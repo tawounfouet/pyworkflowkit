@@ -32,8 +32,7 @@ def verify_release_metadata(*, tag: str | None = None) -> dict[str, str]:
     expected_heading = f"# PyWorkflowKit {version}"
     if not lines or lines[0] != expected_heading:
         raise SystemExit(
-            f"release note must start with {expected_heading!r}: "
-            f"{release_note.relative_to(ROOT)}"
+            f"release note must start with {expected_heading!r}: {release_note.relative_to(ROOT)}"
         )
 
     changelog_text = changelog.read_text(encoding="utf-8")
