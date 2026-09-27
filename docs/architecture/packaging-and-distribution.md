@@ -59,6 +59,7 @@ RQ-05 freezes the current direct runtime dependency ranges:
 alembic>=1.16,<2
 pydantic>=2.13,<3
 pydantic-settings>=2.11,<3
+rich>=13.8,<16
 sqlalchemy>=2.0,<3
 typer>=0.12,<1
 ```
