@@ -54,7 +54,7 @@ LEGACY_REDIRECTS = {
     "troubleshooting.md": "26_DEBUGGING_AND_TROUBLESHOOTING.md",
 }
 
-LOCAL_MD_LINK = re.compile(r"\\]\(([^)#?]+\\.md)(?:#[^)]+)?\\)")
+LOCAL_MD_LINK = re.compile(r"\]\(([^)#?]+\.md)(?:#[^)]+)?\)")
 
 FORBIDDEN_BEGINNER_IMPORTS = (
     "from pyworkflowkit.application",
