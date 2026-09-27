@@ -178,3 +178,38 @@ against an unknown/future schema.
 
 The product compatibility promise is forward migration to head. Downgrade compatibility
 is not promoted to a stable application-level contract by M45.
+
+
+## M46 release qualification rules
+
+Compatibility claims are release-qualified from built distribution artifacts, not only
+from an editable source checkout.
+
+Release qualification contract v1 freezes:
+
+~~~text
+supported Python versions: 3.11 / 3.12 / 3.13
+CLI machine contract: 1
+RunManifest schema: 1
+Plugin API: 1
+Persistence schema contract: 1
+migration head: 0003_retry_eligible_at
+~~~
+
+A release candidate must pass:
+
+~~~text
+release metadata consistency
+wheel and sdist build
+package metadata validation
+installed-artifact smoke tests
+reference contract snapshots
+SQLite upgrade matrix
+PostgreSQL upgrade matrix
+security gates
+~~~
+
+When a qualification run is triggered by a tag, the tag must equal `v<project.version>`.
+
+Release qualification is non-publishing. Passing it does not itself upload to PyPI,
+create a GitHub Release, or push a tag.

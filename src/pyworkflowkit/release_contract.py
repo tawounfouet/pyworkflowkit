@@ -1,0 +1,52 @@
+"""Release qualification contract assembled from compatibility milestones."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from importlib.metadata import version
+from types import MappingProxyType
+
+from pyworkflowkit.application.manifest import MANIFEST_SCHEMA_VERSION
+from pyworkflowkit.cli_contract import CLI_MACHINE_CONTRACT_VERSION
+from pyworkflowkit.migrations.contract import (
+    MIGRATION_HEAD_REVISION,
+    PERSISTENCE_SCHEMA_CONTRACT_VERSION,
+)
+from pyworkflowkit.plugins.model import PLUGIN_API_VERSION
+
+RELEASE_QUALIFICATION_CONTRACT_VERSION = "1"
+
+SUPPORTED_PYTHON_VERSIONS: tuple[str, ...] = (
+    "3.11",
+    "3.12",
+    "3.13",
+)
+
+REQUIRED_CONTRACT_VERSIONS: Mapping[str, str] = MappingProxyType(
+    {
+        "cli_machine": CLI_MACHINE_CONTRACT_VERSION,
+        "manifest": MANIFEST_SCHEMA_VERSION,
+        "persistence": PERSISTENCE_SCHEMA_CONTRACT_VERSION,
+        "plugin_api": PLUGIN_API_VERSION,
+    }
+)
+
+
+def release_contract_snapshot() -> dict[str, object]:
+    """Return deterministic release-facing compatibility metadata."""
+
+    return {
+        "package_version": version("pyworkflowkit"),
+        "qualification_contract_version": RELEASE_QUALIFICATION_CONTRACT_VERSION,
+        "supported_python_versions": list(SUPPORTED_PYTHON_VERSIONS),
+        "contracts": dict(sorted(REQUIRED_CONTRACT_VERSIONS.items())),
+        "migration_head": MIGRATION_HEAD_REVISION,
+    }
+
+
+__all__ = [
+    "RELEASE_QUALIFICATION_CONTRACT_VERSION",
+    "REQUIRED_CONTRACT_VERSIONS",
+    "SUPPORTED_PYTHON_VERSIONS",
+    "release_contract_snapshot",
+]

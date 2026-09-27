@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M46 release qualification contract v1 aggregating supported Python, CLI, manifest, plugin, persistence, and migration-head compatibility metadata.
+- Dedicated Release Qualification workflow with wheel/sdist build, Twine metadata validation, SHA-256 checksums, artifact upload, installed-artifact smoke tests, contract snapshots, SQLite/PostgreSQL upgrade matrices, security gates, and a single aggregate release gate.
+- Release metadata verifier enforcing version/release-note/CHANGELOG consistency and optional `v<version>` tag matching.
+- Artifact installation qualification for wheel on Python 3.11/3.12/3.13 and sdist on Python 3.13 from outside the repository checkout.
 - M45 persistence schema contract v1 with frozen migration lineage, explicit current-head metadata, and supported upgrade-origin declarations.
 - MigrationCompatibilityError plus early rejection of unknown database revisions and unknown explicit migration targets.
 - Immutable Git-blob fingerprint acceptance for published migrations 0001/0002/0003.
@@ -26,7 +30,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The development line advances to `0.7.0a5`; M45 freezes the published Alembic history and promotes forward migration from supported historical revisions to an executable compatibility promise.
+- The development line advances to `0.7.0b1`; M46 turns M41-M45 compatibility evidence into a dedicated artifact-oriented release qualification pipeline.
+- Release qualification validates tags but deliberately does not publish to PyPI, create GitHub Releases, or push tags.
 - Durable stores now reject unknown/future Alembic revisions before attempting an upgrade rather than delegating ambiguous compatibility to Alembic internals.
 - Plugin registration validation remains side-effect-free and never invokes plugin factories; instance conformance is an explicit caller-controlled step.
 - `manifest --json` is explicitly governed by RunManifest schema v1 rather than a competing CLI-specific manifest schema.
