@@ -18,6 +18,37 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0b1 - 2026-09-27
+
+### Added
+
+- RQ-04 Developer Experience Contract v1 targeting `1.0.0`.
+- Explicit README `Start here` path and first-use guide set for API, CLI, retries, persistence, plugin authoring, and troubleshooting.
+- Executable public examples for hello-world, failure/retry, SQLite persistence, and ecosystem plugin authoring.
+- Import-safe decorated workflow fixture for the CLI journey.
+- Source and built-wheel developer-experience qualification gates covering the complete first-run CLI lifecycle.
+
+### Changed
+
+- The development line advances from `0.9.0a3` to `0.9.0b1`.
+- `examples/00_hello_world.py` now uses the stable package facade instead of internal runner/store/executor construction.
+- Recommended onboarding documentation now starts from `pyworkflowkit` and `pyworkflowkit.ecosystem`, while advanced implementation documentation remains separate.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No runtime capability is removed.
+
+### Fixed
+
+- The repository's first example no longer teaches internal implementation imports as the normal user path.
+- Cross-process CLI inspection is documented and qualified with a durable SQLite backend instead of the default in-memory store.
+
+### Security
+
 ## 0.9.0a3 - 2026-09-27
 
 ### Added
