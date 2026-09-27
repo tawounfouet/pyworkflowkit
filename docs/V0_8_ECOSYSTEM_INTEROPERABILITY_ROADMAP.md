@@ -230,7 +230,7 @@ Artifact payload storage remains external or plugin-owned.
 M48 is complete when references survive serialization, persistence, manifest generation
 and lineage reconstruction without importing foreign runtime schemas.
 
-## M49 — Observability Interoperability — 0.8.0a3
+## M49 — Observability Interoperability — 0.8.0a3 ✅
 
 ### Objective
 
@@ -617,13 +617,19 @@ M47 External Workload Interoperability 0.8.0a1 ✅
     ↓
 M48 External References & Portable Evidence    ✅
     ↓
-M49 Observability Interoperability              NEXT
+M49 Observability Interoperability              ✅
+    ↓
+M50 Reference Integration Packages              NEXT
 ~~~
 
 M47 defines the generic synchronous external-workload protocol, normalized result,
 retry ownership, failure normalization, TaskResult/ExternalRunRef mapping and
 executor-owned timeout/cancellation boundary.
 
-M48 now freezes portable provider naming, absolute URI expectations, JSON metadata
+M48 freezes portable provider naming, absolute URI expectations, JSON metadata
 portability, manifest reference redaction, exact foreign identity preservation and
 deterministic reference lineage.
+
+M49 now adds committed-event telemetry projection, stable domain correlation,
+bounded-cardinality workflow/task metrics, redaction-preserving failure isolation and a
+dependency-free OpenTelemetry reference adapter.
