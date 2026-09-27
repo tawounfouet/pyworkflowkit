@@ -80,7 +80,7 @@ def _command_names() -> set[str]:
 def test_m43_contract_version_commands_and_exit_codes_are_frozen() -> None:
     assert CLI_MACHINE_CONTRACT_VERSION == "1"
     assert _command_names() == set(CLI_COMMANDS)
-    assert CLI_JSON_COMMANDS == {
+    assert {
         "doctor",
         "events",
         "inspect",
@@ -89,16 +89,16 @@ def test_m43_contract_version_commands_and_exit_codes_are_frozen() -> None:
         "plugins",
         "run",
         "validate",
-    }
+    } == CLI_JSON_COMMANDS
     assert dict(CLI_EXIT_CODES) == {
         "success": 0,
         "validation": 2,
         "run_failure": 3,
         "doctor_failure": 4,
     }
-    assert VALIDATION_EXIT == CLI_EXIT_CODES["validation"]
-    assert RUN_FAILURE_EXIT == CLI_EXIT_CODES["run_failure"]
-    assert DOCTOR_FAILURE_EXIT == CLI_EXIT_CODES["doctor_failure"]
+    assert CLI_EXIT_CODES["validation"] == VALIDATION_EXIT
+    assert CLI_EXIT_CODES["run_failure"] == RUN_FAILURE_EXIT
+    assert CLI_EXIT_CODES["doctor_failure"] == DOCTOR_FAILURE_EXIT
 
 
 def test_m43_validate_plan_and_error_shapes(monkeypatch) -> None:  # type: ignore[no-untyped-def]
