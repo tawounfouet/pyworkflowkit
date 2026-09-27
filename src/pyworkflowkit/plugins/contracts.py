@@ -114,7 +114,10 @@ def validate_plugin_registration(
         issues.append(
             PluginContractIssue(
                 code=PluginContractIssueCode.ENTRY_POINT_GROUP,
-                message=f"entry-point group '{entry_point_group}' is not a PyWorkflowKit plugin group",
+                message=(
+                    f"entry-point group '{entry_point_group}' is not a "
+                    "PyWorkflowKit plugin group"
+                ),
             )
         )
 
