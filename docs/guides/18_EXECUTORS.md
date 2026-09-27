@@ -91,6 +91,7 @@ Canonical companions:
 - [`examples/16_timeout.py`](../../examples/16_timeout.py)
 - [`examples/17_cancellation.py`](../../examples/17_cancellation.py)
 - [`examples/18_external_workload.py`](../../examples/18_external_workload.py)
+- [`examples/20_custom_executor.py`](../../examples/20_custom_executor.py)
 
 ## Related notebook
 

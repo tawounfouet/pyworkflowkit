@@ -75,10 +75,7 @@ def _qualify_cli() -> dict[str, object]:
     assert set(versions.values()) == {canonical_version}
 
     target = "examples.getting_started_workflow:demo"
-    json_results = [
-        _run(alias, "plan", target, "--json")
-        for alias in aliases
-    ]
+    json_results = [_run(alias, "plan", target, "--json") for alias in aliases]
     assert all(result.stdout == json_results[0].stdout for result in json_results)
     planned = _json_stdout(json_results[0])
     assert planned["groups"]
