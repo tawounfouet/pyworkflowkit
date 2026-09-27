@@ -1,4 +1,4 @@
-"""Qualify the installed PyWorkflowKit artifact as the 1.0 release candidate."""
+"""Qualify an installed PyWorkflowKit 1.x artifact against the frozen 1.0 baseline."""
 
 from __future__ import annotations
 
@@ -19,13 +19,13 @@ from pyworkflowkit.release_contract import release_contract_snapshot
 
 def qualify_release_candidate() -> dict[str, object]:
     installed_version = version("pyworkflowkit")
-    assert installed_version == RELEASE_CANDIDATE_TARGET_RELEASE
+    assert installed_version.startswith("1.")
 
     release = release_contract_snapshot()
     candidate = release_candidate_contract_snapshot()
     compatibility = compatibility_contract_snapshot()
 
-    assert release["package_version"] == RELEASE_CANDIDATE_TARGET_RELEASE
+    assert release["package_version"] == installed_version
     assert release["contracts"]["release_candidate"] == RELEASE_CANDIDATE_CONTRACT_VERSION
     assert release["release_candidate"] == candidate
 
@@ -49,8 +49,8 @@ def qualify_release_candidate() -> dict[str, object]:
 
     return {
         "candidate_version": RELEASE_CANDIDATE_VERSION,
-        "promoted_version": installed_version,
-        "target_release": RELEASE_CANDIDATE_TARGET_RELEASE,
+        "installed_version": installed_version,
+        "baseline_target_release": RELEASE_CANDIDATE_TARGET_RELEASE,
         "stabilization_tracks": list(sorted(tracks)),
         "qualification_jobs": list(REQUIRED_QUALIFICATION_JOB_IDS),
         "compatibility_blockers": [],
@@ -68,7 +68,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(payload, sort_keys=True))
     else:
-        print("RQ-06 1.0 stable promotion qualification passed.")
+        print("RQ-06 1.0 compatibility baseline qualification passed.")
     return 0
 
 
