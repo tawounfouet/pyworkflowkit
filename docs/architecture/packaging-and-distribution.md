@@ -137,6 +137,7 @@ RQ-05 makes the sdist scope explicit instead of relying on implicit VCS inclusio
 The source distribution contains only:
 
 ```text
+.gitignore              # mandatory Hatchling sdist metadata
 pyproject.toml
 README.md
 CHANGELOG.md
@@ -144,6 +145,10 @@ SECURITY.md
 src/pyworkflowkit/**
 generated PKG-INFO
 ```
+
+Hatchling always includes the root VCS ignore file in source distributions. RQ-05 treats
+that builder-mandated file as explicit expected metadata rather than pretending it can be
+excluded.
 
 This is sufficient to rebuild the package while excluding CI configuration, tests,
 examples, documentation corpus, and integration fixtures from the published source
