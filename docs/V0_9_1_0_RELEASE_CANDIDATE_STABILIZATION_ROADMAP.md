@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0rc1 / RQ-06**
+Status: **complete — 1.0.0 stable promotion prepared**
 
 ## Objective
 
@@ -34,8 +34,8 @@ RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
 RQ-03 Typing & Static Contracts            0.9.0a3   ✅
 RQ-04 Developer Experience & Documentation 0.9.0b1   ✅
 RQ-05 Packaging & Distribution             0.9.0b2   ✅
-RQ-06 1.0 Release Qualification            0.9.0rc1  ACTIVE
-                                           1.0.0
+RQ-06 1.0 Release Qualification            0.9.0rc1  ✅
+Stable promotion                            1.0.0     READY
 ```
 
 ## RQ-01 — Public API Freeze
@@ -241,6 +241,21 @@ aggregate release-candidate gate is green
 final release gate is green
 1.0 promotion permits version/release metadata only
 ```
+
+## Stable promotion — 1.0.0
+
+The stable branch follows the RQ-06 promotion policy:
+
+```text
+same-qualified-code-version-metadata-only
+```
+
+The implementation under `src/pyworkflowkit/**` remains unchanged from the qualified
+`0.9.0rc1` commit. Promotion changes only version/distribution metadata, release-facing
+tests/workflows, and documentation.
+
+The stable merge remains operationally gated by external closure of the RC tag
+`v0.9.0rc1` and its tag-triggered Release Qualification.
 
 ## Non-goals
 
