@@ -8,6 +8,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- Progressive Zero-to-Hero documentation architecture under `docs/guides/`, starting from installation, tasks, workflow definitions, DAGs, planning, runtime, data flow, retries, events, and manifests.
+- Compatibility redirects from historical beginner/retry guide paths to the canonical numbered learning chapters.
+
 ### Changed
 
 ### Deprecated
