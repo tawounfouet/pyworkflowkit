@@ -180,6 +180,7 @@ def _qualify_sdist(sdist: Path, *, expected_version: str) -> dict[str, object]:
         assert not any(path.startswith(prefix) for prefix in FORBIDDEN_SDIST_PREFIXES), path
 
     allowed_root_files = {
+        ".gitignore",
         "CHANGELOG.md",
         "PKG-INFO",
         "README.md",
