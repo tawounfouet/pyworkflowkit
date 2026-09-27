@@ -5,7 +5,7 @@ from importlib.resources import files
 from pathlib import Path
 
 import pytest
-from sqlalchemy import MetaData, Table, inspect, insert, text
+from sqlalchemy import MetaData, Table, insert, inspect, text
 
 from pyworkflowkit.adapters.metadata.sqlite import (
     SQLiteMetadataStore,
