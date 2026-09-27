@@ -108,9 +108,7 @@ def test_m44_api_mismatch_is_machine_diagnosable_and_publicly_rejected() -> None
     )
 
     assert report.compatible is False
-    assert PluginContractIssueCode.API_VERSION in {
-        issue.code for issue in report.issues
-    }
+    assert PluginContractIssueCode.API_VERSION in {issue.code for issue in report.issues}
 
     with pytest.raises(PluginCompatibilityError):
         assert_plugin_registration_compatible(
