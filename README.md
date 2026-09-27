@@ -91,7 +91,7 @@ python -m pip install "pyworkflowkit[postgres]"
 ## Start here
 
 The supported first-use path is documented in
-[`docs/guides/getting-started.md`](docs/guides/getting-started.md).
+[`docs/guides/getting-started.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/getting-started.md).
 
 The minimal public-API example is executable:
 
@@ -108,11 +108,11 @@ pyworkflow plan examples.getting_started_workflow:demo --json
 
 Continue with:
 
-- [CLI workflow](docs/guides/cli-workflow.md)
-- [Failures and retries](docs/guides/failures-and-retries.md)
-- [Persistence and evidence](docs/guides/persistence-and-evidence.md)
-- [Plugin authoring](docs/guides/plugin-authoring.md)
-- [Troubleshooting](docs/guides/troubleshooting.md)
+- [CLI workflow](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/cli-workflow.md)
+- [Failures and retries](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/failures-and-retries.md)
+- [Persistence and evidence](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/persistence-and-evidence.md)
+- [Plugin authoring](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/plugin-authoring.md)
+- [Troubleshooting](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/troubleshooting.md)
 
 These guides intentionally start from the frozen `pyworkflowkit` and
 `pyworkflowkit.ecosystem` facades instead of implementation modules.
