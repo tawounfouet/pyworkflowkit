@@ -17,6 +17,10 @@ from pyworkflowkit.contracts.distribution import (
     DISTRIBUTION_CONTRACT_VERSION,
     distribution_contract_snapshot,
 )
+from pyworkflowkit.contracts.release_candidate import (
+    RELEASE_CANDIDATE_CONTRACT_VERSION,
+    release_candidate_contract_snapshot,
+)
 from pyworkflowkit.contracts.typing import TYPING_CONTRACT_VERSION, typing_contract_snapshot
 from pyworkflowkit.migrations.contract import (
     MIGRATION_HEAD_REVISION,
@@ -40,6 +44,7 @@ REQUIRED_CONTRACT_VERSIONS: Mapping[str, str] = MappingProxyType(
         "manifest": MANIFEST_SCHEMA_VERSION,
         "persistence": PERSISTENCE_SCHEMA_CONTRACT_VERSION,
         "plugin_api": PLUGIN_API_VERSION,
+        "release_candidate": RELEASE_CANDIDATE_CONTRACT_VERSION,
         "typing": TYPING_CONTRACT_VERSION,
     }
 )
@@ -57,6 +62,7 @@ def release_contract_snapshot() -> dict[str, object]:
         "compatibility": compatibility_contract_snapshot(),
         "developer_experience": developer_experience_contract_snapshot(),
         "distribution": distribution_contract_snapshot(),
+        "release_candidate": release_candidate_contract_snapshot(),
         "typing": typing_contract_snapshot(),
     }
 

@@ -18,6 +18,39 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0rc1 - 2026-09-27
+
+### Added
+
+- RQ-06 Release-Candidate Contract v1 targeting `1.0.0`.
+- Aggregate `1.0 release candidate` job that requires every inherited release-qualification family.
+- Installed-artifact RC qualifier for the exact built wheel.
+- Explicit promotion policy: `same-qualified-code-version-metadata-only`.
+- Manual 1.0 publication-decision registry, currently containing software-license selection.
+
+### Changed
+
+- The development line advances from `0.9.0b2` to `0.9.0rc1`.
+- The aggregate release contract now includes `release_candidate=1`.
+- RQ-01 through RQ-05 are treated as inherited, immutable stabilization inputs to RQ-06.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No runtime capability is removed.
+
+### Fixed
+
+- Release qualification now has an explicit aggregate candidate decision instead of relying only on parallel green jobs.
+- A direct 1.0 promotion is now contractually limited to the same qualified implementation with release/version metadata changes only.
+
+### Security
+
+- RQ-06 inherits the blocking Bandit, pip-audit, detect-secrets, migration, artifact, ecosystem, and compatibility gates.
+
 ## 0.9.0b2 - 2026-09-27
 
 ### Added

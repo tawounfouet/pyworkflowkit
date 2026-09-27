@@ -139,6 +139,7 @@ jobs:
               "manifest": "1",
               "persistence": "1",
               "plugin_api": "1",
+              "release_candidate": "1",
               "typing": "1",
           }
           assert snapshot["migration_head"] == "0003_retry_eligible_at"
@@ -150,6 +151,8 @@ jobs:
           assert snapshot["developer_experience"]["target_release"] == "1.0.0"
           assert snapshot["distribution"]["contract_version"] == "1"
           assert snapshot["distribution"]["target_release"] == "1.0.0"
+          assert snapshot["release_candidate"]["contract_version"] == "1"
+          assert snapshot["release_candidate"]["target_release"] == "1.0.0"
           assert snapshot["typing"]["contract_version"] == "1"
           assert snapshot["typing"]["target_release"] == "1.0.0"
           assert files("pyworkflowkit").joinpath("py.typed").is_file()
@@ -393,8 +396,8 @@ jobs:
           /tmp/rq05-core/bin/python -m pip install --upgrade pip
           /tmp/rq05-core/bin/python -m pip install "$wheel"
           /tmp/rq05-core/bin/python -m pip check
-          test "$(/tmp/rq05-core/bin/pyworkflow version)" = "0.9.0b2"
-          test "$(/tmp/rq05-core/bin/pyworkflowkit version)" = "0.9.0b2"
+          test "$(/tmp/rq05-core/bin/pyworkflow version)" = "0.9.0rc1"
+          test "$(/tmp/rq05-core/bin/pyworkflowkit version)" = "0.9.0rc1"
 
       - name: Install published extras
         shell: bash
@@ -426,8 +429,8 @@ jobs:
           /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0'"
           /tmp/rq05-upgrade/bin/python -m pip install --upgrade --no-deps "$current_wheel"
           /tmp/rq05-upgrade/bin/python -m pip check
-          /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.9.0b2'"
-          test "$(/tmp/rq05-upgrade/bin/pyworkflow version)" = "0.9.0b2"
+          /tmp/rq05-upgrade/bin/python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.9.0rc1'"
+          test "$(/tmp/rq05-upgrade/bin/pyworkflow version)" = "0.9.0rc1"
 
       - name: Qualify RQ-05 contract against installed wheel
         shell: bash
@@ -435,6 +438,81 @@ jobs:
           cd /tmp
           python -m pip install pytest
           pytest "$GITHUB_WORKSPACE/tests/reference/test_v0_9_packaging_distribution.py" -q
+
+
+  release-candidate:
+    name: 1.0 release candidate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - metadata
+      - build
+      - artifact-install
+      - public-api-freeze
+      - compatibility-deprecation
+      - static-typing
+      - developer-experience
+      - packaging-distribution
+      - reference-contracts
+      - reference-integrations
+      - control-plane-provider
+      - ecosystem-sdk
+      - transverse-v0-8
+      - sqlite-upgrade
+      - postgres-upgrade
+      - security
+
+    steps:
+      - name: Require every inherited qualification family
+        shell: bash
+        run: |
+          test "${{ needs.metadata.result }}" = "success"
+          test "${{ needs.build.result }}" = "success"
+          test "${{ needs.artifact-install.result }}" = "success"
+          test "${{ needs.public-api-freeze.result }}" = "success"
+          test "${{ needs.compatibility-deprecation.result }}" = "success"
+          test "${{ needs.static-typing.result }}" = "success"
+          test "${{ needs.developer-experience.result }}" = "success"
+          test "${{ needs.packaging-distribution.result }}" = "success"
+          test "${{ needs.reference-contracts.result }}" = "success"
+          test "${{ needs.reference-integrations.result }}" = "success"
+          test "${{ needs.control-plane-provider.result }}" = "success"
+          test "${{ needs.ecosystem-sdk.result }}" = "success"
+          test "${{ needs.transverse-v0-8.result }}" = "success"
+          test "${{ needs.sqlite-upgrade.result }}" = "success"
+          test "${{ needs.postgres-upgrade.result }}" = "success"
+          test "${{ needs.security.result }}" = "success"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pyworkflowkit-dist
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install release candidate wheel and test runner
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest dist/*.whl
+
+      - name: Qualify RQ-06 source contract against installed wheel
+        shell: bash
+        run: |
+          cd /tmp
+          pytest "$GITHUB_WORKSPACE/tests/reference/test_v0_9_release_candidate.py" -q
+
+      - name: Qualify installed release candidate
+        shell: bash
+        run: |
+          cd /tmp
+          python "$GITHUB_WORKSPACE/scripts/qualify_v1_release_candidate.py" --json
 
   transverse-v0-8:
     name: 0.8 transverse qualification
@@ -710,6 +788,7 @@ jobs:
       - static-typing
       - developer-experience
       - packaging-distribution
+      - release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -731,6 +810,7 @@ jobs:
           test "${{ needs.static-typing.result }}" = "success"
           test "${{ needs.developer-experience.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
+          test "${{ needs.release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"

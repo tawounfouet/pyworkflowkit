@@ -25,6 +25,7 @@ def test_m46_release_qualification_contract_is_frozen() -> None:
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
+        "release_candidate": "1",
         "typing": "1",
     }
 
@@ -41,6 +42,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
+        "release_candidate": "1",
         "typing": "1",
     }
     assert snapshot["migration_head"] == "0003_retry_eligible_at"
@@ -52,6 +54,8 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
     assert snapshot["developer_experience"]["target_release"] == "1.0.0"
     assert snapshot["distribution"]["contract_version"] == "1"
     assert snapshot["distribution"]["target_release"] == "1.0.0"
+    assert snapshot["release_candidate"]["contract_version"] == "1"
+    assert snapshot["release_candidate"]["target_release"] == "1.0.0"
     assert snapshot["typing"]["contract_version"] == "1"
     assert snapshot["typing"]["target_release"] == "1.0.0"
 
