@@ -64,6 +64,7 @@ FORBIDDEN_WHEEL_PREFIXES: tuple[str, ...] = (
 )
 
 REQUIRED_SDIST_PATHS: tuple[str, ...] = (
+    ".gitignore",
     "CHANGELOG.md",
     "README.md",
     "SECURITY.md",
