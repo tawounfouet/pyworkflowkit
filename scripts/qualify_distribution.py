@@ -92,11 +92,7 @@ def _runtime_requires(metadata: Any) -> set[str]:
 
 
 def _wheel_package_paths(names: set[str]) -> set[str]:
-    return {
-        name
-        for name in names
-        if name.startswith("pyworkflowkit/") and not name.endswith("/")
-    }
+    return {name for name in names if name.startswith("pyworkflowkit/") and not name.endswith("/")}
 
 
 def _qualify_source_metadata(project_data: dict[str, Any]) -> dict[str, object]:
@@ -150,10 +146,7 @@ def _qualify_wheel(wheel: Path, *, expected_version: str) -> dict[str, object]:
 
     top_level = {path.split("/", maxsplit=1)[0] for path in names if "/" in path}
     assert "pyworkflowkit" in top_level
-    assert all(
-        value == "pyworkflowkit" or value.endswith(".dist-info")
-        for value in top_level
-    )
+    assert all(value == "pyworkflowkit" or value.endswith(".dist-info") for value in top_level)
 
     assert "Root-Is-Purelib: true" in combined
     assert "Tag: py3-none-any" in combined
@@ -170,20 +163,12 @@ def _qualify_wheel(wheel: Path, *, expected_version: str) -> dict[str, object]:
 def _sdist_relative_paths(sdist: Path, *, expected_version: str) -> set[str]:
     expected_root = f"{PACKAGE_NAME}-{expected_version}/"
     with tarfile.open(sdist, "r:gz") as archive:
-        names = {
-            member.name
-            for member in archive.getmembers()
-            if member.isfile()
-        }
+        names = {member.name for member in archive.getmembers() if member.isfile()}
 
     roots = {name.split("/", maxsplit=1)[0] for name in names}
     assert roots == {expected_root.rstrip("/")}
 
-    return {
-        name[len(expected_root) :]
-        for name in names
-        if name.startswith(expected_root)
-    }
+    return {name[len(expected_root) :] for name in names if name.startswith(expected_root)}
 
 
 def _qualify_sdist(sdist: Path, *, expected_version: str) -> dict[str, object]:
@@ -211,8 +196,16 @@ def _qualify_sdist(sdist: Path, *, expected_version: str) -> dict[str, object]:
 
 
 def _compare_wheels(primary: Path, rebuilt: Path) -> dict[str, object]:
-    primary_metadata, primary_names, _, = _metadata_from_wheel(primary)
-    rebuilt_metadata, rebuilt_names, _, = _metadata_from_wheel(rebuilt)
+    (
+        primary_metadata,
+        primary_names,
+        _,
+    ) = _metadata_from_wheel(primary)
+    (
+        rebuilt_metadata,
+        rebuilt_names,
+        _,
+    ) = _metadata_from_wheel(rebuilt)
 
     assert primary_metadata["Name"] == rebuilt_metadata["Name"]
     assert primary_metadata["Version"] == rebuilt_metadata["Version"]
