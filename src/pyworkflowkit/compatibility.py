@@ -86,9 +86,17 @@ STABLE_EXCEPTION_EXPORTS: Mapping[str, tuple[str, ...]] = MappingProxyType(
 INTERNAL_MODULE_PREFIXES: tuple[str, ...] = (
     "pyworkflowkit.adapters",
     "pyworkflowkit.application",
+    "pyworkflowkit.cli",
+    "pyworkflowkit.cli_contract",
+    "pyworkflowkit.compatibility",
+    "pyworkflowkit.config",
+    "pyworkflowkit.contracts",
+    "pyworkflowkit.declarative",
     "pyworkflowkit.domain",
+    "pyworkflowkit.errors",
     "pyworkflowkit.migrations",
     "pyworkflowkit.ports",
+    "pyworkflowkit.release_contract",
 )
 
 
@@ -389,10 +397,52 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             rationale="Application services are not direct 1.0 import contracts.",
         ),
         CompatibilitySubject(
+            key="module.cli",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="The Python CLI implementation module is not a direct public API.",
+        ),
+        CompatibilitySubject(
+            key="module.cli_contract",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="CLI contract semantics are stable; the implementation module path is not.",
+        ),
+        CompatibilitySubject(
+            key="module.compatibility",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="Compatibility metadata is release tooling rather than a frozen user facade.",
+        ),
+        CompatibilitySubject(
+            key="module.config",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="RuntimeSettings is stable through the package facade; config internals are not.",
+        ),
+        CompatibilitySubject(
+            key="module.contracts",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="Serialization/reference implementation paths are not separate public facades.",
+        ),
+        CompatibilitySubject(
+            key="module.declarative",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="Declarative helpers are stable through package-root re-exports.",
+        ),
+        CompatibilitySubject(
             key="module.domain",
             area="module",
             status=CompatibilityStatus.INTERNAL,
             rationale="Domain module paths may evolve; facade re-exports remain stable.",
+        ),
+        CompatibilitySubject(
+            key="module.errors",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="Stable exception types are those re-exported through frozen facades.",
         ),
         CompatibilitySubject(
             key="module.migrations",
@@ -405,6 +455,12 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             area="module",
             status=CompatibilityStatus.INTERNAL,
             rationale="Port module paths are internal; facade-provided protocols remain stable.",
+        ),
+        CompatibilitySubject(
+            key="module.release_contract",
+            area="module",
+            status=CompatibilityStatus.INTERNAL,
+            rationale="Release qualification metadata is not a frozen runtime import facade.",
         ),
     )
 )
