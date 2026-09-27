@@ -418,19 +418,13 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             key="module.config",
             area="module",
             status=CompatibilityStatus.INTERNAL,
-            rationale=(
-                "RuntimeSettings is stable through the package facade; "
-                "config internals are not."
-            ),
+            rationale="RuntimeSettings is stable via the facade; config internals are not.",
         ),
         CompatibilitySubject(
             key="module.contracts",
             area="module",
             status=CompatibilityStatus.INTERNAL,
-            rationale=(
-                "Serialization/reference implementation paths are not "
-                "separate public facades."
-            ),
+            rationale="Reference/serialization implementation paths are not public facades.",
         ),
         CompatibilitySubject(
             key="module.declarative",
