@@ -35,6 +35,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
     assert snapshot["supported_python_versions"] == ["3.11", "3.12", "3.13"]
     assert snapshot["contracts"] == {
         "cli_machine": "1",
+        "developer_experience": "1",
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
