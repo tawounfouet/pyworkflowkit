@@ -60,8 +60,7 @@ as:
 
 ```python
 @task()
-def invalid(a: int, b: int) -> int:
-    ...
+def invalid(a: int, b: int) -> int: ...
 ```
 
 could therefore pass static typing even though no executor contract could invoke it.
