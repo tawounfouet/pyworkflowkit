@@ -75,9 +75,7 @@ def test_rq06_requires_every_inherited_release_qualification_family() -> None:
         "security",
     )
 
-    workflow = (ROOT / ".github/workflows/release-qualification.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (ROOT / ".github/workflows/release-qualification.yml").read_text(encoding="utf-8")
 
     assert "release-candidate:" in workflow
     for job_id in REQUIRED_QUALIFICATION_JOB_IDS:
