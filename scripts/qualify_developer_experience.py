@@ -80,10 +80,7 @@ def _qualify_cli() -> dict[str, object]:
     target = "examples.getting_started_workflow:demo"
 
     aliases = ("pwk", "pyworkflowkit", "pyworkflow")
-    version_results = {
-        alias: _run(alias, "version")
-        for alias in aliases
-    }
+    version_results = {alias: _run(alias, "version") for alias in aliases}
     version = version_results["pwk"].stdout.strip()
     assert version
     for result in version_results.values():
@@ -102,8 +99,7 @@ def _qualify_cli() -> dict[str, object]:
             assert result.stderr == canonical.stderr
 
     invalid_results = [
-        _run_unchecked(alias, "validate", "invalid-target", "--json")
-        for alias in aliases
+        _run_unchecked(alias, "validate", "invalid-target", "--json") for alias in aliases
     ]
     canonical_invalid = invalid_results[0]
     assert canonical_invalid.returncode == 2
@@ -148,14 +144,10 @@ def _qualify_cli() -> dict[str, object]:
         assert executed["status"] == "SUCCEEDED"
         run_id = str(executed["run_id"])
 
-        inspected = _json_stdout(
-            _run("pwk", "inspect", run_id, "--config", str(config), "--json")
-        )
+        inspected = _json_stdout(_run("pwk", "inspect", run_id, "--config", str(config), "--json"))
         assert inspected["status"] == "SUCCEEDED"
 
-        events = _json_stdout(
-            _run("pwk", "events", run_id, "--config", str(config), "--json")
-        )
+        events = _json_stdout(_run("pwk", "events", run_id, "--config", str(config), "--json"))
         assert events["events"]
 
         manifest = _json_stdout(
