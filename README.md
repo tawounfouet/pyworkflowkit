@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.8.0`; current development line `0.9.0a1`.
-> RQ-01 begins 1.0 release-candidate stabilization by freezing the intentional public
-> facades as an executable compatibility contract.
+> **Status:** stable release `0.8.0`; current development line `0.9.0a2`.
+> RQ-01 froze the intentional public facades; RQ-02 now classifies compatibility,
+> deprecation, configuration defaults, aliases, and internal import boundaries for 1.0.
 
 ## What the stable 0.8 baseline provides
 
@@ -1049,7 +1049,7 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.7 and 0.8 lines are stable. The 0.9 line begins at **0.9.0a1** with
-**RQ-01 — Public API Freeze**. The existing runtime is now being stabilized toward 1.0
-through compatibility, typing, documentation, packaging, and final release qualification
-rather than new product-scope expansion.
+The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the intentional public
+facades. **0.9.0a2 / RQ-02** now makes compatibility policy executable: stable contracts,
+internal module paths, CLI aliases, configuration defaults, exception exports, and the
+deprecation/removal boundary are classified before the typing-focused RQ-03 milestone.
