@@ -340,7 +340,7 @@ internal runtime services
 
 Scheduling remains external.
 
-## M52 — Ecosystem SDK & Conformance Matrix — 0.8.0b1
+## M52 — Ecosystem SDK & Conformance Matrix — 0.8.0b1 ✅
 
 ### Objective
 
@@ -623,7 +623,9 @@ M50 Reference Integration Packages              ✅
     ↓
 M51 Control-Plane Provider Contract              ✅
     ↓
-M52 Ecosystem SDK & Conformance Matrix           NEXT
+M52 Ecosystem SDK & Conformance Matrix           ✅
+    ↓
+Transverse 0.8 Qualification                     NEXT
 ~~~
 
 M47 defines the generic synchronous external-workload protocol, normalized result,
@@ -642,7 +644,12 @@ M50 proves the ecosystem boundary through four independently built wheels using 
 Python entry points, explicit enablement, uninstall isolation, and a cross-project
 PyIngestKit 1.0.1 job executed behind one atomic ExternalWorkload.
 
-M51 now defines a schema-first ControlPlaneProvider contract and a WorkflowRuntimeProvider
+M51 defines a schema-first ControlPlaneProvider contract and a WorkflowRuntimeProvider
 implementation covering validation, inspection, execution, events, manifest, lineage,
 recovery, reconciliation, resume, and truthful capability negotiation without exposing
 runtime internals or taking ownership of scheduling.
+
+M52 now consolidates the ecosystem-facing contracts into `pyworkflowkit.ecosystem`,
+adds self-checking plugin authoring helpers, dependency-free conformance reports, an
+explicit `>=0.8.0b1,<0.9` compatibility window, and wheel-level qualification across
+Python 3.11, 3.12, and 3.13.
