@@ -61,7 +61,7 @@ plugin, the ecosystem conformance checks.
 
 ## Related example
 
-DX04 target: `examples/20_custom_executor.py`.
+Canonical companion: [`examples/20_custom_executor.py`](../../examples/20_custom_executor.py).
 
 ## Next chapter
 
