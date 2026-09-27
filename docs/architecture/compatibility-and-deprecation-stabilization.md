@@ -177,7 +177,7 @@ changed.
 RQ-02 corrects the compatibility window to:
 
 ```text
->=0.8.0b1,<1.0
+>=0.8.0b1,<2.0
 ```
 
 and updates the ecosystem template, reference packages, qualification fixtures, and
@@ -186,9 +186,9 @@ conformance assertions accordingly.
 The contract therefore becomes:
 
 ```text
-series            = 0.8-0.9
+series            = 0.8-1.x-1.x
 minimum           = 0.8.0b1
-maximum_exclusive = 1.0
+maximum_exclusive = 2.0
 SDK contract      = 1
 ```
 
