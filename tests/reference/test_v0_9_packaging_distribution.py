@@ -75,6 +75,10 @@ def test_rq05_sdist_scope_is_explicit() -> None:
         "/SECURITY.md",
         "/pyproject.toml",
     ]
+    assert sdist["exclude"] == [
+        "/.gitignore",
+        "/.editorconfig",
+    ]
 
 
 def test_rq05_artifact_path_contract_is_narrow() -> None:
