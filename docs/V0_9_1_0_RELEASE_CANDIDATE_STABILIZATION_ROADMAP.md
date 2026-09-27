@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0b2 / RQ-05**
+Status: **active — 0.9.0rc1 / RQ-06**
 
 ## Objective
 
@@ -33,8 +33,8 @@ RQ-01 Public API Freeze                    0.9.0a1   ✅
 RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
 RQ-03 Typing & Static Contracts            0.9.0a3   ✅
 RQ-04 Developer Experience & Documentation 0.9.0b1   ✅
-RQ-05 Packaging & Distribution             0.9.0b2   ACTIVE
-RQ-06 1.0 Release Qualification            0.9.0rc1
+RQ-05 Packaging & Distribution             0.9.0b2   ✅
+RQ-06 1.0 Release Qualification            0.9.0rc1  ACTIVE
                                            1.0.0
 ```
 
@@ -208,8 +208,39 @@ built-artifact Release Qualification gate is green
 
 ## RQ-06 — 1.0 Release Qualification
 
-RQ-06 will compose the inherited runtime, persistence, security, ecosystem, compatibility,
-typing, documentation, and packaging gates into the final 1.0 release-candidate gate.
+RQ-06 composes the inherited runtime, persistence, security, ecosystem, compatibility,
+typing, documentation, and packaging gates into one final release-candidate decision.
+
+The candidate introduces a Release-Candidate Contract v1 that freezes:
+
+- candidate version `0.9.0rc1`;
+- target release `1.0.0`;
+- RQ-01 through RQ-05 as required inherited tracks;
+- every release-qualification job family required by the 1.0 promise;
+- zero active `deprecated` / `remove-before-1.0` compatibility blockers;
+- the promotion rule `same-qualified-code-version-metadata-only`;
+- software-license selection as an explicit manual publication decision rather than an
+  inferred package change.
+
+The dedicated `1.0 release candidate` workflow job runs only after all inherited
+qualification families report success, installs the same built wheel, and executes the
+RQ-06 contract and installed-artifact qualifier.
+
+Exit criteria:
+
+```text
+package version = 0.9.0rc1
+Release-Candidate Contract v1 targets 1.0.0
+RQ-01 through RQ-05 remain v1 and target 1.0.0
+no active compatibility blocker
+all inherited qualification families are required
+installed wheel passes RQ-06 qualification
+regular CI is green
+Release Qualification is green
+aggregate release-candidate gate is green
+final release gate is green
+1.0 promotion permits version/release metadata only
+```
 
 ## Non-goals
 
