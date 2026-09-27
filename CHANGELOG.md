@@ -8,6 +8,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M43 CLI machine-contract v1 with explicit command inventory, application exit codes, required JSON top-level/nested keys, shared handled-error shape, and executable CLI acceptance snapshots.
+- M43 documentation defining compatible additive JSON evolution versus breaking command/key/type/stream/exit-code changes.
 - M42 deprecation infrastructure with typed categories, visible warning classes, versioned DeprecationSpec metadata, once-per-identity emission, decorator support, and an explicit active-deprecation catalog.
 - Enforced normal deprecation removal no earlier than the next minor release line, with a documented emergency security/invariant exception.
 - M42 unit and reference coverage for warning categories, caller stack location, duplicate suppression, decorator behavior, and policy validation.
@@ -17,7 +19,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The development line advances to `0.7.0a2`; M42 adds compatibility-evolution mechanics without deprecating an existing API.
+- The development line advances to `0.7.0a3`; M43 freezes the existing CLI machine surface without changing runtime behavior or existing payload shapes.
+- `manifest --json` is explicitly governed by RunManifest schema v1 rather than a competing CLI-specific manifest schema.
 - README roadmap now marks 0.6 stable and 0.7 as the active compatibility-contract line.
 
 ### Deprecated
