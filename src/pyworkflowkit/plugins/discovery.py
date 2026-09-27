@@ -206,6 +206,7 @@ class PluginDiscovery:
                 error=str(error),
             )
 
+
 __all__ = [
     "ENTRY_POINT_GROUPS",
     "DiscoveredPlugin",
