@@ -85,9 +85,9 @@ if scenario == "present":
     snapshot = ecosystem_contract_snapshot()
     assert snapshot["sdk_contract_version"] == ECOSYSTEM_SDK_CONTRACT_VERSION == "1"
     assert snapshot["compatibility"] == {
-        "series": "0.8",
+        "series": "0.8-0.9",
         "minimum": "0.8.0b1",
-        "maximum_exclusive": "0.9",
+        "maximum_exclusive": "1.0",
     }
     assert snapshot["supported_python_versions"] == ["3.11", "3.12", "3.13"]
     assert snapshot["contracts"] == {
