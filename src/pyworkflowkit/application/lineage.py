@@ -44,9 +44,24 @@ class ExecutionLineageProjector:
 
         tasks = []
         for task_run in sorted(task_runs, key=lambda value: str(value.task_id)):
-            attempts = self._metadata_store.list_task_attempts(task_run.task_run_id)
-            artifacts = self._metadata_store.list_artifacts(task_run.task_run_id)
-            external_refs = self._metadata_store.list_external_run_refs(task_run.task_run_id)
+            attempts = tuple(
+                sorted(
+                    self._metadata_store.list_task_attempts(task_run.task_run_id),
+                    key=lambda value: (value.attempt_number, str(value.attempt_id)),
+                )
+            )
+            artifacts = tuple(
+                sorted(
+                    self._metadata_store.list_artifacts(task_run.task_run_id),
+                    key=lambda value: str(value.artifact_id),
+                )
+            )
+            external_refs = tuple(
+                sorted(
+                    self._metadata_store.list_external_run_refs(task_run.task_run_id),
+                    key=lambda value: str(value.external_ref_id),
+                )
+            )
             tasks.append(
                 TaskExecutionLineage(
                     task_id=str(task_run.task_id),

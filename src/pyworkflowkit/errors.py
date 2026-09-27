@@ -330,6 +330,24 @@ class IntegrationError(PyWorkflowKitError):
     """Base class for optional runtime-integration boundary errors."""
 
 
+class ReferenceInteroperabilityError(IntegrationError):
+    """Raised when a reference cannot satisfy the portable M48 contract."""
+
+    def __init__(
+        self,
+        *,
+        reference_kind: str,
+        field: str,
+        reason: str,
+    ) -> None:
+        self.reference_kind = reference_kind
+        self.field = field
+        self.reason = reason
+        super().__init__(
+            f"Portable {reference_kind} reference field '{field}' is invalid: {reason}."
+        )
+
+
 class ExternalWorkloadError(IntegrationError):
     """Normalized failure from one atomic execution owned by another runtime."""
 
@@ -762,6 +780,7 @@ __all__ = [
     "PyIngestKitRetryOwnershipError",
     "PyWorkflowKitError",
     "ReconciliationError",
+    "ReferenceInteroperabilityError",
     "RecoveryError",
     "ResumeError",
     "RuntimeErrorBase",

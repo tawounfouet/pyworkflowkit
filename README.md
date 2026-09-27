@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.7.0`; current development line `0.8.0a1`.
-> M47 introduces External Workload Contract v1: one foreign runtime execution can be
-> represented as one atomic task without importing foreign runtime semantics into core.
+> **Status:** stable release `0.7.0`; current development line `0.8.0a2`.
+> M47 defines External Workload Contract v1; M48 now hardens `ArtifactReference` and
+> `ExternalRunRef` as portable, redacted, deterministic ecosystem evidence.
 
 ## What 0.7 provides
 
@@ -55,6 +55,7 @@ concurrency, hardened execution, recovery, and executable compatibility contract
 - historical SQLite/PostgreSQL migration qualification;
 - artifact-oriented Release Qualification across Python 3.11, 3.12, and 3.13.
 - generic external-workload interoperability with explicit retry ownership and `ExternalRunRef` evidence.
+- portable reference validation, manifest metadata redaction, and deterministic reference lineage.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.

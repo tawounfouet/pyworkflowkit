@@ -7,6 +7,7 @@ from enum import Enum
 from math import isfinite
 from typing import cast
 
+from pyworkflowkit.application.observability import redact_mapping
 from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.enums import (
     ATTEMPT_TERMINAL_STATUSES,
@@ -346,6 +347,7 @@ def _attempt_manifest(attempt: TaskAttempt) -> ManifestAttempt:
 
 
 def _artifact_manifest(artifact: ArtifactReference) -> ManifestArtifact:
+    metadata = redact_mapping(artifact.metadata)
     return ManifestArtifact(
         artifact_id=str(artifact.artifact_id),
         name=artifact.name,
@@ -355,12 +357,13 @@ def _artifact_manifest(artifact: ArtifactReference) -> ManifestArtifact:
         size_bytes=artifact.size_bytes,
         metadata={
             key: _to_json_value(value, path=f"artifact.{artifact.artifact_id}.{key}")
-            for key, value in sorted(artifact.metadata.items())
+            for key, value in sorted(metadata.items())
         },
     )
 
 
 def _external_ref_manifest(external_ref: ExternalRunRef) -> ManifestExternalRunRef:
+    metadata = redact_mapping(external_ref.metadata)
     return ManifestExternalRunRef(
         external_ref_id=str(external_ref.external_ref_id),
         provider=external_ref.provider,
@@ -371,7 +374,7 @@ def _external_ref_manifest(external_ref: ExternalRunRef) -> ManifestExternalRunR
                 value,
                 path=f"external_ref.{external_ref.external_ref_id}.{key}",
             )
-            for key, value in sorted(external_ref.metadata.items())
+            for key, value in sorted(metadata.items())
         },
     )
 
