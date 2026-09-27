@@ -42,6 +42,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
+        "release_candidate": "1",
         "typing": "1",
     }
     assert snapshot["migration_head"] == "0003_retry_eligible_at"
