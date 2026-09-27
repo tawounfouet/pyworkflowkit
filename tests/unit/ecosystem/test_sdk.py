@@ -91,9 +91,7 @@ def test_validate_conformance_reports_bad_workload_without_raising() -> None:
     )
 
     assert report.compatible is False
-    assert report.messages == (
-        "workload plugin instance does not satisfy ExternalWorkload",
-    )
+    assert report.messages == ("workload plugin instance does not satisfy ExternalWorkload",)
 
 
 def test_assert_conformance_raises_public_compatibility_error() -> None:
