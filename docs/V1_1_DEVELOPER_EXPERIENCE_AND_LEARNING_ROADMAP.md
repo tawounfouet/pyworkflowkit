@@ -831,7 +831,7 @@ PyWorkflowKit `1.1.0` is complete when:
 | DX01 | 1.1.0a1 | `pwk` canonical CLI | Complete |
 | DX02 | 1.1.0a2 | Rich human CLI | Complete |
 | DX03 | 1.1.0a3 | Zero-to-Hero guides | Complete |
-| DX04 | 1.1.0b1 | Canonical Python examples | Planned |
+| DX04 | 1.1.0b1 | Canonical Python examples | In progress |
 | DX05 | 1.1.0b2 | Interactive notebooks | Planned |
 | DX06 | 1.1.0rc1 | Transverse DX qualification | Planned |
 | Stable | 1.1.0 | Developer Experience & Learning | Planned |
@@ -840,17 +840,15 @@ PyWorkflowKit `1.1.0` is complete when:
 
 ## 17. Immediate next action
 
-After DX03 is merged, the next implementation action is:
+DX04 is now in progress:
 
 ```text
 LOT-DX04
     ↓
 1.1.0b1
     ↓
-Build the canonical executable Python example suite
-    ↓
-link every relevant guide to a real runnable companion
+Build and qualify the canonical executable Python example suite
 ```
 
-DX04 must reuse the concepts and terminology frozen by the Zero-to-Hero guide path rather
-than creating a parallel learning model.
+The examples reuse the concepts and terminology frozen by the Zero-to-Hero guide path and
+must not bypass the 1.0 public compatibility facades.
