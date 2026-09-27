@@ -50,12 +50,12 @@ production patterns
 | [02](02_TASKS_AND_HANDLERS.md) | Tasks and handlers | Available |
 | [03](03_WORKFLOW_DEFINITIONS.md) | Workflow definitions | Available |
 | [04](04_DEPENDENCIES_AND_DAG.md) | Dependencies and DAG | Available |
-| 05 | Execution planning | Planned in DX03 |
-| 06 | Workflow runtime | Planned in DX03 |
-| 07 | RunContext and data flow | Planned in DX03 |
-| 08 | Failures and retries | Existing guide will be promoted |
-| 09 | Events and observability | Planned in DX03 |
-| 10 | Manifest and evidence | Planned in DX03 |
+| [05](05_EXECUTION_PLANNING.md) | Execution planning | Available |
+| [06](06_WORKFLOW_RUNTIME.md) | Workflow runtime | Available |
+| [07](07_RUN_CONTEXT_AND_DATA_FLOW.md) | RunContext and data flow | Available |
+| [08](08_FAILURES_AND_RETRIES.md) | Failures and retries | Available |
+| [09](09_EVENTS_AND_OBSERVABILITY.md) | Events and observability | Available |
+| [10](10_MANIFEST_AND_EVIDENCE.md) | Manifest and evidence | Available |
 | 11 | MetadataStore | Planned in DX03 |
 | 12 | SQLite persistence | Planned in DX03 |
 | 13 | PostgreSQL persistence | Planned in DX03 |
