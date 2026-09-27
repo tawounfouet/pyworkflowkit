@@ -403,10 +403,7 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             area="distribution",
             status=CompatibilityStatus.STABLE,
             contract_version="1",
-            rationale=(
-                "Wheel/sdist metadata, contents, installability, and upgrade path "
-                "are qualified."
-            ),
+            rationale="Wheel/sdist metadata, contents, installs, and upgrade path are qualified.",
         ),
         CompatibilitySubject(
             key="module.adapters",
