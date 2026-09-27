@@ -330,6 +330,54 @@ class IntegrationError(PyWorkflowKitError):
     """Base class for optional runtime-integration boundary errors."""
 
 
+class ExternalWorkloadError(IntegrationError):
+    """Normalized failure from one atomic execution owned by another runtime."""
+
+    def __init__(
+        self,
+        *,
+        provider: str,
+        workload_ref: str,
+        error_type: str,
+        error_message: str,
+        error_category: str,
+        external_run_id: str | None = None,
+    ) -> None:
+        self.provider = provider
+        self.workload_ref = workload_ref
+        self.error_type = error_type
+        self.error_message = error_message
+        self.error_category = error_category
+        self.external_run_id = external_run_id
+        run_suffix = f" external_run_id='{external_run_id}'" if external_run_id is not None else ""
+        super().__init__(
+            f"External workload '{provider}:{workload_ref}' failed with "
+            f"{error_type}: {error_message}.{run_suffix}"
+        )
+
+
+class ExternalWorkloadRetryOwnershipError(IntegrationError):
+    """Raised when nested runtimes would both retry one external workload."""
+
+    def __init__(
+        self,
+        *,
+        provider: str,
+        workload_ref: str,
+        retry_owner: str,
+        max_attempts: int,
+    ) -> None:
+        self.provider = provider
+        self.workload_ref = workload_ref
+        self.retry_owner = retry_owner
+        self.max_attempts = max_attempts
+        super().__init__(
+            "External-runtime-owned retry requires PyWorkflowKit max_attempts=1; "
+            f"got max_attempts={max_attempts} for '{provider}:{workload_ref}' "
+            f"with retry_owner='{retry_owner}'."
+        )
+
+
 class PyIngestKitAdapterError(IntegrationError):
     """Translated failure from one atomic PyIngestKit workload."""
 
@@ -682,6 +730,8 @@ __all__ = [
     "ExecutorSerializationError",
     "ExecutorShutdownError",
     "ExecutorWorkerError",
+    "ExternalWorkloadError",
+    "ExternalWorkloadRetryOwnershipError",
     "GraphError",
     "HandlerNotFoundError",
     "InvalidExecutionPlanError",

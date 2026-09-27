@@ -147,7 +147,7 @@ PyWorkflowKit runtime model.
 | M52 | Ecosystem SDK & Conformance Matrix | 0.8.0b1 |
 | Qualification | Transverse ecosystem qualification | 0.8.0 |
 
-## M47 — External Workload Interoperability Contract — 0.8.0a1
+## M47 — External Workload Interoperability Contract — 0.8.0a1 ✅
 
 ### Objective
 
@@ -608,12 +608,16 @@ stabilization rather than major new capability work.
 1.0  Stable embeddable workflow runtime
 ~~~
 
-## Immediate next step after 0.7.0 stable
+## Current status
 
 ~~~text
-M47 — External Workload Interoperability Contract — 0.8.0a1
+0.7.0 stable                                   ✅
+    ↓
+M47 External Workload Interoperability 0.8.0a1 ✅
+    ↓
+M48 External References & Portable Evidence    NEXT
 ~~~
 
-M47 should define the exact public protocol/value objects, retry ownership, failure
-normalization, TaskResult/ExternalRunRef mapping, capability boundary and external
-conformance tests before implementation begins.
+M47 now defines the generic synchronous external-workload protocol, normalized result,
+retry ownership, failure normalization, TaskResult/ExternalRunRef mapping and
+executor-owned timeout/cancellation boundary.

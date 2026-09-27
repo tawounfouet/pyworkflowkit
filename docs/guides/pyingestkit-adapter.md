@@ -1,5 +1,11 @@
 # PyIngestKit adapter
 
+> **0.8 note:** this specialized adapter remains backward-compatible. New generic
+> external-runtime integrations should target
+> `pyworkflowkit.integrations.ExternalWorkload` and
+> `ExternalWorkloadResult`. PyIngestKit remains one atomic workload and does not become
+> a core dependency.
+
 PyWorkflowKit treats a PyIngestKit job as **one atomic workload**.
 
 ```text

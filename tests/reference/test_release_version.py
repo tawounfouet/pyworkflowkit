@@ -1,4 +1,4 @@
-"""0.7.0 stable release metadata consistency checks."""
+"""0.8.0a1 0.8.0a1 development metadata consistency checks."""
 
 from importlib.metadata import version
 
@@ -7,7 +7,7 @@ from typer.testing import CliRunner
 import pyworkflowkit
 from pyworkflowkit.cli import app
 
-EXPECTED_VERSION = "0.7.0"
+EXPECTED_VERSION = "0.8.0a1"
 
 
 def test_package_metadata_and_public_version_match_development_version() -> None:
