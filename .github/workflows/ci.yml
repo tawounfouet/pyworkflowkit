@@ -321,6 +321,32 @@ jobs:
         run: pytest tests/reference/test_v0_9_packaging_distribution.py -q
 
 
+  release-candidate:
+    name: 1.0 release candidate contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Qualify RQ-06 source contract
+        run: pytest tests/reference/test_v0_9_release_candidate.py -q
+
+      - name: Qualify release candidate snapshot
+        run: python scripts/qualify_v1_release_candidate.py --json
+
+
   transverse-v0-8:
     name: 0.8 transverse qualification
     runs-on: ubuntu-latest
