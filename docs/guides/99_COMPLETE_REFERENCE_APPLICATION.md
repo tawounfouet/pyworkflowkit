@@ -146,7 +146,10 @@ platform governance
 
 Those remain outside the PyWorkflowKit core product boundary.
 
+## Canonical executable companion
+
+Run [`examples/complete/data_pipeline.py`](../../examples/complete/data_pipeline.py) for the executable version of this reference application.
+
 ## Next
 
-DX04 turns these teaching concepts into the complete canonical executable example set.
-DX05 then adds interactive notebooks, and DX06 qualifies consistency across every surface.
+DX04 now provides the canonical executable example set. DX05 adds interactive notebooks, and DX06 qualifies consistency across every surface.
