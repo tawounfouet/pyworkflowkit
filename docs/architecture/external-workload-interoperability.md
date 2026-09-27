@@ -82,8 +82,7 @@ A third-party wrapper implements:
 
 ~~~python
 class ExternalWorkload(Protocol):
-    def run(self, *, context: RunContext) -> ExternalWorkloadResult:
-        ...
+    def run(self, *, context: RunContext) -> ExternalWorkloadResult: ...
 ~~~
 
 The protocol is deliberately small.
@@ -165,7 +164,7 @@ ExternalRetryOwner.EXTERNAL
 ### External runtime owns retries
 
 ~~~python
-retry_owner=ExternalRetryOwner.EXTERNAL
+retry_owner = ExternalRetryOwner.EXTERNAL
 ~~~
 
 PyWorkflowKit must then use:
@@ -188,7 +187,7 @@ BAD effective executions = 9
 ### PyWorkflowKit owns retries
 
 ~~~python
-retry_owner=ExternalRetryOwner.PYWORKFLOWKIT
+retry_owner = ExternalRetryOwner.PYWORKFLOWKIT
 ~~~
 
 The foreign wrapper must disable its own retry loop.
