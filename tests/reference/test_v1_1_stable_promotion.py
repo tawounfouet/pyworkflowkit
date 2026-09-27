@@ -49,9 +49,8 @@ def test_v1_1_stable_release_metadata_is_present() -> None:
 
 
 def test_v1_1_roadmap_is_closed() -> None:
-    roadmap = (
-        ROOT / "docs" / "V1_1_DEVELOPER_EXPERIENCE_AND_LEARNING_ROADMAP.md"
-    ).read_text(encoding="utf-8")
+    roadmap_path = ROOT / "docs" / "V1_1_DEVELOPER_EXPERIENCE_AND_LEARNING_ROADMAP.md"
+    roadmap = roadmap_path.read_text(encoding="utf-8")
 
     assert "| DX06 | 1.1.0rc1 | Transverse DX qualification | Complete |" in roadmap
     assert "| Stable | 1.1.0 | Developer Experience & Learning | Complete |" in roadmap
