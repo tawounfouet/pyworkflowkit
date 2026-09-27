@@ -74,7 +74,7 @@ Installed plugins use normal Python package entry points. The CLI can show candi
 without loading them:
 
 ```bash
-pyworkflow plugins --json
+pwk plugins --json
 ```
 
-Use `pyworkflow doctor` to explicitly check selected plugin compatibility.
+Use `pwk doctor` to explicitly check selected plugin compatibility.
