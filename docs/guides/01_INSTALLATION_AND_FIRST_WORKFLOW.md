@@ -169,7 +169,7 @@ Canonical companion: [`examples/01_tasks_and_handlers.py`](../../examples/01_tas
 
 ## Related notebook
 
-DX05 will provide `01 - Hello Workflow.ipynb`.
+Canonical notebook: [`01 - Hello Workflow.ipynb`](<../../notebooks/01 - Hello Workflow.ipynb>).
 
 ## Next chapter
 

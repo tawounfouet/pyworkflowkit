@@ -18,6 +18,45 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0rc1 - 2026-09-28
+
+### Added
+
+- Developer Experience Contract v2 targeting `1.1.0` while preserving the stable v1
+  contract for `1.0.0`.
+- Transverse DX qualifier covering CLI identity, JSON behavior, Rich human rendering,
+  first-use execution, advanced integrations, and representative notebooks.
+- Cross-surface acceptance for the 29 guides, 24 canonical examples, 19 notebooks, local
+  links, and guide/example/notebook bidirectional references.
+- Dedicated 1.1 Developer Experience gates in regular CI and built-wheel Release
+  Qualification.
+- Release note `docs/releases/1.1.0rc1.md`.
+
+### Changed
+
+- Current learning guides no longer contain stale DX04/DX05 future placeholders.
+- The 1.1 release line moves from beta learning-surface construction to release-candidate
+  transverse qualification.
+- Stable promotion to `1.1.0` is now gated by the complete cross-surface Developer
+  Experience contract.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Missing guide-to-notebook links for onboarding, SQLite, plugins, custom executors,
+  production patterns, and the complete workflow lab.
+
+### Security
+
+- No runtime security contract changes.
+
 ## 1.1.0b2 - 2026-09-28
 
 ### Added

@@ -150,6 +150,12 @@ Those remain outside the PyWorkflowKit core product boundary.
 
 Run [`examples/complete/data_pipeline.py`](../../examples/complete/data_pipeline.py) for the executable version of this reference application.
 
+## Canonical notebook companion
+
+Use [`99 - Complete Workflow Lab.ipynb`](<../../notebooks/99 - Complete Workflow Lab.ipynb>)
+for the interactive version of this end-to-end workflow.
+
 ## Next
 
-DX04 now provides the canonical executable example set. DX05 adds interactive notebooks, and DX06 qualifies consistency across every surface.
+DX06 qualifies this guide, its executable companion, the notebook lab, CLI behavior, and
+the rest of the 1.1 learning surfaces as one coherent Developer Experience.

@@ -105,6 +105,10 @@ Canonical companion: [`examples/12_sqlite.py`](../../examples/12_sqlite.py).
 
 The historical `examples/02_sqlite_persistence.py` example remains available for compatibility.
 
+## Related notebook
+
+Canonical notebook: [`11 - SQLite Persistence.ipynb`](<../../notebooks/11 - SQLite Persistence.ipynb>).
+
 ## Next chapter
 
 Continue with [13 — PostgreSQL Persistence](13_POSTGRESQL_PERSISTENCE.md).

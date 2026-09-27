@@ -79,6 +79,10 @@ Canonical companion: [`examples/19_plugin.py`](../../examples/19_plugin.py).
 
 The historical `examples/03_ecosystem_plugin.py` example remains available for compatibility.
 
+## Related notebook
+
+Canonical notebook: [`15 - Plugins.ipynb`](<../../notebooks/15 - Plugins.ipynb>).
+
 ## Next chapter
 
 Continue with [20 — External Workloads](20_EXTERNAL_WORKLOADS.md).
