@@ -26,6 +26,7 @@ from pyworkflowkit.compatibility import (
     compatibility_contract_snapshot,
 )
 from pyworkflowkit.config import RuntimeSettings
+from pyworkflowkit.contracts.release_candidate import RELEASE_CANDIDATE_CONTRACT_VERSION
 from pyworkflowkit.control_plane import CONTROL_PLANE_PROVIDER_CONTRACT_VERSION
 from pyworkflowkit.ecosystem import (
     ECOSYSTEM_COMPATIBILITY_SERIES,
@@ -73,6 +74,7 @@ def test_rq02_all_versioned_contracts_remain_v1() -> None:
     assert EXTERNAL_WORKLOAD_CONTRACT_VERSION == "1"
     assert REFERENCE_INTEROPERABILITY_CONTRACT_VERSION == "1"
     assert OBSERVABILITY_INTEROPERABILITY_CONTRACT_VERSION == "1"
+    assert RELEASE_CANDIDATE_CONTRACT_VERSION == "1"
     assert MIGRATION_HEAD_REVISION == "0003_retry_eligible_at"
 
 
