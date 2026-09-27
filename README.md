@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.8.0`; current development line `0.9.0a3`.
-> RQ-01 froze the public facades, RQ-02 froze compatibility policy, and RQ-03 now
-> qualifies those contracts as strict PEP 561 typed consumer surfaces.
+> **Status:** stable release `0.8.0`; current development line `0.9.0b1`.
+> RQ-01 froze the public facades, RQ-02 froze compatibility policy, RQ-03 qualified
+> static typing, and RQ-04 now makes the first-use developer journey executable.
 
 ## What the stable 0.8 baseline provides
 
@@ -87,6 +87,35 @@ PostgreSQL support is optional:
 ```bash
 python -m pip install "pyworkflowkit[postgres]"
 ```
+
+## Start here
+
+The supported first-use path is documented in
+[`docs/guides/getting-started.md`](docs/guides/getting-started.md).
+
+The minimal public-API example is executable:
+
+```bash
+python examples/00_hello_world.py
+```
+
+For CLI-first usage:
+
+```bash
+pyworkflow validate examples.getting_started_workflow:demo --json
+pyworkflow plan examples.getting_started_workflow:demo --json
+```
+
+Continue with:
+
+- [CLI workflow](docs/guides/cli-workflow.md)
+- [Failures and retries](docs/guides/failures-and-retries.md)
+- [Persistence and evidence](docs/guides/persistence-and-evidence.md)
+- [Plugin authoring](docs/guides/plugin-authoring.md)
+- [Troubleshooting](docs/guides/troubleshooting.md)
+
+These guides intentionally start from the frozen `pyworkflowkit` and
+`pyworkflowkit.ecosystem` facades instead of implementation modules.
 
 ## Public API example
 
@@ -1049,7 +1078,8 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the intentional public
-facades and **0.9.0a2 / RQ-02** made compatibility policy executable. **0.9.0a3 / RQ-03**
-now qualifies public decorators, Protocols, plugin factories, control-plane contracts,
-and the Ecosystem SDK through strict external-consumer static typing.
+The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the public facades,
+**0.9.0a2 / RQ-02** made compatibility policy executable, and **0.9.0a3 / RQ-03**
+qualified strict external-consumer typing. **0.9.0b1 / RQ-04** now qualifies the
+install → define → run → inspect → persist → plugin-authoring journey as executable
+documentation.
