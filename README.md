@@ -7,11 +7,11 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.5.0`; current development line `0.6.0a4`.
-> M37 detects stale candidates, M38 reconciles ambiguous external work, M39 resumes the
-> same persisted WorkflowRun, and M40 makes retry backoff non-blocking in the concurrent runtime.
+> **Status:** stable release `0.6.0`.
+> The 0.6 line adds crash-recovery assessment, reconciliation, same-run resume, and
+> durable non-blocking retry coordination.
 
-## What 0.5 provides
+## What 0.6 provides
 
 The `0.5.x` line keeps the complete local developer framework and concurrency foundation
 from 0.4, then adds hardened execution and integration:
@@ -46,6 +46,10 @@ from 0.4, then adds hardened execution and integration:
 - subprocess executable/cwd/environment/I/O guardrails;
 - observability payload and sink-error redaction;
 - blocking Bandit, pip-audit, and detect-secrets CI security gates.
+- read-only stale-run recovery assessment over durable runtime evidence;
+- provider-specific reconciliation of ambiguous external executions;
+- same-`WorkflowRun` resume with durable portable dependency-output checkpoints;
+- durable `retry_eligible_at` evidence and non-blocking concurrent retry backoff.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.

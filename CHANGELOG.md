@@ -8,6 +8,21 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.6.0 - 2026-09-27
+
+### Added
+
+- Transverse 0.6 release qualification freezing recovery, reconciliation, resume, retry-wait, migration, evidence, and public-surface contracts.
 - M40 durable non-blocking retry eligibility through TaskAttempt.retry_eligible_at.
 - Alembic revision 0003_retry_eligible_at for SQLite and PostgreSQL metadata stores.
 - ConcurrentRunner retry-deadline coordination without blocking Sleeper calls.
@@ -37,7 +52,7 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The 0.6 development line advances to 0.6.0a4.
+- The 0.6 recovery line is qualified and promoted to stable 0.6.0.
 - ConcurrentRunner replaces retry sleeps with wall-clock retry_eligible_at evidence plus local monotonic deadlines, allowing unrelated READY work to continue during backoff.
 - Sequential Runner retains simple blocking execution while persisting retry eligibility before sleeping.
 - Recovery and reconciliation treat an explicit retry wait as known runtime intent rather than ambiguous RUNNING work.
