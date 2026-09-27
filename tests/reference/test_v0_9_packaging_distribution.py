@@ -75,14 +75,11 @@ def test_rq05_sdist_scope_is_explicit() -> None:
         "/SECURITY.md",
         "/pyproject.toml",
     ]
-    assert sdist["exclude"] == [
-        "/.gitignore",
-        "/.editorconfig",
-    ]
 
 
 def test_rq05_artifact_path_contract_is_narrow() -> None:
     assert "pyworkflowkit/py.typed" in REQUIRED_WHEEL_PATHS
+    assert ".gitignore" in REQUIRED_SDIST_PATHS
     assert "src/pyworkflowkit/py.typed" in REQUIRED_SDIST_PATHS
 
     for prefix in (
