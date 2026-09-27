@@ -122,11 +122,7 @@ Canonical companion: [`examples/01_tasks_and_handlers.py`](../../examples/01_tas
 
 ## Related notebook
 
-DX05 target:
-
-```text
-02 - Tasks and Handlers.ipynb
-```
+Canonical notebook: [`02 - Tasks and Handlers.ipynb`](<../../notebooks/02 - Tasks and Handlers.ipynb>).
 
 ## Next chapter
 

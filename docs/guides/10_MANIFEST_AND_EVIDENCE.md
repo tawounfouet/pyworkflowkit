@@ -101,7 +101,7 @@ Canonical companion: [`examples/11_manifest.py`](../../examples/11_manifest.py).
 
 ## Related notebook
 
-DX05 target: `10 - Run Manifest.ipynb`.
+Canonical notebook: [`10 - Run Manifest.ipynb`](<../../notebooks/10 - Run Manifest.ipynb>).
 
 ## Next chapter
 

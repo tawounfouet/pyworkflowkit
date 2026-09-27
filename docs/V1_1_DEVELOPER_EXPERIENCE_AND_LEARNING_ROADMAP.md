@@ -832,7 +832,7 @@ PyWorkflowKit `1.1.0` is complete when:
 | DX02 | 1.1.0a2 | Rich human CLI | Complete |
 | DX03 | 1.1.0a3 | Zero-to-Hero guides | Complete |
 | DX04 | 1.1.0b1 | Canonical Python examples | Complete |
-| DX05 | 1.1.0b2 | Interactive notebooks | Planned |
+| DX05 | 1.1.0b2 | Interactive notebooks | Complete |
 | DX06 | 1.1.0rc1 | Transverse DX qualification | Planned |
 | Stable | 1.1.0 | Developer Experience & Learning | Planned |
 
@@ -840,17 +840,15 @@ PyWorkflowKit `1.1.0` is complete when:
 
 ## 17. Immediate next action
 
-After DX04 is merged, the next implementation action is:
+After DX05 is merged, the next implementation action is:
 
 ```text
-LOT-DX05
+LOT-DX06
     ↓
-1.1.0b2
+1.1.0rc1
     ↓
-Build the interactive notebook learning path
-    ↓
-cross-link each notebook with its guide and canonical script
+Qualify the complete Developer Experience across CLI, guides, examples, notebooks, and tests
 ```
 
-DX05 must explore the same public concepts interactively rather than duplicating the
-canonical scripts cell by cell.
+DX06 must freeze cross-surface terminology, references, first-use journeys, and advanced-use
+journeys before the stable `1.1.0` promotion.

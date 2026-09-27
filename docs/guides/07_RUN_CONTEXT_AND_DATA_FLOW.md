@@ -109,7 +109,7 @@ Canonical companion: [`examples/07_run_context.py`](../../examples/07_run_contex
 
 ## Related notebook
 
-DX05 target: `07 - RunContext and Data Flow.ipynb`.
+Canonical notebook: [`07 - RunContext and Data Flow.ipynb`](<../../notebooks/07 - RunContext and Data Flow.ipynb>).
 
 ## Next chapter
 

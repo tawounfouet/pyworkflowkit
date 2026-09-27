@@ -101,7 +101,7 @@ Canonical companion: [`examples/10_events.py`](../../examples/10_events.py).
 
 ## Related notebook
 
-DX05 target: `09 - Events and Evidence.ipynb`.
+Canonical notebook: [`09 - Events and Evidence.ipynb`](<../../notebooks/09 - Events and Evidence.ipynb>).
 
 ## Next chapter
 

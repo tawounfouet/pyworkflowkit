@@ -51,7 +51,7 @@ Canonical integration companion: [`examples/integrations/pyingestkit/atomic_job.
 
 ## Related notebook
 
-DX05 target: `17 - PyIngestKit Integration.ipynb`.
+Canonical notebook: [`17 - PyIngestKit Integration.ipynb`](<../../notebooks/17 - PyIngestKit Integration.ipynb>).
 
 ## Next chapter
 

@@ -83,7 +83,7 @@ Canonical companion: [`examples/15_concurrency.py`](../../examples/15_concurrenc
 
 ## Related notebook
 
-DX05 target: `13 - Concurrency.ipynb`.
+Canonical notebook: [`13 - Concurrency.ipynb`](<../../notebooks/13 - Concurrency.ipynb>).
 
 ## Next chapter
 

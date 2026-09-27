@@ -109,7 +109,7 @@ The historical `examples/01_failure_and_retry.py` example remains available for 
 
 ## Related notebook
 
-DX05 target: `08 - Failures and Retries.ipynb`.
+Canonical notebook: [`08 - Failures and Retries.ipynb`](<../../notebooks/08 - Failures and Retries.ipynb>).
 
 ## Next chapter
 
