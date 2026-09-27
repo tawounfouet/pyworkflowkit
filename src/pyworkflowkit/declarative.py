@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import ParamSpec, TypeVar, overload
+from typing import overload
 
 from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.domain.enums import FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.ids import TaskId, WorkflowId
 from pyworkflowkit.domain.values import RetryPolicy, WorkflowParameter
 from pyworkflowkit.ports.executor import TaskHandler
-
-P = ParamSpec("P")
-R = TypeVar("R")
 
 WorkflowDeclaration = Callable[[], Sequence["TaskHandle"]]
 
@@ -97,7 +94,7 @@ class WorkflowBuilder:
 
 
 @overload
-def task(function: Callable[P, R], /) -> TaskHandle: ...
+def task(function: TaskHandler, /) -> TaskHandle: ...
 
 
 @overload
@@ -113,11 +110,11 @@ def task(
     timeout_mode: TimeoutMode = TimeoutMode.NONE,
     tags: Sequence[str] = (),
     description: str | None = None,
-) -> Callable[[Callable[P, R]], TaskHandle]: ...
+) -> Callable[[TaskHandler], TaskHandle]: ...
 
 
 def task(
-    function: Callable[P, R] | None = None,
+    function: TaskHandler | None = None,
     /,
     *,
     id: str | None = None,
@@ -128,10 +125,10 @@ def task(
     timeout_mode: TimeoutMode = TimeoutMode.NONE,
     tags: Sequence[str] = (),
     description: str | None = None,
-) -> TaskHandle | Callable[[Callable[P, R]], TaskHandle]:
+) -> TaskHandle | Callable[[TaskHandler], TaskHandle]:
     """Declare a task without executing its handler."""
 
-    def decorate(handler: Callable[P, R]) -> TaskHandle:
+    def decorate(handler: TaskHandler) -> TaskHandle:
         task_id = TaskId(id or handler.__name__)
         handler_ref = f"{handler.__module__}:{handler.__qualname__}"
         dependency_ids = tuple(_dependency_id(value) for value in depends_on)
