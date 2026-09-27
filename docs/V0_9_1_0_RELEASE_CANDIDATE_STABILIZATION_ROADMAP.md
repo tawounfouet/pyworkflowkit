@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0a3 / RQ-03**
+Status: **active — 0.9.0b1 / RQ-04**
 
 ## Objective
 
@@ -31,8 +31,8 @@ strictly required to make an already-promised contract correct.
 ```text
 RQ-01 Public API Freeze                    0.9.0a1   ✅
 RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
-RQ-03 Typing & Static Contracts            0.9.0a3   ACTIVE
-RQ-04 Developer Experience & Documentation 0.9.0b1
+RQ-03 Typing & Static Contracts            0.9.0a3   ✅
+RQ-04 Developer Experience & Documentation 0.9.0b1   ACTIVE
 RQ-05 Packaging & Distribution             0.9.0b2
 RQ-06 1.0 Release Qualification            0.9.0rc1
                                            1.0.0
@@ -140,8 +140,38 @@ built-wheel Release Qualification gate is green
 
 ## RQ-04 — Developer Experience & Documentation
 
-RQ-04 will qualify the first-use path from install to define/run/inspect/failure handling
-without requiring knowledge of the internal architecture corpus.
+RQ-04 qualifies the first-use path as executable release evidence rather than prose-only
+documentation.
+
+The milestone introduces a Developer Experience Contract v1 and validates:
+
+- installation/version discovery;
+- public `@task` / `@workflow` authoring;
+- execution through `WorkflowRuntime`;
+- event and manifest inspection;
+- failure/retry behavior;
+- SQLite persistence across runtime instances and CLI processes;
+- the CLI journey `version → validate → plan → run → inspect → events → manifest`;
+- first plugin authoring through `pyworkflowkit.ecosystem`;
+- troubleshooting guidance for the most common boundary mistakes.
+
+All first-use examples are statically inspected to ensure PyWorkflowKit imports use only
+the documented `pyworkflowkit` and `pyworkflowkit.ecosystem` facades.
+
+Exit criteria:
+
+```text
+package version = 0.9.0b1
+Developer Experience Contract v1 targets 1.0.0
+README contains an explicit Start here path
+required first-use guides exist
+first-use examples use only public authoring facades
+hello-world / retry / SQLite / plugin examples execute successfully
+complete CLI first-run journey succeeds
+both console aliases report the same version
+source CI is green
+built-wheel Release Qualification gate is green
+```
 
 ## RQ-05 — Packaging & Distribution
 
