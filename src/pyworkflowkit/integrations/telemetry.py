@@ -283,8 +283,7 @@ class _OpenTelemetryCounter(Protocol):
         self,
         amount: int | float,
         attributes: Mapping[str, TelemetryAttributeValue] | None = None,
-    ) -> object:
-        ...
+    ) -> object: ...
 
 
 class _OpenTelemetryHistogram(Protocol):
@@ -292,8 +291,7 @@ class _OpenTelemetryHistogram(Protocol):
         self,
         amount: int | float,
         attributes: Mapping[str, TelemetryAttributeValue] | None = None,
-    ) -> object:
-        ...
+    ) -> object: ...
 
 
 class OpenTelemetryMeter(Protocol):
