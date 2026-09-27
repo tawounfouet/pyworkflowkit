@@ -23,9 +23,9 @@ def test_v0_8_ecosystem_contract_is_stable() -> None:
 
     assert ECOSYSTEM_SDK_CONTRACT_VERSION == "1"
     assert snapshot["compatibility"] == {
-        "series": "0.8-0.9",
+        "series": "0.8-1.x",
         "minimum": "0.8.0b1",
-        "maximum_exclusive": "1.0",
+        "maximum_exclusive": "2.0",
     }
     assert snapshot["supported_python_versions"] == ["3.11", "3.12", "3.13"]
 
