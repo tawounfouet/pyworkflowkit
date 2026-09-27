@@ -65,6 +65,10 @@ Use those scenarios as behavioral specifications, not as duplicated business log
 Machine-facing tests should use `--json` and assert exit codes separately from human Rich
 rendering.
 
+## Related executable qualification
+
+DX04 smoke coverage lives in [`tests/reference/test_v1_1_canonical_examples.py`](../../tests/reference/test_v1_1_canonical_examples.py) and executes every canonical companion as a clean process.
+
 ## Next chapter
 
 Continue with [26 — Debugging and Troubleshooting](26_DEBUGGING_AND_TROUBLESHOOTING.md).
