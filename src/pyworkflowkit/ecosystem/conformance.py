@@ -5,10 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pyworkflowkit.errors import PluginCompatibilityError
-from pyworkflowkit.integrations import ExternalWorkload
 from pyworkflowkit.plugins import (
     PluginContractIssue,
-    PluginContractIssueCode,
     PluginType,
     RegisteredPlugin,
     validate_plugin_instance,
@@ -45,7 +43,13 @@ def validate_plugin_conformance(
     plugin_type: PluginType,
     create_instance: bool = True,
 ) -> EcosystemConformanceReport:
-    """Validate registration metadata and, optionally, one created instance."""
+    """Validate registration metadata and the structural contract owned by Plugin API v1.
+
+    WORKLOAD intentionally remains an open plugin category at this level. A workload
+    plugin may itself be an ExternalWorkload or may be an adapter/factory that creates
+    one. The M47 ExternalWorkload protocol is validated when the produced workload is
+    actually composed for execution, not by narrowing the generic Plugin API category.
+    """
 
     from pyworkflowkit.ecosystem.authoring import entry_point_group
 
@@ -57,21 +61,11 @@ def validate_plugin_conformance(
     issues = list(registration_report.issues)
 
     if create_instance and isinstance(registration, RegisteredPlugin) and not issues:
-        instance = registration.create()
-        if plugin_type is PluginType.WORKLOAD:
-            if not isinstance(instance, ExternalWorkload):
-                issues.append(
-                    PluginContractIssue(
-                        code=PluginContractIssueCode.INSTANCE_TYPE,
-                        message="workload plugin instance does not satisfy ExternalWorkload",
-                    )
-                )
-        else:
-            instance_report = validate_plugin_instance(
-                instance,
-                plugin_type=plugin_type,
-            )
-            issues.extend(instance_report.issues)
+        instance_report = validate_plugin_instance(
+            registration.create(),
+            plugin_type=plugin_type,
+        )
+        issues.extend(instance_report.issues)
 
     return EcosystemConformanceReport(
         plugin_name=entry_point_name,

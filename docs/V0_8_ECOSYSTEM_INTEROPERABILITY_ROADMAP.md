@@ -384,7 +384,7 @@ uninstall integration
 leave core operational
 ~~~
 
-## Transverse 0.8 qualification
+## Transverse 0.8 qualification ✅
 
 After M52:
 
@@ -625,7 +625,11 @@ M51 Control-Plane Provider Contract              ✅
     ↓
 M52 Ecosystem SDK & Conformance Matrix           ✅
     ↓
-Transverse 0.8 Qualification                     NEXT
+Transverse 0.8 Qualification                     ✅
+    ↓
+0.8.0 stable                                     ✅
+    ↓
+0.9 release-candidate stabilization              NEXT
 ~~~
 
 M47 defines the generic synchronous external-workload protocol, normalized result,
@@ -653,3 +657,21 @@ M52 now consolidates the ecosystem-facing contracts into `pyworkflowkit.ecosyste
 adds self-checking plugin authoring helpers, dependency-free conformance reports, an
 explicit `>=0.8.0b1,<0.9` compatibility window, and wheel-level qualification across
 Python 3.11, 3.12, and 3.13.
+
+
+## 0.8 stable qualification outcome
+
+The stable qualification executes scenarios A-F in one installed environment around the
+built wheel and resolves one beta-line finding before promotion: PluginType.WORKLOAD
+remains generic at plugin level so an adapter factory may legitimately produce the
+ExternalWorkload that is later composed into a task.
+
+The 0.8 line is therefore complete and promoted to 0.8.0 stable.
+
+Next line:
+
+~~~text
+0.9
+  ↓
+1.0 release-candidate stabilization
+~~~

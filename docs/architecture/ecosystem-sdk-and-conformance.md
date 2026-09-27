@@ -272,4 +272,5 @@ repeat this on Python 3.11 / 3.12 / 3.13
 
 ## Next
 
-Transverse 0.8 qualification and promotion to 0.8.0 stable.
+After transverse 0.8 qualification and promotion to 0.8.0 stable, the next roadmap line is
+0.9 release-candidate stabilization toward 1.0.

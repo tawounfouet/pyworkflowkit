@@ -8,6 +8,23 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 0.8.0 - 2026-09-27
+
+### Added
+
+- Transverse 0.8 stable qualification covering core-only execution, a third-party executor plugin, real PyIngestKit external workload execution, optional observability, public control-plane operation, and broken-plugin isolation in one installed environment.
+- Dedicated `qualification-integrations` fixtures and `scripts/qualify_v0_8_transverse.py` stable release gate.
+
 - M52 Ecosystem SDK & Conformance Matrix with a dedicated `pyworkflowkit.ecosystem` authoring facade.
 - Machine-readable ecosystem compatibility snapshot covering Python support, contract versions, entry-point groups, and the explicit `>=0.8.0b1,<0.9` support window.
 - `plugin_registration()`, `entry_point_group()`, and dependency-free plugin conformance helpers for external package authors.
@@ -37,6 +54,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The 0.8 ecosystem interoperability line is promoted from `0.8.0b1` to stable `0.8.0` after transverse qualification.
+- WORKLOAD plugin conformance preserves the generic Plugin API category so adapter factories such as the canonical PyIngestKit integration remain valid; the ExternalWorkload protocol applies to the workload ultimately composed for execution.
 - The development line advances to `0.8.0b1`; M47-M51 are now exposed through a consolidated third-party authoring and conformance surface.
 - Ecosystem compatibility is executable across Python 3.11/3.12/3.13 rather than documentary only.
 - The development line advances to `0.8.0a5`; external control planes can now operate PyWorkflowKit through portable public contracts rather than runtime internals.

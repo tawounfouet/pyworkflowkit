@@ -148,14 +148,36 @@ jobs:
 
       - name: Development metadata smoke
         run: |
-          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.8.0b1'"
-          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0b1'"
-          pyworkflow version | grep -Fx "0.8.0b1"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.8.0'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0'"
+          pyworkflow version | grep -Fx "0.8.0"
 
       - name: Migration resources smoke
         run: |
           python -c "from importlib.resources import files; versions=files('pyworkflowkit.migrations.versions'); assert versions.joinpath('0001_runtime_metadata.py').is_file(); assert versions.joinpath('0002_task_output_checkpoints.py').is_file(); assert versions.joinpath('0003_retry_eligible_at.py').is_file()"
 
+
+  transverse-v0-8:
+    name: 0.8 transverse qualification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install qualification build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build hatchling
+
+      - name: Qualify scenarios A-F together
+        run: python scripts/qualify_v0_8_transverse.py
 
   ecosystem-sdk:
     name: Ecosystem SDK (Python ${{ matrix.python-version }})
