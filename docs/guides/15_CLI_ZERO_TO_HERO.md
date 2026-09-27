@@ -136,7 +136,7 @@ Never scrape the human Rich output in scripts.
 
 ## Related example
 
-CLI-oriented executable examples are completed in DX04.
+Use the [canonical examples index](../../examples/README.md) alongside this CLI journey. The execution-plan and control-plane companions are especially useful for machine-facing workflows.
 
 ## Related notebook
 
