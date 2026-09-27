@@ -10,8 +10,8 @@ from pyworkflowkit.adapters.executors.local import LocalExecutor
 from pyworkflowkit.errors import PluginCompatibilityError
 from pyworkflowkit.plugins import (
     ENTRY_POINT_GROUPS,
-    PLUGIN_TYPE_BY_ENTRY_POINT_GROUP,
     PLUGIN_API_VERSION,
+    PLUGIN_TYPE_BY_ENTRY_POINT_GROUP,
     PluginContractIssueCode,
     PluginDescriptor,
     PluginType,
