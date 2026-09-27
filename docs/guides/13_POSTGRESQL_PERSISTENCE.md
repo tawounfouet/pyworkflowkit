@@ -78,7 +78,9 @@ a scheduler or control plane.
 
 ## Related example
 
-DX04 target: `examples/13_postgresql.py`.
+Canonical companion: [`examples/13_postgresql.py`](../../examples/13_postgresql.py).
+
+The script validates PostgreSQL configuration without requiring a live server.
 
 ## Next chapter
 
