@@ -902,11 +902,12 @@ or new lifecycle status.
 
 ## CLI
 
-Both console names currently route to the same CLI:
+`pwk` is the canonical short command. All three console names route to the same CLI:
 
 ```bash
-pyworkflow --help
+pwk --help
 pyworkflowkit --help
+pyworkflow --help
 ```
 
 Core commands:
@@ -926,11 +927,11 @@ version
 Examples:
 
 ```bash
-pyworkflow validate myproject.workflows:demo
-pyworkflow plan myproject.workflows:demo --json
-pyworkflow run myproject.workflows:demo --config pyworkflowkit.toml
-pyworkflow plugins --json
-pyworkflow doctor --enable executor:custom --json
+pwk validate myproject.workflows:demo
+pwk plan myproject.workflows:demo --json
+pwk run myproject.workflows:demo --config pyworkflowkit.toml
+pwk plugins --json
+pwk doctor --enable executor:custom --json
 ```
 
 ## Runtime configuration
