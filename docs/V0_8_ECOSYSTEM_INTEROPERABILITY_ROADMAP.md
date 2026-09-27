@@ -199,7 +199,7 @@ adapter construction has no hidden side effects
 no business-specific TaskType enum is introduced
 ~~~
 
-## M48 — External References & Portable Integration Evidence — 0.8.0a2
+## M48 — External References & Portable Integration Evidence — 0.8.0a2 ✅
 
 ### Objective
 
@@ -615,9 +615,15 @@ stabilization rather than major new capability work.
     ↓
 M47 External Workload Interoperability 0.8.0a1 ✅
     ↓
-M48 External References & Portable Evidence    NEXT
+M48 External References & Portable Evidence    ✅
+    ↓
+M49 Observability Interoperability              NEXT
 ~~~
 
-M47 now defines the generic synchronous external-workload protocol, normalized result,
+M47 defines the generic synchronous external-workload protocol, normalized result,
 retry ownership, failure normalization, TaskResult/ExternalRunRef mapping and
 executor-owned timeout/cancellation boundary.
+
+M48 now freezes portable provider naming, absolute URI expectations, JSON metadata
+portability, manifest reference redaction, exact foreign identity preservation and
+deterministic reference lineage.

@@ -14,6 +14,13 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol, runtime_checkable
 
+from pyworkflowkit.contracts.references import (
+    normalize_reference_metadata,
+    validate_portable_artifact_reference,
+    validate_portable_external_run_ref,
+    validate_provider_name,
+    validate_reference_uri,
+)
 from pyworkflowkit.declarative import TaskHandle
 from pyworkflowkit.domain.enums import TimeoutMode
 from pyworkflowkit.domain.ids import ExternalRunRefId, TaskId
@@ -55,8 +62,11 @@ class ExternalWorkloadResult:
 
     def __post_init__(self) -> None:
         _require_text(self.external_run_id, field_name="external_run_id")
-        if self.uri is not None:
-            _require_text(self.uri, field_name="uri")
+        validate_reference_uri(
+            self.uri,
+            reference_kind="external_run",
+            required=False,
+        )
         if self.error_type is not None:
             _require_text(self.error_type, field_name="error_type")
         if self.error_message is not None:
@@ -64,8 +74,15 @@ class ExternalWorkloadResult:
         if self.error_category is not None:
             _require_text(self.error_category, field_name="error_category")
 
-        object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
-        object.__setattr__(self, "artifacts", tuple(self.artifacts))
+        portable_metadata = normalize_reference_metadata(
+            self.metadata,
+            reference_kind="external_run",
+        )
+        artifacts = tuple(self.artifacts)
+        for artifact in artifacts:
+            validate_portable_artifact_reference(artifact)
+        object.__setattr__(self, "metadata", MappingProxyType(portable_metadata))
+        object.__setattr__(self, "artifacts", artifacts)
 
         error_fields = (self.error_type, self.error_message, self.error_category)
         if self.succeeded and any(value is not None for value in error_fields):
@@ -92,7 +109,7 @@ class ExternalWorkloadAdapter:
     retry_owner: ExternalRetryOwner = ExternalRetryOwner.EXTERNAL
 
     def __post_init__(self) -> None:
-        _require_text(self.provider, field_name="provider")
+        validate_provider_name(self.provider)
         _require_text(self.workload_ref, field_name="workload_ref")
         if not isinstance(self.retry_owner, ExternalRetryOwner):
             raise TypeError("retry_owner must be an ExternalRetryOwner")
@@ -159,7 +176,7 @@ def external_workload_task(
     """Create one atomic task backed by an execution owned by another runtime."""
 
     _require_text(id, field_name="id")
-    _require_text(provider, field_name="provider")
+    validate_provider_name(provider)
     _require_text(workload_ref, field_name="workload_ref")
     _require_text(executor_key, field_name="executor_key")
     if not isinstance(retry_owner, ExternalRetryOwner):
@@ -215,6 +232,7 @@ def _success_result_to_task_result(
             "retry_owner": retry_owner.value,
         },
     )
+    validate_portable_external_run_ref(external_ref)
     return TaskResult(
         output=result.output,
         metadata={

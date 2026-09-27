@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M48 Portable Reference & Integration Evidence Contract v1 with stable provider-name validation, absolute URI validation, strict JSON-portable metadata checks, and explicit reference portability helpers.
+- `ReferenceInteroperabilityError` for deterministic provider / URI / metadata contract diagnostics.
+- Durable M48 acceptance proving exact foreign identifier/URI preservation through serialization and SQLite persistence.
+- Manifest redaction coverage for sensitive artifact and external-reference metadata plus deterministic lineage ordering.
 - M47 External Workload Contract v1 with `ExternalWorkload`, `ExternalWorkloadResult`, `ExternalWorkloadAdapter`, and `external_workload_task()`.
 - Generic external-runtime retry ownership through `ExternalRetryOwner`, preventing nested retry multiplication when the foreign runtime owns retries.
 - Portable `ExternalRunRef` evidence and artifact propagation for successful external workloads.
@@ -16,6 +20,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The development line advances to `0.8.0a2`; M48 strengthens portable evidence without making the stable 0.7 reference constructors stricter.
+- M47 external workloads now consume the M48 provider / URI / metadata portability contract before emitting TaskResult evidence.
+- RunManifest projections now recursively redact sensitive keys from artifact and external-reference metadata while durable stored evidence remains unchanged.
+- Execution lineage now explicitly sorts attempts, artifacts, and external references rather than relying on MetadataStore return order.
 - The development line advances to `0.8.0a1` and begins ecosystem interoperability without changing the stable 0.7 package-root API.
 - External workload timeout/cancellation remain governed by existing TaskDefinition and Executor capabilities rather than a competing remote lifecycle model.
 
