@@ -137,4 +137,4 @@ DX05 target:
 
 ## Next chapter
 
-The next DX03 chapter is `05_EXECUTION_PLANNING.md`.
+Continue with [05 — Execution Planning](05_EXECUTION_PLANNING.md).
