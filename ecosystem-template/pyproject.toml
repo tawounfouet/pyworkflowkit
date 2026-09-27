@@ -7,7 +7,7 @@ name = "pyworkflowkit-ecosystem-template"
 version = "0.1.0"
 description = "Reference third-party integration template for PyWorkflowKit."
 requires-python = ">=3.11"
-dependencies = ["pyworkflowkit>=0.8.0b1,<0.9"]
+dependencies = ["pyworkflowkit>=0.8.0b1,<1.0"]
 
 [project.entry-points."pyworkflowkit.workloads"]
 ecosystem-template = "pyworkflowkit_ecosystem_template:plugin"
