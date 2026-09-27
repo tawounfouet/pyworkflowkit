@@ -97,7 +97,7 @@ causally related.
 
 ## Related example
 
-DX04 target: `examples/11_manifest.py`.
+Canonical companion: [`examples/11_manifest.py`](../../examples/11_manifest.py).
 
 ## Related notebook
 
