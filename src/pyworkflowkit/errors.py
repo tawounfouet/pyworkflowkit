@@ -1,4 +1,4 @@
-"""Public exception hierarchy for PyWorkflowKit."""
+"""Exception hierarchy definitions for PyWorkflowKit.\n\n1.0-stable exception imports are the names re-exported through frozen public facades.\nDirect imports from this implementation module are not separately frozen by RQ-01.\n"""
 
 from collections.abc import Iterable
 
