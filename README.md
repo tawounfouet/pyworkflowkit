@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `1.0.0`.
-> The stable implementation is promoted from the fully qualified `0.9.0rc2` candidate
-> under the `same-qualified-code-version-metadata-only` policy.
+> **Stable baseline:** `1.0.0`.
+> **Current development:** `1.1.0a1` — Developer Experience, beginning with the canonical `pwk` CLI alias.
+> The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
 
@@ -99,12 +99,14 @@ The minimal public-API example is executable:
 python examples/00_hello_world.py
 ```
 
-For CLI-first usage:
+For CLI-first usage, `pwk` is the canonical short command:
 
 ```bash
-pyworkflow validate examples.getting_started_workflow:demo --json
-pyworkflow plan examples.getting_started_workflow:demo --json
+pwk validate examples.getting_started_workflow:demo --json
+pwk plan examples.getting_started_workflow:demo --json
 ```
+
+The longer `pyworkflowkit` and historical `pyworkflow` commands remain compatible aliases.
 
 Continue with:
 
