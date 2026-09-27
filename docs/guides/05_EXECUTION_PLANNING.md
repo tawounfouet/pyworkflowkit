@@ -90,7 +90,7 @@ run
 
 ## Related example
 
-DX04 target: `examples/05_execution_plan.py`.
+Canonical companion: [`examples/05_execution_plan.py`](../../examples/05_execution_plan.py).
 
 ## Related notebook
 
