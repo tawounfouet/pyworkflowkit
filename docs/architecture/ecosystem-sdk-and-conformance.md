@@ -27,7 +27,7 @@ Compatibility window:
 ~~~text
 series            = 0.8
 minimum           = 0.8.0b1
-maximum_exclusive = 0.9
+maximum_exclusive = 1.0
 ~~~
 
 Supported Python matrix:
