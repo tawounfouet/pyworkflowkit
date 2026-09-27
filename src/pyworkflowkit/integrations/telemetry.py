@@ -349,7 +349,7 @@ class OpenTelemetryBackend:
             event_attributes.update(event.attributes)
             if event.payload:
                 event_attributes["pyworkflowkit.payload_json"] = json.dumps(
-                    event.payload,
+                    dict(event.payload),
                     ensure_ascii=False,
                     allow_nan=False,
                     separators=(",", ":"),
