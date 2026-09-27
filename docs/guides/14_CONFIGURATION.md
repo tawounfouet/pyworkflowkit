@@ -100,7 +100,7 @@ Use the redacted view for diagnostics rather than dumping secret-bearing configu
 
 ## Related example
 
-DX04 target: `examples/14_configuration.py`.
+Canonical companion: [`examples/14_configuration.py`](../../examples/14_configuration.py).
 
 ## Related notebook
 
