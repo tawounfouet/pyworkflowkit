@@ -115,9 +115,7 @@ def test_dx04_canonical_examples_execute_as_clean_processes() -> None:
         )
 
         assert completed.returncode == 0, (
-            f"{relative_path} failed\n"
-            f"stdout:\n{completed.stdout}\n"
-            f"stderr:\n{completed.stderr}"
+            f"{relative_path} failed\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
         )
         payload = json.loads(completed.stdout)
         assert isinstance(payload, dict), relative_path
