@@ -157,29 +157,20 @@ def test_m43_run_inspect_events_and_manifest_shapes(
     assert event_result.exit_code == CLI_EXIT_CODES["success"]
     assert set(events_payload) == CLI_JSON_REQUIRED_KEYS["events"]
     assert events_payload["events"]
-    assert (
-        set(events_payload["events"][0])
-        == CLI_JSON_NESTED_REQUIRED_KEYS["events.events[]"]
-    )
+    assert set(events_payload["events"][0]) == CLI_JSON_NESTED_REQUIRED_KEYS["events.events[]"]
 
     assert manifest_result.exit_code == CLI_EXIT_CODES["success"]
     assert set(manifest_payload) == CLI_JSON_REQUIRED_KEYS["manifest"]
     assert manifest_payload["schema_version"] == "1"
     assert manifest_payload["tasks"]
-    assert (
-        set(manifest_payload["tasks"][0])
-        == CLI_JSON_NESTED_REQUIRED_KEYS["manifest.tasks[]"]
-    )
+    assert set(manifest_payload["tasks"][0]) == CLI_JSON_NESTED_REQUIRED_KEYS["manifest.tasks[]"]
     assert manifest_payload["tasks"][0]["attempts"]
     assert (
         set(manifest_payload["tasks"][0]["attempts"][0])
         == CLI_JSON_NESTED_REQUIRED_KEYS["manifest.tasks[].attempts[]"]
     )
     assert manifest_payload["events"]
-    assert (
-        set(manifest_payload["events"][0])
-        == CLI_JSON_NESTED_REQUIRED_KEYS["manifest.events[]"]
-    )
+    assert set(manifest_payload["events"][0]) == CLI_JSON_NESTED_REQUIRED_KEYS["manifest.events[]"]
 
 
 def test_m43_plugins_and_doctor_empty_inventory_shapes(monkeypatch) -> None:  # type: ignore[no-untyped-def]
