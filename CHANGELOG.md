@@ -8,7 +8,16 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M47 External Workload Contract v1 with `ExternalWorkload`, `ExternalWorkloadResult`, `ExternalWorkloadAdapter`, and `external_workload_task()`.
+- Generic external-runtime retry ownership through `ExternalRetryOwner`, preventing nested retry multiplication when the foreign runtime owns retries.
+- Portable `ExternalRunRef` evidence and artifact propagation for successful external workloads.
+- `ExternalWorkloadError` failure normalization with preserved error categories through the trusted-Python executor boundary.
+- Dedicated `pyworkflowkit.integrations` public surface and M47 unit/reference acceptance coverage.
+
 ### Changed
+
+- The development line advances to `0.8.0a1` and begins ecosystem interoperability without changing the stable 0.7 package-root API.
+- External workload timeout/cancellation remain governed by existing TaskDefinition and Executor capabilities rather than a competing remote lifecycle model.
 
 ### Deprecated
 

@@ -9,7 +9,11 @@ from typing import cast
 from pyworkflowkit.application.observability import LogContext, log_runtime
 from pyworkflowkit.domain.definitions import TaskDefinition
 from pyworkflowkit.domain.values import TaskResult
-from pyworkflowkit.errors import InvalidHandlerError, TaskExecutionError
+from pyworkflowkit.errors import (
+    ExternalWorkloadError,
+    InvalidHandlerError,
+    TaskExecutionError,
+)
 from pyworkflowkit.ports.executor import (
     ContextHandler,
     RunContext,
@@ -52,6 +56,25 @@ def invoke_python_handler(
             raw_result = cast(ZeroArgumentHandler, handler)()
         else:
             raw_result = cast(ContextHandler, handler)(context)
+    except ExternalWorkloadError as exc:
+        log_runtime(
+            logger,
+            logging.WARNING,
+            "External workload invocation failed",
+            context=log_context,
+            fields={
+                "error_type": exc.error_type,
+                "error_category": exc.error_category,
+                "provider": exc.provider,
+            },
+        )
+        raise TaskExecutionError(
+            task_id=task.task_id,
+            handler_ref=task.handler_ref,
+            error_type=exc.error_type,
+            error_message=exc.error_message,
+            error_category=exc.error_category,
+        ) from exc
     except Exception as exc:
         log_runtime(
             logger,
