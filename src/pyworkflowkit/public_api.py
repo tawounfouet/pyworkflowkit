@@ -15,7 +15,7 @@ PUBLIC_API_TARGET_RELEASE = "1.0.0"
 
 PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
     {
-    "pyworkflowkit": (
+        "pyworkflowkit": (
             "ArtifactId",
             "ArtifactReference",
             "BackoffStrategy",
@@ -40,7 +40,7 @@ PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
             "task",
             "workflow",
         ),
-    "pyworkflowkit.control_plane": (
+        "pyworkflowkit.control_plane": (
             "CONTROL_PLANE_OPERATIONS",
             "CONTROL_PLANE_PROVIDER_CONTRACT_VERSION",
             "ControlPlaneCapabilityError",
@@ -62,7 +62,7 @@ PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
             "WorkflowRuntimeProvider",
             "WorkflowValidationResultSchema",
         ),
-    "pyworkflowkit.ecosystem": (
+        "pyworkflowkit.ecosystem": (
             "ArtifactReference",
             "ControlPlaneProvider",
             "ECOSYSTEM_COMPATIBILITY_SERIES",
@@ -101,7 +101,7 @@ PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
             "plugin_registration",
             "validate_plugin_conformance",
         ),
-    "pyworkflowkit.integrations": (
+        "pyworkflowkit.integrations": (
             "EXTERNAL_WORKLOAD_CONTRACT_VERSION",
             "ExternalRetryOwner",
             "ExternalWorkload",
@@ -127,7 +127,7 @@ PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
             "validate_provider_name",
             "validate_reference_uri",
         ),
-    "pyworkflowkit.plugins": (
+        "pyworkflowkit.plugins": (
             "DiscoveredPlugin",
             "ENTRY_POINT_GROUPS",
             "PLUGIN_API_VERSION",
@@ -151,7 +151,7 @@ PUBLIC_API_SURFACES: Mapping[str, tuple[str, ...]] = MappingProxyType(
             "validate_plugin_instance",
             "validate_plugin_registration",
         ),
-    "pyworkflowkit.public_api": (
+        "pyworkflowkit.public_api": (
             "PUBLIC_API_CONTRACT_VERSION",
             "PUBLIC_API_SURFACES",
             "PUBLIC_API_TARGET_RELEASE",
