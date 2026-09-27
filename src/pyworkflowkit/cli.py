@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Mapping
 from importlib import import_module
 from pathlib import Path
@@ -334,6 +335,10 @@ def _load_workflow(target: str) -> tuple[WorkflowDefinition, WorkflowBuilder | N
     module_name, separator, attribute_path = target.partition(":")
     if not separator or not module_name or not attribute_path:
         raise ValueError("workflow reference must use module:attribute syntax")
+
+    working_directory = str(Path.cwd())
+    if working_directory not in sys.path:
+        sys.path.insert(0, working_directory)
 
     current: Any = import_module(module_name)
     for part in attribute_path.split("."):
