@@ -406,6 +406,13 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             rationale="Wheel/sdist metadata, contents, installs, and upgrade path are qualified.",
         ),
         CompatibilitySubject(
+            key="release_candidate.readiness",
+            area="release",
+            status=CompatibilityStatus.STABLE,
+            contract_version="1",
+            rationale="The 1.0 release candidate composes every frozen stabilization contract.",
+        ),
+        CompatibilitySubject(
             key="module.adapters",
             area="module",
             status=CompatibilityStatus.INTERNAL,
