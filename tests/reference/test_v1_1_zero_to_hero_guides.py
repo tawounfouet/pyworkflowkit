@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 GUIDES = Path(__file__).resolve().parents[2] / "docs" / "guides"
 
@@ -52,6 +53,8 @@ LEGACY_REDIRECTS = {
     "pyingestkit-adapter.md": "24_PYINGESTKIT_INTEGRATION.md",
     "troubleshooting.md": "26_DEBUGGING_AND_TROUBLESHOOTING.md",
 }
+
+LOCAL_MD_LINK = re.compile(r"\\]\(([^)#?]+\\.md)(?:#[^)]+)?\\)")
 
 FORBIDDEN_BEGINNER_IMPORTS = (
     "from pyworkflowkit.application",
@@ -108,3 +111,11 @@ def test_dx03_legacy_guide_paths_redirect_to_canonical_chapters() -> None:
         content = (GUIDES / legacy).read_text(encoding="utf-8")
         assert canonical in content, f"{legacy} -> {canonical}"
         assert "preserved for compatibility" in content
+
+
+def test_dx03_local_markdown_links_resolve() -> None:
+    for guide in GUIDES.glob("*.md"):
+        content = guide.read_text(encoding="utf-8")
+        for match in LOCAL_MD_LINK.finditer(content):
+            target = (guide.parent / match.group(1)).resolve()
+            assert target.is_file(), f"{guide.name}: {match.group(1)}"
