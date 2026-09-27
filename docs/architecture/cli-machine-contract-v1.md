@@ -250,7 +250,11 @@ successful --json payload -> stdout
 handled --json error      -> stderr
 ~~~
 
-Human-readable output is not byte-for-byte frozen. Machine-readable JSON structure is.
+Human-readable output is not byte-for-byte frozen. Starting with 1.1.0a2, that path may
+use Rich panels, tables, trees, and styled error text.
+
+Rich presentation is never applied to `--json`. Machine-readable JSON structure,
+stdout/stderr placement, and application-owned exit codes remain frozen by this contract.
 
 ## Scope boundary
 

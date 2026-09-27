@@ -86,7 +86,23 @@ Check plugin compatibility:
 pwk doctor --json
 ```
 
-## Machine-facing behavior
+## Human and machine output
 
-CLI JSON keys and exit codes are governed by the existing CLI machine contract v1.
-Scripts should prefer `--json` instead of parsing human-readable output.
+The default terminal experience uses Rich presentation for summaries, tables, and
+execution-plan trees:
+
+```bash
+pwk plan examples.getting_started_workflow:demo
+pwk plugins
+pwk doctor
+```
+
+Machine-facing automation must continue to use `--json`:
+
+```bash
+pwk plan examples.getting_started_workflow:demo --json
+```
+
+Rich rendering is never applied to JSON output. CLI JSON keys, streams, and exit codes
+remain governed by CLI Machine Contract v1. Scripts should never parse the human-facing
+Rich output.

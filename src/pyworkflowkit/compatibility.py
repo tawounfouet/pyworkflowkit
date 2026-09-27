@@ -89,6 +89,7 @@ INTERNAL_MODULE_PREFIXES: tuple[str, ...] = (
     "pyworkflowkit.application",
     "pyworkflowkit.cli",
     "pyworkflowkit.cli_contract",
+    "pyworkflowkit.cli_rendering",
     "pyworkflowkit.compatibility",
     "pyworkflowkit.config",
     "pyworkflowkit.contracts",

@@ -135,6 +135,7 @@ def test_rq02_internal_module_prefixes_do_not_overlap_frozen_facades() -> None:
         "pyworkflowkit.application",
         "pyworkflowkit.cli",
         "pyworkflowkit.cli_contract",
+        "pyworkflowkit.cli_rendering",
         "pyworkflowkit.compatibility",
         "pyworkflowkit.config",
         "pyworkflowkit.contracts",

@@ -827,9 +827,9 @@ PyWorkflowKit `1.1.0` is complete when:
 
 | Lot | Version | Goal | Status |
 |---|---|---|---|
-| DX00 | 1.0.0 closure | GitHub Release and freeze | Planned |
-| DX01 | 1.1.0a1 | `pwk` canonical CLI | Planned |
-| DX02 | 1.1.0a2 | Rich human CLI | Planned |
+| DX00 | 1.0.0 closure | GitHub Release and freeze | In progress |
+| DX01 | 1.1.0a1 | `pwk` canonical CLI | Complete |
+| DX02 | 1.1.0a2 | Rich human CLI | In progress |
 | DX03 | 1.1.0a3 | Zero-to-Hero guides | Planned |
 | DX04 | 1.1.0b1 | Canonical Python examples | Planned |
 | DX05 | 1.1.0b2 | Interactive notebooks | Planned |
