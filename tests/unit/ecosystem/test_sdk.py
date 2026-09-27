@@ -18,7 +18,7 @@ from pyworkflowkit.errors import PluginCompatibilityError
 from pyworkflowkit.integrations import ExternalWorkloadResult
 
 
-class GoodWorkload:
+class DirectWorkload:
     def run(self, *, context: RunContext) -> ExternalWorkloadResult:
         return ExternalWorkloadResult(
             external_run_id=f"good-{context.task_run_id}",
@@ -26,7 +26,14 @@ class GoodWorkload:
         )
 
 
-class BadWorkload:
+class WorkloadAdapterFactory:
+    """A valid generic WORKLOAD plugin that is not itself an ExternalWorkload."""
+
+    def wrap(self) -> DirectWorkload:
+        return DirectWorkload()
+
+
+class BadEventSink:
     pass
 
 
@@ -60,7 +67,7 @@ def test_authoring_helper_builds_self_consistent_registration() -> None:
     registration = plugin_registration(
         name="good-workload",
         plugin_type=PluginType.WORKLOAD,
-        factory=GoodWorkload,
+        factory=DirectWorkload,
         plugin_version="1.2.3",
     )
 
@@ -77,35 +84,52 @@ def test_authoring_helper_builds_self_consistent_registration() -> None:
     assert report.compatible
 
 
-def test_validate_conformance_reports_bad_workload_without_raising() -> None:
+def test_workload_plugin_conformance_preserves_generic_adapter_factory_shape() -> None:
     registration = plugin_registration(
-        name="bad-workload",
+        name="adapter-factory",
         plugin_type=PluginType.WORKLOAD,
-        factory=BadWorkload,
+        factory=WorkloadAdapterFactory,
     )
 
     report = validate_plugin_conformance(
         registration,
-        entry_point_name="bad-workload",
+        entry_point_name="adapter-factory",
         plugin_type=PluginType.WORKLOAD,
     )
 
+    assert report.compatible is True
+    assert isinstance(registration.create().wrap(), DirectWorkload)
+
+
+def test_validate_conformance_reports_bad_typed_plugin_without_raising() -> None:
+    registration = plugin_registration(
+        name="bad-event",
+        plugin_type=PluginType.EVENT,
+        factory=BadEventSink,
+    )
+
+    report = validate_plugin_conformance(
+        registration,
+        entry_point_name="bad-event",
+        plugin_type=PluginType.EVENT,
+    )
+
     assert report.compatible is False
-    assert report.messages == ("workload plugin instance does not satisfy ExternalWorkload",)
+    assert report.messages == ("event plugin instance does not satisfy RuntimeEventSink",)
 
 
 def test_assert_conformance_raises_public_compatibility_error() -> None:
     registration = plugin_registration(
-        name="bad-workload",
-        plugin_type=PluginType.WORKLOAD,
-        factory=BadWorkload,
+        name="bad-event",
+        plugin_type=PluginType.EVENT,
+        factory=BadEventSink,
     )
 
     with pytest.raises(PluginCompatibilityError):
         assert_plugin_conforms(
             registration,
-            entry_point_name="bad-workload",
-            plugin_type=PluginType.WORKLOAD,
+            entry_point_name="bad-event",
+            plugin_type=PluginType.EVENT,
         )
 
 

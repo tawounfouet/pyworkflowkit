@@ -77,4 +77,4 @@ atomic external workload.
 
 These packages are conformance assets, not separately supported production products.
 
-M52 may extract reusable ecosystem SDK helpers from the friction discovered here.
+M52 extracted the reusable `pyworkflowkit.ecosystem` authoring/conformance facade. The 0.8 stable transverse qualification reuses the event-sink and PyIngestKit packages alongside dedicated executor and broken-plugin fixtures.
