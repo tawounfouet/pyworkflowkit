@@ -128,21 +128,21 @@ contract snapshots
 release-note gate
 ~~~
 
-## Stable 0.7 qualification
+## Stable 0.7 qualification ✅
 
-After M46:
+Completed after M46:
 
 ~~~text
-M41 Compatibility Foundation
-M42 Deprecation
-M43 CLI contracts
-M44 Plugin compatibility
-M45 Persistence/migrations
-M46 Release automation
+M41 Compatibility Foundation       ✅
+M42 Deprecation                     ✅
+M43 CLI contracts                   ✅
+M44 Plugin compatibility            ✅
+M45 Persistence/migrations          ✅
+M46 Release automation              ✅
         ↓
-Transverse 0.7 qualification
+Transverse 0.7 qualification        ✅
         ↓
-0.7.0 stable
+0.7.0 stable                        ✅
 ~~~
 
 ## Scope exclusions
@@ -166,7 +166,22 @@ project is in a hardening phase.
 
 ## Exit condition for the line
 
-0.7 is complete when a maintainer can answer, with executable evidence:
+0.7 is complete because a maintainer can now answer, with executable evidence:
 
 Which PyWorkflowKit contracts may an application or adapter rely on, how are changes
 announced, and how do we prove that an upgrade did not silently break them?
+
+
+## Final status
+
+~~~text
+0.7.0 stable
+    ↓
+0.8 Ecosystem Interoperability
+~~~
+
+The next canonical roadmap is:
+
+~~~text
+docs/V0_8_ECOSYSTEM_INTEROPERABILITY_ROADMAP.md
+~~~

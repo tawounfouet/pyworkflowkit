@@ -7,14 +7,14 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.6.0`; current development line `0.7.0b1`.
-> M41-M45 freeze compatibility, deprecation, CLI, plugins, and persistence; M46 now
-> assembles those contracts into an artifact-oriented release qualification pipeline.
+> **Status:** stable release `0.7.0`; next development line `0.8.x`.
+> The 0.7 line freezes compatibility, deprecation, CLI, plugin, persistence, and release
+> qualification contracts. The 0.8 roadmap now focuses on ecosystem interoperability.
 
-## What 0.6 provides
+## What 0.7 provides
 
-The stable `0.6.x` baseline combines the local developer framework, durable persistence,
-concurrency, hardened execution, and explicit recovery semantics:
+The stable `0.7.x` baseline combines the local developer framework, durable persistence,
+concurrency, hardened execution, recovery, and executable compatibility contracts:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
 - deterministic DAG validation and topological planning;
@@ -50,6 +50,10 @@ concurrency, hardened execution, and explicit recovery semantics:
 - provider-specific reconciliation of ambiguous external executions;
 - same-`WorkflowRun` resume with durable portable dependency-output checkpoints;
 - durable `retry_eligible_at` evidence and non-blocking concurrent retry backoff.
+- compatibility contract freeze for package API, CLI, plugins, persistence, and manifests;
+- explicit deprecation policy and compatibility warnings;
+- historical SQLite/PostgreSQL migration qualification;
+- artifact-oriented Release Qualification across Python 3.11, 3.12, and 3.13.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.
