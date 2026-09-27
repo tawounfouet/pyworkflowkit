@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.6.0`; current development line `0.7.0a3`.
-> M41 freezes the compatibility baseline, M42 controls deprecation, and M43 freezes the
-> CLI machine contract used by scripts and automation.
+> **Status:** stable release `0.6.0`; current development line `0.7.0a4`.
+> M41 freezes the compatibility baseline, M42 controls deprecation, M43 freezes the CLI
+> machine contract, and M44 makes plugin compatibility reusable by third-party packages.
 
 ## What 0.6 provides
 
@@ -1039,6 +1039,7 @@ SubprocessExecutor, Observability Plugins, and Security Hardening before transve
 qualification promoted the line to **0.5.0 stable**.
 
 The 0.6 line is stable. The 0.7 line now contains **M41 — Compatibility Contract
-Foundation**, **M42 — Deprecation Policy & Compatibility Warnings**, and **M43 — CLI &
-Machine Contract Freeze** at **0.7.0a3**. M43 formalizes the existing JSON, error-stream,
-and exit-code behavior without changing the runtime.
+Foundation**, **M42 — Deprecation Policy & Compatibility Warnings**, **M43 — CLI &
+Machine Contract Freeze**, and **M44 — Plugin Ecosystem Compatibility** at **0.7.0a4**.
+M44 exposes the same compatibility rules used by runtime discovery as a reusable
+third-party conformance API.
