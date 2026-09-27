@@ -7,13 +7,13 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** current stable release `0.8.0`.
-> The complete M47-M52 interoperability line is transversely qualified across core-only,
-> third-party executor, external workload, observability, control-plane, and failure-isolation scenarios.
+> **Status:** stable release `0.8.0`; current development line `0.9.0a1`.
+> RQ-01 begins 1.0 release-candidate stabilization by freezing the intentional public
+> facades as an executable compatibility contract.
 
-## What 0.7 provides
+## What the stable 0.8 baseline provides
 
-The stable `0.7.x` baseline combines the local developer framework, durable persistence,
+The stable `0.8.0` baseline combines the local developer framework, durable persistence,
 concurrency, hardened execution, recovery, and executable compatibility contracts:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
@@ -1039,9 +1039,9 @@ control-plane concerns remain outside the core.
 0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
 0.5  Process/async/subprocess executors and hardening            ✓ stable
 0.6  Recovery, reconciliation, resume, non-blocking retry         ✓ stable
-0.7  Core compatibility contracts                                 ← current development
-0.8  Ecosystem/interoperability hardening
-0.9  1.0 release-candidate stabilization
+0.7  Core compatibility contracts                                 ✓ stable
+0.8  Ecosystem/interoperability hardening                           ✓ stable
+0.9  1.0 release-candidate stabilization                            ← current development
 1.0  Stable embedded runtime
 ```
 
@@ -1049,7 +1049,7 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 line is stable. The 0.7 line now reaches **M46 — Release Automation & Upgrade
-Matrix** at **0.7.0b1**. Release qualification builds wheel/sdist artifacts, installs them
-across the supported Python matrix, reruns contract snapshots, qualifies SQLite and
-PostgreSQL historical upgrades, and blocks on the release security gates.
+The 0.7 and 0.8 lines are stable. The 0.9 line begins at **0.9.0a1** with
+**RQ-01 — Public API Freeze**. The existing runtime is now being stabilized toward 1.0
+through compatibility, typing, documentation, packaging, and final release qualification
+rather than new product-scope expansion.

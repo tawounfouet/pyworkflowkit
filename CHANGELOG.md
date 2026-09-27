@@ -18,6 +18,30 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0a1 - 2026-09-27
+
+### Added
+
+- RQ-01 Public API Freeze with machine-readable `pyworkflowkit.public_api` contract v1 targeting `1.0.0`.
+- Executable freeze of the intentional package-root, ecosystem, control-plane, integrations, plugins, and public-api facades.
+- Dedicated regular-CI and built-wheel Release Qualification gates for the frozen public API surface.
+- 0.9 → 1.0 stabilization roadmap defining RQ-01 through RQ-06 without new feature expansion.
+
+### Changed
+
+- The development line advances from stable `0.8.0` to `0.9.0a1`.
+- Public facade drift must now be an explicit compatibility decision rather than an incidental `__all__` change.
+
+### Deprecated
+
+- No active deprecations are introduced by RQ-01.
+
+### Removed
+
+### Fixed
+
+### Security
+
 ## 0.8.0 - 2026-09-27
 
 ### Added
