@@ -8,7 +8,7 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0a2` — Developer Experience with the canonical `pwk` CLI and Rich human rendering.
+> **Current development:** `1.1.0a3` — Zero-to-Hero documentation architecture.
 > The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
@@ -91,7 +91,10 @@ python -m pip install "pyworkflowkit[postgres]"
 ## Start here
 
 The supported first-use path is documented in
-[`docs/guides/getting-started.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/getting-started.md).
+[`docs/guides/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/README.md).
+
+The historical `docs/guides/getting-started.md` path remains available as a compatibility
+redirect into this canonical learning journey.
 
 The minimal public-API example is executable:
 
@@ -110,13 +113,14 @@ The longer `pyworkflowkit` and historical `pyworkflow` commands remain compatibl
 Human terminal output uses Rich presentation where useful; `--json` remains the stable
 machine-facing path governed by CLI Machine Contract v1.
 
-Continue with:
+Continue with the canonical Zero-to-Hero path:
 
-- [CLI workflow](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/cli-workflow.md)
-- [Failures and retries](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/failures-and-retries.md)
-- [Persistence and evidence](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/persistence-and-evidence.md)
-- [Plugin authoring](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/plugin-authoring.md)
-- [Troubleshooting](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/troubleshooting.md)
+- [01 — Installation and First Workflow](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/01_INSTALLATION_AND_FIRST_WORKFLOW.md)
+- [04 — Dependencies and DAG](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/04_DEPENDENCIES_AND_DAG.md)
+- [08 — Failures and Retries](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/08_FAILURES_AND_RETRIES.md)
+- [15 — CLI Zero to Hero](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/15_CLI_ZERO_TO_HERO.md)
+- [19 — Plugins and Ecosystem](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/19_PLUGINS_AND_ECOSYSTEM.md)
+- [99 — Complete Reference Application](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/99_COMPLETE_REFERENCE_APPLICATION.md)
 
 These guides intentionally start from the frozen `pyworkflowkit` and
 `pyworkflowkit.ecosystem` facades instead of implementation modules.
