@@ -73,6 +73,10 @@ Before production use, verify:
 - installed package qualification;
 - stable CLI/API contracts used by automation.
 
+## Related example
+
+The complete durable companion is [`examples/complete/data_pipeline.py`](../../examples/complete/data_pipeline.py).
+
 ## Next chapter
 
 Finish with [99 — Complete Reference Application](99_COMPLETE_REFERENCE_APPLICATION.md).
