@@ -1,262 +1,253 @@
-# Release Qualification and Upgrade Matrix
+# Release Qualification
 
-Status: M46 completed in 0.7.0b1; qualified baseline: 0.7.0
+Status: active 0.9 → 1.0 release-candidate qualification pipeline.
 
 ## Purpose
 
-M46 converts the compatibility work from M41 through M45 into a release-facing,
-artifact-oriented qualification pipeline.
+Ordinary CI answers:
 
-The ordinary CI answers:
-
-~~~text
+```text
 Does the checked-out source tree pass its quality and runtime tests?
-~~~
+```
 
 Release Qualification answers:
 
-~~~text
-Can the package we are about to distribute be built, installed, upgraded, and consumed
-without violating the compatibility contracts we have frozen?
-~~~
+```text
+Can the exact artifacts we intend to distribute be built, installed, upgraded,
+typed, consumed, and exercised without violating the contracts frozen for 1.0?
+```
 
 Both are required.
 
 ## Release qualification contract
 
-~~~text
+```text
 RELEASE_QUALIFICATION_CONTRACT_VERSION = "1"
-~~~
+```
 
-The contract aggregates:
+The aggregate snapshot now includes:
 
-~~~text
+```text
 package version
 supported Python versions
-CLI machine contract version
-RunManifest schema version
-Plugin API version
-Persistence schema contract version
+CLI machine contract v1
+Developer Experience contract v1
+Distribution contract v1
+RunManifest schema v1
+Persistence schema v1
+Plugin API v1
+Typing contract v1
 migration head
-~~~
+compatibility classification
+```
 
-For the stable 0.7.0 baseline:
+Supported Python versions remain:
 
-~~~text
-Python              3.11 / 3.12 / 3.13
-CLI machine         1
-RunManifest         1
-Plugin API          1
-Persistence schema  1
-Migration head      0003_retry_eligible_at
-~~~
+```text
+3.11
+3.12
+3.13
+```
 
 ## Workflow
 
-The dedicated GitHub Actions workflow is:
+The dedicated workflow is:
 
-~~~text
+```text
 .github/workflows/release-qualification.yml
-~~~
+```
 
 It runs on:
 
-~~~text
+```text
 pull requests targeting main
 manual workflow_dispatch
 version tags matching v*
-~~~
+```
 
 The workflow has read-only repository permissions and does not publish packages.
 
 ## Qualification graph
 
-~~~text
+```text
 Release metadata
       │
-      ├──────────────┐
-      ▼              ▼
-Build artifacts    Contract snapshots
-      │              │
-      ▼              ├── SQLite upgrade matrix
-Artifact installs    ├── PostgreSQL upgrade matrix
-      │              └── Security gates
-      └──────────────┬───────────────
-                     ▼
-          Release qualification gate
-~~~
+      ├─────────────────────────────────────────────┐
+      ▼                                             ▼
+Build wheel + sdist                         Source-backed contract gates
+      │                                             │
+      ├── artifact install 3.11/3.12/3.13          ├── contract snapshots
+      ├── public API freeze                         ├── SQLite upgrades
+      ├── compatibility/deprecation                 ├── PostgreSQL upgrades
+      ├── strict static typing                      └── security
+      ├── developer experience
+      ├── packaging/distribution
+      ├── ecosystem SDK
+      ├── reference integrations
+      ├── control-plane provider
+      └── transverse 0.8 compatibility
+                       │
+                       ▼
+             Release qualification gate
+```
 
-## Release metadata gate
+## Release metadata
 
-The source tree must satisfy:
+Before artifact qualification:
 
-~~~text
+```text
 pyproject project.version exists
 docs/releases/<version>.md exists
-release note starts with "# PyWorkflowKit <version>"
+release note begins with "# PyWorkflowKit <version>"
 CHANGELOG.md mentions <version>
 tag, when present, equals v<version>
-~~~
+```
 
 The reusable checker is:
 
-~~~text
+```text
 scripts/verify_release_metadata.py
-~~~
-
-Manual use:
-
-~~~bash
-python scripts/verify_release_metadata.py
-python scripts/verify_release_metadata.py --tag v0.7.0b1
-python scripts/verify_release_metadata.py --print-version
-~~~
+```
 
 ## Artifact build
 
-The release workflow builds both:
+The release workflow builds:
 
-~~~text
+```text
 wheel
 sdist
-~~~
+```
 
-Then performs:
+and performs:
 
-~~~text
+```text
 twine check
 SHA-256 checksum generation
 artifact upload to the workflow run
-~~~
+```
 
-These are qualification artifacts, not a package publication.
+The artifacts are qualification inputs, not automatically published releases.
 
-## Artifact installation matrix
+## Artifact installation
 
-The built wheel is installed on:
+The official wheel is installed on:
 
-~~~text
+```text
 Python 3.11
 Python 3.12
 Python 3.13
-~~~
+```
 
-The built sdist is additionally installed on Python 3.13.
+The official sdist is also installed on Python 3.13.
 
-Crucially, installed-package verification runs from /tmp rather than the repository
-checkout. This prevents an import from accidentally resolving the local src tree and
-mistaking source-tree behavior for packaged-artifact behavior.
+Installed-artifact verification runs away from the source package path and checks the
+aggregate release contract, migration resources, PEP 561 marker, and CLI version.
 
-The installed artifact must expose:
+## RQ-01 — Public API
 
-~~~text
-correct package version
-release qualification contract v1
-CLI machine contract v1
-Manifest schema v1
-Plugin API v1
-Persistence schema v1
-migration head 0003_retry_eligible_at
-packaged migration resources 0001 / 0002 / 0003
-working pyworkflow version command
-~~~
+The built wheel must satisfy the frozen public-facade contract targeting 1.0.
 
-## Contract snapshots
+## RQ-02 — Compatibility
 
-The full reference acceptance corpus is part of release qualification.
+The built wheel must preserve the compatibility/deprecation classification and ecosystem
+compatibility window.
 
-This includes the executable freezes introduced by:
+## RQ-03 — Static typing
 
-~~~text
-M41 public compatibility baseline
-M42 deprecation semantics
-M43 CLI machine contract
-M44 plugin ecosystem contract
-M45 migration lineage
-M46 release qualification metadata
-~~~
+The built wheel is checked with `mypy --strict` on Python 3.11, 3.12, and 3.13.
 
-## Upgrade matrix
+A positive external-consumer fixture must pass. An intentionally invalid two-argument
+`@task` handler must fail.
 
-SQLite historical migration tests run on every supported Python:
+## RQ-04 — Developer experience
 
-~~~text
-3.11
-3.12
-3.13
-~~~
+The built wheel must support the complete first-use journey:
 
-PostgreSQL 15 historical migration tests also run on every supported Python.
+```text
+version
+validate
+plan
+run
+inspect
+events
+manifest
+SQLite cross-process persistence
+public plugin authoring
+```
 
-The tested upgrade origins remain:
+## RQ-05 — Packaging and distribution
 
-~~~text
-fresh
-0001_runtime_metadata
-0002_task_output_checkpoints
-0003_retry_eligible_at
-~~~
+The distribution gate validates:
 
-Historical-data preservation remains part of the M45 tests consumed by this matrix.
+```text
+project metadata
+well-known project URLs
+runtime dependency ranges
+published extras
+pure-Python wheel tag
+wheel file scope
+sdist file scope
+py.typed
+migration resources
+console entry points
+wheel rebuilt from sdist
+clean core install
+clean extra installs
+pip check
+stable 0.8.0 -> current package upgrade
+```
 
-## Security gate
+The stable upgrade baseline is the exact 0.8.0 commit:
 
-Release qualification repeats the blocking release-relevant security checks:
+```text
+70cf048ca7264c9c6caf79fd28801f0db50973c5
+```
 
-~~~text
+Database migration compatibility is still proven separately by the SQLite/PostgreSQL
+historical upgrade matrix.
+
+## Security
+
+Blocking release checks remain:
+
+```text
 Bandit
 pip-audit
 detect-secrets
-~~~
-
-A release candidate is not qualified merely because ordinary unit tests pass.
+```
 
 ## Final gate
 
-The Release qualification gate depends on every qualification family.
+The final gate uses `if: always()` and explicitly requires success from every release
+qualification family.
 
-It can succeed only when all of these succeed:
-
-~~~text
-release metadata
-artifact build
-artifact install matrix
-reference contracts
-SQLite upgrade matrix
-PostgreSQL upgrade matrix
-security gates
-~~~
-
-This provides a single branch-protection / release-readiness signal.
+No individual green job can qualify a release when another required family fails.
 
 ## Tag behavior
 
 For a tagged qualification:
 
-~~~text
-package version = 0.7.0
-tag             = v0.7.0
-~~~
+```text
+package version = X
+tag             = vX
+```
 
-Any mismatch fails before artifact qualification.
+A mismatch fails before artifact qualification.
 
-M46 validates tags; it does not create them automatically.
+The workflow validates tags; it does not create them.
 
 ## Publication boundary
 
-M46 intentionally does not:
+Release Qualification intentionally does not:
 
-~~~text
+```text
 upload to PyPI
 create a GitHub Release
 push tags
-sign artifacts
+select a software license
 publish containers
-~~~
+```
 
-Those are mutating distribution actions and remain separate from qualification until
-the stable 0.7 release process is explicitly promoted.
-
-## Next
-
-Transverse 0.7 qualification, then 0.7.0 stable.
+Those are separate mutating/project decisions. RQ-05 proves that the artifacts are
+technically distributable; RQ-06 will compose all frozen evidence for the 1.0 release
+candidate.
