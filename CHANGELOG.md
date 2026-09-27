@@ -18,6 +18,42 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0 - 2026-09-28
+
+Stable Developer Experience & Learning release promoted from the fully qualified
+`1.1.0rc1` candidate.
+
+### Added
+
+- Stable Developer Experience Contract v2 for the 1.1 line.
+- Canonical `pwk` CLI identity with compatibility aliases.
+- Rich human CLI rendering while preserving deterministic `--json` behavior.
+- Zero-to-Hero guide architecture, canonical executable examples, and interactive notebooks.
+- Cross-surface qualification across CLI, guides, examples, notebooks, and tests.
+- Release note `docs/releases/1.1.0.md`.
+
+### Changed
+
+- Package version promoted from `1.1.0rc1` to `1.1.0`.
+- Distribution classifier promoted from Beta to Production/Stable.
+- README and roadmap now identify `1.1.0` as the current stable Developer Experience line.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- No runtime security contract changes.
+
 ## 1.1.0rc1 - 2026-09-28
 
 ### Added
