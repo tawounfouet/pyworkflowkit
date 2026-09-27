@@ -79,7 +79,7 @@ allowed to reach a normalized completion according to the executor/cancellation 
 
 ## Related example
 
-DX04 target: `examples/15_concurrency.py`.
+Canonical companion: [`examples/15_concurrency.py`](../../examples/15_concurrency.py).
 
 ## Related notebook
 
