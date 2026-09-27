@@ -7,14 +7,14 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.6.0`.
-> The 0.6 line adds crash-recovery assessment, reconciliation, same-run resume, and
-> durable non-blocking retry coordination.
+> **Status:** stable release `0.6.0`; current development line `0.7.0a1`.
+> M41 starts the compatibility/stabilization phase by freezing the contracts that the
+> ecosystem must be able to rely on before 1.0.
 
 ## What 0.6 provides
 
-The `0.5.x` line keeps the complete local developer framework and concurrency foundation
-from 0.4, then adds hardened execution and integration:
+The stable `0.6.x` baseline combines the local developer framework, durable persistence,
+concurrency, hardened execution, and explicit recovery semantics:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
 - deterministic DAG validation and topological planning;
@@ -1027,8 +1027,10 @@ control-plane concerns remain outside the core.
 0.3  Developer framework, CLI, plugins, PyIngestKit boundary
 0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
 0.5  Process/async/subprocess executors and hardening            ✓ stable
-0.6  Recovery, reconciliation, resume, non-blocking retry         ← current development
-0.7–0.9  Compatibility and stabilization
+0.6  Recovery, reconciliation, resume, non-blocking retry         ✓ stable
+0.7  Core compatibility contracts                                 ← current development
+0.8  Ecosystem/interoperability hardening
+0.9  1.0 release-candidate stabilization
 1.0  Stable embedded runtime
 ```
 
@@ -1036,7 +1038,6 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 development line now contains **M37 — Recovery Foundation**,
-**M38 — Reconciliation**, **M39 — Resume**, and **M40 — Non-blocking Retry** at
-**0.6.0a4**. M40 is the final functional milestone of the line; the next step is
-transverse qualification for **0.6.0 stable**.
+The 0.6 line is now stable. The 0.7 line starts with **M41 — Compatibility Contract
+Foundation** at **0.7.0a1**. Its purpose is to turn previously implicit compatibility
+expectations into executable reference contracts before ecosystem expansion and 1.0.
