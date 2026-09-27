@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 import pytest
-from sqlalchemy import MetaData, Table, inspect, insert, text
+from sqlalchemy import MetaData, Table, insert, inspect, text
 
 from pyworkflowkit.adapters.metadata.postgres import (
     PostgresMetadataStore,
