@@ -149,3 +149,32 @@ in Plugin API v1.
 
 Changing these contracts requires the M42 deprecation process where applicable or a
 Plugin API version transition.
+
+
+## M45 persistence and migration compatibility rules
+
+Durable relational persistence now has an explicit schema contract version and frozen
+published migration lineage.
+
+The following are stable-intent persistence contracts:
+
+~~~text
+PERSISTENCE_SCHEMA_CONTRACT_VERSION
+published Alembic revision IDs
+published migration source content
+linear down_revision ancestry
+current migration head for a release
+forward upgrade from supported historical revisions
+MetadataStore readability after upgrade
+current UnitOfWork writability after upgrade
+~~~
+
+Published migrations are append-only history. Existing migration files must not be
+rewritten after release; schema evolution appends a new revision.
+
+A PyWorkflowKit build rejects databases whose current Alembic revision is not present
+in its known migration history. This prevents an older runtime from silently operating
+against an unknown/future schema.
+
+The product compatibility promise is forward migration to head. Downgrade compatibility
+is not promoted to a stable application-level contract by M45.

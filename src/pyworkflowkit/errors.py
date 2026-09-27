@@ -495,6 +495,24 @@ class MetadataStoreError(PyWorkflowKitError):
     """Base class for runtime metadata persistence errors."""
 
 
+class MigrationCompatibilityError(MetadataStoreError):
+    """Raised when a durable database uses an unsupported migration revision."""
+
+    def __init__(
+        self,
+        *,
+        revision: str,
+        supported_revisions: tuple[str, ...],
+    ) -> None:
+        self.revision = revision
+        self.supported_revisions = supported_revisions
+        rendered = ", ".join(supported_revisions)
+        super().__init__(
+            f"Migration revision '{revision}' is not supported by this PyWorkflowKit "
+            f"build; supported revisions: {rendered}."
+        )
+
+
 class MetadataNotFoundError(MetadataStoreError):
     """Raised when required runtime metadata does not exist."""
 
@@ -677,6 +695,7 @@ __all__ = [
     "ManifestInvariantError",
     "ManifestNotReadyError",
     "ManifestSerializationError",
+    "MigrationCompatibilityError",
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",

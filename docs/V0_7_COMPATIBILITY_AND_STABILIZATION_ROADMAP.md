@@ -36,7 +36,7 @@ compatibility explicit and executable.
 
 ## 0.7 milestone sequence
 
-### M41 — Compatibility Contract Foundation — 0.7.0a1 ✅ ✅
+### M41 — Compatibility Contract Foundation — 0.7.0a1 ✅ ✅ ✅
 
 Freeze the baseline contract inventory:
 
@@ -57,7 +57,7 @@ migration head
 M41 is intentionally contract/test/documentation work. It adds no new workflow state,
 executor semantics, persistence behavior, or scheduling capability.
 
-### M42 — Deprecation Policy and Compatibility Warnings — 0.7.0a2 ✅ ✅
+### M42 — Deprecation Policy and Compatibility Warnings — 0.7.0a2 ✅ ✅ ✅
 
 Introduce the mechanics needed to evolve a pre-1.0 package without silent breakage:
 
@@ -71,7 +71,7 @@ security/invariant emergency exception
 tests proving warnings are emitted once and at the correct boundary
 ~~~
 
-### M43 — CLI and Machine Contract Freeze — 0.7.0a3 ✅ ✅
+### M43 — CLI and Machine Contract Freeze — 0.7.0a3 ✅ ✅ ✅
 
 Freeze the automation-facing CLI surface:
 
@@ -85,7 +85,7 @@ manifest JSON behavior
 backward-compatible additions policy
 ~~~
 
-### M44 — Plugin Ecosystem Compatibility — 0.7.0a4 ✅
+### M44 — Plugin Ecosystem Compatibility — 0.7.0a4 ✅ ✅
 
 Prepare third-party adapters to rely on explicit plugin compatibility:
 
@@ -98,7 +98,7 @@ plugin compatibility diagnostics
 third-party contract fixtures
 ~~~
 
-### M45 — Persistence and Migration Compatibility — 0.7.0a5
+### M45 — Persistence and Migration Compatibility — 0.7.0a5 ✅
 
 Turn durable-state compatibility into an explicit upgrade promise:
 
