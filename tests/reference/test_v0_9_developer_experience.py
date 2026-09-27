@@ -58,7 +58,9 @@ def test_rq04_examples_use_only_documented_authoring_facades() -> None:
                 imported.add(node.module)
 
         pyworkflowkit_imports = {
-            name for name in imported if name == "pyworkflowkit" or name.startswith("pyworkflowkit.")
+            name
+            for name in imported
+            if name == "pyworkflowkit" or name.startswith("pyworkflowkit.")
         }
         assert pyworkflowkit_imports <= allowed, (
             relative_path,
