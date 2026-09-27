@@ -8,6 +8,11 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M52 Ecosystem SDK & Conformance Matrix with a dedicated `pyworkflowkit.ecosystem` authoring facade.
+- Machine-readable ecosystem compatibility snapshot covering Python support, contract versions, entry-point groups, and the explicit `>=0.8.0b1,<0.9` support window.
+- `plugin_registration()`, `entry_point_group()`, and dependency-free plugin conformance helpers for external package authors.
+- Independently buildable ecosystem integration template using only the consolidated SDK facade.
+- Ecosystem SDK wheel qualification across Python 3.11, 3.12, and 3.13 in regular CI and Release Qualification.
 - M51 Control-Plane Provider Contract v1 with a dedicated `pyworkflowkit.control_plane` public surface, runtime-checkable provider protocol, stable operation identifiers, and portable schemas.
 - WorkflowRuntimeProvider for schema-first validation, static inspection, synchronous execution, run inspection, redacted runtime events, manifest/lineage retrieval, recovery assessment, reconciliation, and resume.
 - Explicit capability negotiation reporting external scheduling ownership, synchronous execution, and unsupported external cancellation.
@@ -32,6 +37,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The development line advances to `0.8.0b1`; M47-M51 are now exposed through a consolidated third-party authoring and conformance surface.
+- Ecosystem compatibility is executable across Python 3.11/3.12/3.13 rather than documentary only.
 - The development line advances to `0.8.0a5`; external control planes can now operate PyWorkflowKit through portable public contracts rather than runtime internals.
 - Control-plane run summaries omit raw parameters and control-plane runtime events apply defensive sensitive-key redaction.
 - Scheduling remains external, while unsupported cancellation is declared explicitly instead of being simulated.

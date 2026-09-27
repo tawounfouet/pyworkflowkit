@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.7.0`; current development line `0.8.0a5`.
-> M47-M50 establish and externally prove interoperability contracts; M51 now adds a
-> schema-first control-plane provider boundary for Ochestrix-style platforms.
+> **Status:** stable release `0.7.0`; current development line `0.8.0b1`.
+> M47-M51 establish interoperability and control-plane boundaries; M52 now consolidates
+> them into a third-party ecosystem SDK with an executable compatibility matrix.
 
 ## What 0.7 provides
 
@@ -59,6 +59,7 @@ concurrency, hardened execution, recovery, and executable compatibility contract
 - vendor-neutral telemetry projection, bounded-cardinality runtime metrics, and optional OpenTelemetry adaptation.
 - independently packaged workload, event, metadata, and real PyIngestKit reference integrations qualified through real entry points.
 - schema-first control-plane provider contract with portable validation, execution, evidence, recovery, and capability negotiation.
+- consolidated `pyworkflowkit.ecosystem` authoring SDK, machine-readable compatibility snapshot, and Python 3.11/3.12/3.13 conformance matrix.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.
