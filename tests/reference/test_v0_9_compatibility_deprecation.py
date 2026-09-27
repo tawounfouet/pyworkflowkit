@@ -78,10 +78,10 @@ def test_rq02_all_versioned_contracts_remain_v1() -> None:
     assert MIGRATION_HEAD_REVISION == "0003_retry_eligible_at"
 
 
-def test_rq02_ecosystem_sdk_v1_covers_0_8_and_0_9() -> None:
-    assert ECOSYSTEM_COMPATIBILITY_SERIES == "0.8-0.9"
+def test_rq02_ecosystem_sdk_v1_covers_0_8_through_1_x() -> None:
+    assert ECOSYSTEM_COMPATIBILITY_SERIES == "0.8-1.x"
     assert ECOSYSTEM_MINIMUM_VERSION == "0.8.0b1"
-    assert ECOSYSTEM_MAXIMUM_EXCLUSIVE_VERSION == "1.0"
+    assert ECOSYSTEM_MAXIMUM_EXCLUSIVE_VERSION == "2.0"
 
 
 def test_rq02_console_aliases_are_installed_and_stable() -> None:

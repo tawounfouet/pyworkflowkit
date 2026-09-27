@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0rc1 / RQ-06**
+Status: **active — 0.9.0rc2 / RQ-06 requalification**
 
 ## Objective
 
@@ -34,7 +34,8 @@ RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
 RQ-03 Typing & Static Contracts            0.9.0a3   ✅
 RQ-04 Developer Experience & Documentation 0.9.0b1   ✅
 RQ-05 Packaging & Distribution             0.9.0b2   ✅
-RQ-06 1.0 Release Qualification            0.9.0rc1  ACTIVE
+RQ-06 1.0 Release Qualification            0.9.0rc1  ⚠ superseded
+RQ-06 Ecosystem compatibility correction   0.9.0rc2  ACTIVE
                                            1.0.0
 ```
 
@@ -213,7 +214,7 @@ typing, documentation, and packaging gates into one final release-candidate deci
 
 The candidate introduces a Release-Candidate Contract v1 that freezes:
 
-- candidate version `0.9.0rc1`;
+- current candidate version `0.9.0rc2`;
 - target release `1.0.0`;
 - RQ-01 through RQ-05 as required inherited tracks;
 - every release-qualification job family required by the 1.0 promise;
@@ -229,7 +230,7 @@ RQ-06 contract and installed-artifact qualifier.
 Exit criteria:
 
 ```text
-package version = 0.9.0rc1
+package version = 0.9.0rc2
 Release-Candidate Contract v1 targets 1.0.0
 RQ-01 through RQ-05 remain v1 and target 1.0.0
 no active compatibility blocker
@@ -241,6 +242,31 @@ aggregate release-candidate gate is green
 final release gate is green
 1.0 promotion permits version/release metadata only
 ```
+
+### RC1 → RC2 correction
+
+The first stable-promotion qualification exposed one remaining public compatibility
+defect:
+
+```text
+Ecosystem SDK v1
+minimum           = 0.8.0b1
+maximum_exclusive = 1.0
+```
+
+That ceiling excludes `1.0.0` itself.
+
+RC2 corrects the same SDK v1 contract to:
+
+```text
+series            = 0.8-1.x
+minimum           = 0.8.0b1
+maximum_exclusive = 2.0
+```
+
+and aligns reference/template package dependency ceilings to `<2.0`.
+
+The stable promotion must be recreated only after RC2 passes the full RQ-06 corpus.
 
 ## Non-goals
 

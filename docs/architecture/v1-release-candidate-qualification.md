@@ -1,6 +1,6 @@
 # PyWorkflowKit 1.0 Release-Candidate Qualification
 
-Status: RQ-06 — 0.9.0rc1
+Status: RQ-06 — 0.9.0rc2
 
 ## Objective
 
@@ -28,7 +28,7 @@ with:
 
 ```python
 RELEASE_CANDIDATE_CONTRACT_VERSION = "1"
-RELEASE_CANDIDATE_VERSION = "0.9.0rc1"
+RELEASE_CANDIDATE_VERSION = "0.9.0rc2"
 RELEASE_CANDIDATE_TARGET_RELEASE = "1.0.0"
 ```
 
@@ -148,7 +148,7 @@ The RC freezes this promotion rule:
 same-qualified-code-version-metadata-only
 ```
 
-After `0.9.0rc1` is qualified, promotion to `1.0.0` must not add:
+After `0.9.0rc2` is qualified, promotion to `1.0.0` must not add:
 
 ```text
 new workflow semantics
@@ -163,8 +163,12 @@ new runtime capability
 Normal 1.0 promotion may update only release-facing metadata required to represent the
 same qualified implementation as stable.
 
-If the RC reveals a functional defect, the fix belongs to another release-candidate
-iteration before 1.0.
+RC1 exposed an Ecosystem SDK compatibility ceiling defect: the v1 SDK window ended at
+`<1.0`, excluding the intended stable target. RC2 corrects that public compatibility
+metadata to `>=0.8.0b1,<2.0` and requalifies the complete release corpus.
+
+If a later RC reveals another functional or compatibility defect, the fix belongs to
+another release-candidate iteration before 1.0.
 
 ## Manual publication decision
 
@@ -184,7 +188,7 @@ is recorded as manual release work before a public 1.0 publication.
 The candidate version is:
 
 ```text
-0.9.0rc1
+0.9.0rc2
 ```
 
 Its distribution still follows the RQ-05 contract:
@@ -203,8 +207,8 @@ Release Qualification already runs for version tags.
 For this candidate:
 
 ```text
-package version = 0.9.0rc1
-expected tag    = v0.9.0rc1
+package version = 0.9.0rc2
+expected tag    = v0.9.0rc2
 ```
 
 A tag/version mismatch fails during release metadata validation.
@@ -214,7 +218,7 @@ Tag creation and GitHub/PyPI publication remain separate mutating actions.
 ## Exit criteria
 
 ```text
-package version = 0.9.0rc1
+package version = 0.9.0rc2
 Release-Candidate Contract v1 targets 1.0.0
 RQ-01 through RQ-05 remain contract v1 / target 1.0.0
 no deprecated compatibility subject
@@ -234,7 +238,7 @@ promotion policy is same-qualified-code-version-metadata-only
 If the candidate remains unchanged after qualification:
 
 ```text
-0.9.0rc1 qualified code
+0.9.0rc2 qualified code
         ↓
 release metadata promotion only
         ↓
@@ -244,7 +248,7 @@ release metadata promotion only
 If a functional correction is required:
 
 ```text
-0.9.0rc1
+0.9.0rc2
    ↓
 fix
    ↓

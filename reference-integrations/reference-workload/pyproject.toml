@@ -7,7 +7,7 @@ name = "pyworkflowkit-reference-workload"
 version = "0.1.0"
 description = "Reference external-workload integration for PyWorkflowKit conformance."
 requires-python = ">=3.11"
-dependencies = ["pyworkflowkit>=0.8.0a4,<1.0"]
+dependencies = ["pyworkflowkit>=0.8.0a4,<2.0"]
 
 [project.entry-points."pyworkflowkit.workloads"]
 reference-workload = "pyworkflowkit_reference_workload:plugin"

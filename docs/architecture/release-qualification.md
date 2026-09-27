@@ -217,7 +217,7 @@ RQ-06 introduces an aggregate gate over every inherited qualification family.
 The candidate contract freezes:
 
 ```text
-candidate = 0.9.0rc1
+candidate = 0.9.0rc2
 target    = 1.0.0
 tracks    = RQ-01 through RQ-05
 promotion = same-qualified-code-version-metadata-only
@@ -227,9 +227,12 @@ The aggregate job uses `if: always()`, checks every inherited job result explici
 then installs the same built wheel and executes the RQ-06 reference and artifact
 qualifiers.
 
-A functional change after RC qualification requires another RC iteration. Direct
-promotion to `1.0.0` is reserved for the same qualified implementation plus release
-metadata.
+RC1 exposed an Ecosystem SDK compatibility ceiling ending at `<1.0`. RC2 extends the
+same SDK v1 contract through the 1.x line and reruns every inherited qualification family.
+
+A functional or compatibility-contract change after RC qualification requires another RC
+iteration. Direct promotion to `1.0.0` is reserved for the same qualified implementation
+plus release metadata.
 
 Software-license selection remains an explicit manual publication decision and is not
 inferred by the technical qualification pipeline.

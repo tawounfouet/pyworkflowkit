@@ -28,9 +28,9 @@ from pyworkflowkit.ecosystem import (
 
 def test_m52_ecosystem_sdk_surface_and_matrix_are_machine_readable() -> None:
     assert ECOSYSTEM_SDK_CONTRACT_VERSION == "1"
-    assert ECOSYSTEM_COMPATIBILITY_SERIES == "0.8-0.9"
+    assert ECOSYSTEM_COMPATIBILITY_SERIES == "0.8-1.x"
     assert ECOSYSTEM_MINIMUM_VERSION == "0.8.0b1"
-    assert ECOSYSTEM_MAXIMUM_EXCLUSIVE_VERSION == "1.0"
+    assert ECOSYSTEM_MAXIMUM_EXCLUSIVE_VERSION == "2.0"
     assert PLUGIN_API_VERSION == "1"
     assert ENTRY_POINT_GROUPS[PluginType.WORKLOAD] == "pyworkflowkit.workloads"
 

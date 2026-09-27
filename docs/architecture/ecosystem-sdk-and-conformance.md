@@ -25,9 +25,9 @@ ECOSYSTEM_SDK_CONTRACT_VERSION = "1"
 Compatibility window:
 
 ~~~text
-series            = 0.8
+series            = 0.8-1.x
 minimum           = 0.8.0b1
-maximum_exclusive = 1.0
+maximum_exclusive = 2.0
 ~~~
 
 Supported Python matrix:

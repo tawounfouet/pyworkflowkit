@@ -7,7 +7,7 @@ name = "pyworkflowkit-reference-pyingestkit"
 version = "0.1.0"
 description = "Reference PyIngestKit adapter package for PyWorkflowKit."
 requires-python = ">=3.11"
-dependencies = ["pyworkflowkit>=0.8.0a4,<1.0"]
+dependencies = ["pyworkflowkit>=0.8.0a4,<2.0"]
 
 [project.optional-dependencies]
 pyingestkit = ["pyingestkit>=1.0.1,<2"]
