@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.7.0`; current development line `0.8.0a3`.
-> M47/M48 establish external workload and portable-reference contracts; M49 now adds
-> vendor-neutral observability interoperability over committed runtime events.
+> **Status:** stable release `0.7.0`; current development line `0.8.0a4`.
+> M47-M49 establish external workload, portable evidence, and observability contracts;
+> M50 now proves them through independently packaged reference integration wheels.
 
 ## What 0.7 provides
 
@@ -57,6 +57,7 @@ concurrency, hardened execution, recovery, and executable compatibility contract
 - generic external-workload interoperability with explicit retry ownership and `ExternalRunRef` evidence.
 - portable reference validation, manifest metadata redaction, and deterministic reference lineage.
 - vendor-neutral telemetry projection, bounded-cardinality runtime metrics, and optional OpenTelemetry adaptation.
+- independently packaged workload, event, metadata, and real PyIngestKit reference integrations qualified through real entry points.
 
 `WorkflowRuntime` remains the small sequential/local facade. The concurrent runtime is
 an advanced API composed explicitly from `ConcurrentRunner` and `ThreadExecutor`.

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyworkflowkit-reference-event-sink"
+version = "0.1.0"
+description = "Reference RuntimeEventSink plugin for PyWorkflowKit conformance."
+requires-python = ">=3.11"
+dependencies = ["pyworkflowkit>=0.8.0a4,<0.9"]
+
+[project.entry-points."pyworkflowkit.events"]
+reference-event-sink = "pyworkflowkit_reference_event_sink:plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyworkflowkit_reference_event_sink"]

@@ -147,6 +147,37 @@ jobs:
           PY
           test "$(pyworkflow version)" = "$EXPECTED_VERSION"
 
+  reference-integrations:
+    name: Reference integration packages
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pyworkflowkit-dist
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install integration build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build hatchling
+
+      - name: Qualify independently packaged integrations
+        shell: bash
+        run: |
+          core_wheel=$(ls dist/*.whl)
+          python scripts/qualify_reference_integrations.py --core-wheel "$core_wheel"
+
   reference-contracts:
     name: Contract snapshots
     runs-on: ubuntu-latest
@@ -289,6 +320,7 @@ jobs:
       - build
       - artifact-install
       - reference-contracts
+      - reference-integrations
       - sqlite-upgrade
       - postgres-upgrade
       - security
@@ -301,6 +333,7 @@ jobs:
           test "${{ needs.build.result }}" = "success"
           test "${{ needs.artifact-install.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
+          test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.sqlite-upgrade.result }}" = "success"
           test "${{ needs.postgres-upgrade.result }}" = "success"
           test "${{ needs.security.result }}" = "success"
