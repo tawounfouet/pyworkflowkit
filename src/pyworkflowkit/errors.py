@@ -349,9 +349,7 @@ class ExternalWorkloadError(IntegrationError):
         self.error_message = error_message
         self.error_category = error_category
         self.external_run_id = external_run_id
-        run_suffix = (
-            f" external_run_id='{external_run_id}'" if external_run_id is not None else ""
-        )
+        run_suffix = f" external_run_id='{external_run_id}'" if external_run_id is not None else ""
         super().__init__(
             f"External workload '{provider}:{workload_ref}' failed with "
             f"{error_type}: {error_message}.{run_suffix}"
