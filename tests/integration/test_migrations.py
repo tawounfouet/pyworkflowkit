@@ -64,7 +64,6 @@ def test_migration_revisions_are_packaged() -> None:
     assert versions.joinpath("0003_retry_eligible_at.py").is_file()
 
 
-
 def _seed_sqlite_historical_data(engine, *, revision: str) -> None:  # type: ignore[no-untyped-def]
     metadata = MetaData()
     workflow_runs = Table("workflow_runs", metadata, autoload_with=engine)
@@ -211,16 +210,10 @@ def test_upgrade_database_rejects_unknown_database_revision(tmp_path: Path) -> N
 
     with engine.begin() as connection:
         connection.execute(
-            text(
-                "CREATE TABLE alembic_version "
-                "(version_num VARCHAR(32) NOT NULL PRIMARY KEY)"
-            )
+            text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL PRIMARY KEY)")
         )
         connection.execute(
-            text(
-                "INSERT INTO alembic_version (version_num) "
-                "VALUES ('9999_future_revision')"
-            )
+            text("INSERT INTO alembic_version (version_num) VALUES ('9999_future_revision')")
         )
 
     with pytest.raises(MigrationCompatibilityError, match="9999_future_revision"):
