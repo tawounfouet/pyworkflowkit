@@ -148,9 +148,9 @@ jobs:
 
       - name: Development metadata smoke
         run: |
-          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.9.0a1'"
-          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.9.0a1'"
-          pyworkflow version | grep -Fx "0.9.0a1"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.9.0a2'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.9.0a2'"
+          pyworkflow version | grep -Fx "0.9.0a2"
 
       - name: Migration resources smoke
         run: |
