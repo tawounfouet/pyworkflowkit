@@ -145,4 +145,4 @@ topics.
 
 ## Next chapter
 
-The next DX03 chapter is `16_CONCURRENCY.md`.
+Continue with [16 — Concurrency](16_CONCURRENCY.md).
