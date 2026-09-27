@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M51 Control-Plane Provider Contract v1 with a dedicated `pyworkflowkit.control_plane` public surface, runtime-checkable provider protocol, stable operation identifiers, and portable schemas.
+- WorkflowRuntimeProvider for schema-first validation, static inspection, synchronous execution, run inspection, redacted runtime events, manifest/lineage retrieval, recovery assessment, reconciliation, and resume.
+- Explicit capability negotiation reporting external scheduling ownership, synchronous execution, and unsupported external cancellation.
+- ControlPlaneProviderError / ControlPlaneCapabilityError plus wheel-level provider conformance in CI and Release Qualification.
 - M50 independently packaged reference integration wheels for workload, event sink, metadata, and PyIngestKit boundaries.
 - Isolated-venv integration qualification covering wheel build, install, real entry-point discovery, explicit enablement, scenario execution, uninstall, disappearance from discovery, and core-only execution after removal.
 - Real PyIngestKit 1.0.1 cross-project qualification pinned to commit `a19264845e10769fb8fd8cd42c83193ae011f702`, executed as one atomic ExternalWorkload.
@@ -28,6 +32,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The development line advances to `0.8.0a5`; external control planes can now operate PyWorkflowKit through portable public contracts rather than runtime internals.
+- Control-plane run summaries omit raw parameters and control-plane runtime events apply defensive sensitive-key redaction.
+- Scheduling remains external, while unsupported cancellation is declared explicitly instead of being simulated.
 - The development line advances to `0.8.0a4`; ecosystem interoperability is now exercised through independently built and removable wheels.
 - Optional integrations remain explicitly installed/enabled by the application; PyWorkflowKit does not dynamically install plugins.
 - The PyIngestKit reference adapter now lives outside the core wheel and consumes the real PyIngestKit public runtime API during conformance.
