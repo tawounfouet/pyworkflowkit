@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M45 persistence schema contract v1 with frozen migration lineage, explicit current-head metadata, and supported upgrade-origin declarations.
+- MigrationCompatibilityError plus early rejection of unknown database revisions and unknown explicit migration targets.
+- Immutable Git-blob fingerprint acceptance for published migrations 0001/0002/0003.
+- SQLite and PostgreSQL historical-data upgrade qualification from 0001 and 0002 through current head, including current MetadataStore reads and post-upgrade UnitOfWork writes.
 - M44 public plugin compatibility contract suite with reusable registration reports, stable diagnostic issue codes, explicit entry-point group/type mappings, and opt-in instance conformance checks.
 - Third-party plugin contract documentation showing direct compatibility tests without requiring installed entry-point metadata.
 - M44 reference coverage freezing Plugin API v1 categories, descriptor shape, entry-point groups, diagnostics, and external-author conformance workflow.
@@ -22,7 +26,8 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
-- The development line advances to `0.7.0a4`; M44 extracts plugin compatibility from private discovery logic into a public contract suite used by both runtime discovery and third-party tests.
+- The development line advances to `0.7.0a5`; M45 freezes the published Alembic history and promotes forward migration from supported historical revisions to an executable compatibility promise.
+- Durable stores now reject unknown/future Alembic revisions before attempting an upgrade rather than delegating ambiguous compatibility to Alembic internals.
 - Plugin registration validation remains side-effect-free and never invokes plugin factories; instance conformance is an explicit caller-controlled step.
 - `manifest --json` is explicitly governed by RunManifest schema v1 rather than a competing CLI-specific manifest schema.
 - README roadmap now marks 0.6 stable and 0.7 as the active compatibility-contract line.

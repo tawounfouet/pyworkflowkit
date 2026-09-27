@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.6.0`; current development line `0.7.0a4`.
-> M41 freezes the compatibility baseline, M42 controls deprecation, M43 freezes the CLI
-> machine contract, and M44 makes plugin compatibility reusable by third-party packages.
+> **Status:** stable release `0.6.0`; current development line `0.7.0a5`.
+> M41-M44 freeze API, deprecation, CLI, and plugin contracts; M45 now freezes durable
+> persistence evolution and qualifies historical database upgrades.
 
 ## What 0.6 provides
 
@@ -1038,8 +1038,7 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 line is stable. The 0.7 line now contains **M41 — Compatibility Contract
-Foundation**, **M42 — Deprecation Policy & Compatibility Warnings**, **M43 — CLI &
-Machine Contract Freeze**, and **M44 — Plugin Ecosystem Compatibility** at **0.7.0a4**.
-M44 exposes the same compatibility rules used by runtime discovery as a reusable
-third-party conformance API.
+The 0.6 line is stable. The 0.7 line now reaches **M45 — Persistence & Migration
+Compatibility** at **0.7.0a5**. The published Alembic lineage is frozen, unknown schema
+revisions are rejected explicitly, and SQLite/PostgreSQL historical upgrades are
+qualified with preserved data and post-upgrade writes.
