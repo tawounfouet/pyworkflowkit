@@ -83,7 +83,7 @@ def test_validate_workflow_returns_portable_diagnostics_instead_of_private_objec
     assert result.workflow_id == "reference.invalid"
     assert result.task_count == 1
     assert result.diagnostics
-    assert "SelfDependencyError" in result.diagnostics[0]
+    assert "cannot depend on itself" in result.diagnostics[0]
 
 
 class _EventOnlyRuntime:
