@@ -827,27 +827,27 @@ PyWorkflowKit `1.1.0` is complete when:
 
 | Lot | Version | Goal | Status |
 |---|---|---|---|
-| DX00 | 1.0.0 closure | GitHub Release and freeze | In progress |
+| DX00 | 1.0.0 closure | GitHub Release and freeze | Complete |
 | DX01 | 1.1.0a1 | `pwk` canonical CLI | Complete |
 | DX02 | 1.1.0a2 | Rich human CLI | Complete |
 | DX03 | 1.1.0a3 | Zero-to-Hero guides | Complete |
 | DX04 | 1.1.0b1 | Canonical Python examples | Complete |
 | DX05 | 1.1.0b2 | Interactive notebooks | Complete |
 | DX06 | 1.1.0rc1 | Transverse DX qualification | Complete |
-| Stable | 1.1.0 | Developer Experience & Learning | Planned |
+| Stable | 1.1.0 | Developer Experience & Learning | Complete |
 
 ---
 
-## 17. Immediate next action
+## 17. Stable closure
 
-After DX06 is merged and `1.1.0rc1` remains fully green, the next action is:
+PyWorkflowKit `1.1.0` is the completed Developer Experience & Learning line.
 
 ```text
-1.1.0 stable promotion
-    ↓
-same qualified implementation
-    ↓
-version / release metadata only
+1.0.0   Stable Runtime
+   ↓
+1.1.0   Stable Developer Experience & Learning
 ```
 
-Stable promotion must not add runtime behavior or new Developer Experience surfaces.
+Maintenance releases in the `1.1.x` line must preserve the qualified contracts.
+New capability work belongs to a later roadmap and must not be retrofitted into the
+`1.1.0` stable promotion.

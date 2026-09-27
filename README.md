@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0rc1` — Transverse Developer Experience qualification.
-> The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
+> **Current stable:** `1.1.0` — Developer Experience & Learning.
+> **Runtime compatibility baseline:** `1.0.0`.
+> The 1.1 release preserves the stable 1.0 runtime contracts while adding the qualified developer-learning surfaces.
 
 ## What the stable 1.0 release provides
 
