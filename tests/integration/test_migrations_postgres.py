@@ -80,7 +80,6 @@ def test_postgres_fresh_upgrade_reaches_head() -> None:
     engine.dispose()
 
 
-
 def _reset_postgres_schema(engine) -> None:  # type: ignore[no-untyped-def]
     with engine.begin() as connection:
         connection.execute(text("DROP SCHEMA IF EXISTS pyworkflowkit CASCADE"))
