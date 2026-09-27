@@ -82,18 +82,22 @@ def test_rq06_requires_every_inherited_release_qualification_family() -> None:
         assert f"      - {job_id}\n" in workflow
 
 
-def test_rq06_release_metadata_is_candidate_consistent() -> None:
+def test_rq06_release_metadata_promotes_candidate_to_target_release() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert project["project"]["version"] == RELEASE_CANDIDATE_VERSION
+    assert project["project"]["version"] == RELEASE_CANDIDATE_TARGET_RELEASE
 
-    note = ROOT / "docs" / "releases" / f"{RELEASE_CANDIDATE_VERSION}.md"
-    assert note.is_file()
-    assert note.read_text(encoding="utf-8").splitlines()[0] == (
-        f"# PyWorkflowKit {RELEASE_CANDIDATE_VERSION}"
+    candidate_note = ROOT / "docs" / "releases" / f"{RELEASE_CANDIDATE_VERSION}.md"
+    assert candidate_note.is_file()
+
+    stable_note = ROOT / "docs" / "releases" / f"{RELEASE_CANDIDATE_TARGET_RELEASE}.md"
+    assert stable_note.is_file()
+    assert stable_note.read_text(encoding="utf-8").splitlines()[0] == (
+        f"# PyWorkflowKit {RELEASE_CANDIDATE_TARGET_RELEASE}"
     )
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert RELEASE_CANDIDATE_VERSION in changelog
+    assert RELEASE_CANDIDATE_TARGET_RELEASE in changelog
 
 
 def test_rq06_release_contract_composes_candidate_contract() -> None:
@@ -101,7 +105,7 @@ def test_rq06_release_contract_composes_candidate_contract() -> None:
 
     snapshot = release_contract_snapshot()
 
-    assert snapshot["package_version"] == RELEASE_CANDIDATE_VERSION
+    assert snapshot["package_version"] == RELEASE_CANDIDATE_TARGET_RELEASE
     assert snapshot["contracts"]["release_candidate"] == "1"
     assert snapshot["release_candidate"] == release_candidate_contract_snapshot()
 
