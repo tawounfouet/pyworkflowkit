@@ -126,7 +126,6 @@ def test_catalog_rejects_duplicate_kind_and_subject() -> None:
         validate_deprecation_catalog((first, duplicate))
 
 
-
 def test_compatibility_subject_validation_rejects_ambiguous_entries() -> None:
     with pytest.raises(ValueError, match="key"):
         CompatibilitySubject(
