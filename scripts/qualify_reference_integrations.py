@@ -11,8 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PYINGESTKIT_REFERENCE = (
-    "git+https://github.com/tawounfouet/pyingestkit.git"
-    "@a19264845e10769fb8fd8cd42c83193ae011f702"
+    "git+https://github.com/tawounfouet/pyingestkit.git@a19264845e10769fb8fd8cd42c83193ae011f702"
 )
 
 
