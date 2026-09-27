@@ -453,7 +453,6 @@ jobs:
       - static-typing
       - developer-experience
       - packaging-distribution
-      - release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -475,7 +474,6 @@ jobs:
           test "${{ needs.static-typing.result }}" = "success"
           test "${{ needs.developer-experience.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
-          test "${{ needs.release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"
@@ -790,6 +788,7 @@ jobs:
       - static-typing
       - developer-experience
       - packaging-distribution
+      - release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -811,6 +810,7 @@ jobs:
           test "${{ needs.static-typing.result }}" = "success"
           test "${{ needs.developer-experience.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
+          test "${{ needs.release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"
