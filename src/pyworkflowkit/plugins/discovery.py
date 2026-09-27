@@ -20,6 +20,7 @@ from pyworkflowkit.plugins.contracts import (
 from pyworkflowkit.plugins.model import PluginDescriptor, PluginType
 from pyworkflowkit.plugins.registry import PluginCatalog, RegisteredPlugin
 
+
 class PluginDiscoveryStatus(StrEnum):
     """Lifecycle state of one discovered package entry point."""
 
