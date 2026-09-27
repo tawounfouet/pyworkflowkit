@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.8.0`; current development line `0.9.0b1`.
-> RQ-01 froze the public facades, RQ-02 froze compatibility policy, RQ-03 qualified
-> static typing, and RQ-04 now makes the first-use developer journey executable.
+> **Status:** stable release `0.8.0`; current development line `0.9.0b2`.
+> RQ-01 through RQ-04 froze the public/compatibility/typing/DX contracts; RQ-05 now
+> qualifies the wheel, sdist, clean installs, extras, and stable package upgrade path.
 
 ## What the stable 0.8 baseline provides
 
@@ -91,7 +91,7 @@ python -m pip install "pyworkflowkit[postgres]"
 ## Start here
 
 The supported first-use path is documented in
-[`docs/guides/getting-started.md`](docs/guides/getting-started.md).
+[`docs/guides/getting-started.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/getting-started.md).
 
 The minimal public-API example is executable:
 
@@ -108,11 +108,11 @@ pyworkflow plan examples.getting_started_workflow:demo --json
 
 Continue with:
 
-- [CLI workflow](docs/guides/cli-workflow.md)
-- [Failures and retries](docs/guides/failures-and-retries.md)
-- [Persistence and evidence](docs/guides/persistence-and-evidence.md)
-- [Plugin authoring](docs/guides/plugin-authoring.md)
-- [Troubleshooting](docs/guides/troubleshooting.md)
+- [CLI workflow](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/cli-workflow.md)
+- [Failures and retries](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/failures-and-retries.md)
+- [Persistence and evidence](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/persistence-and-evidence.md)
+- [Plugin authoring](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/plugin-authoring.md)
+- [Troubleshooting](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/troubleshooting.md)
 
 These guides intentionally start from the frozen `pyworkflowkit` and
 `pyworkflowkit.ecosystem` facades instead of implementation modules.
@@ -1079,7 +1079,7 @@ SubprocessExecutor, Observability Plugins, and Security Hardening before transve
 qualification promoted the line to **0.5.0 stable**.
 
 The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the public facades,
-**0.9.0a2 / RQ-02** made compatibility policy executable, and **0.9.0a3 / RQ-03**
-qualified strict external-consumer typing. **0.9.0b1 / RQ-04** now qualifies the
-install → define → run → inspect → persist → plugin-authoring journey as executable
-documentation.
+**0.9.0a2 / RQ-02** made compatibility policy executable, **0.9.0a3 / RQ-03** qualified
+strict external-consumer typing, and **0.9.0b1 / RQ-04** qualified the first-use journey.
+**0.9.0b2 / RQ-05** now qualifies package metadata, wheel/sdist contents, clean installs,
+published extras, and upgrade from stable `0.8.0`.

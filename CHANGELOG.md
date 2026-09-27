@@ -18,6 +18,42 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0b2 - 2026-09-27
+
+### Added
+
+- RQ-05 Distribution Contract v1 targeting `1.0.0`.
+- Explicit wheel/sdist content qualification, including required resources and repository-only exclusions.
+- Wheel reconstruction from the published sdist with package-path and metadata equivalence checks.
+- Fresh virtual-environment install qualification for core and every published extra.
+- Package upgrade qualification from the exact stable `0.8.0` commit.
+
+### Changed
+
+- The development line advances from `0.9.0b1` to `0.9.0b2`.
+- Hatchling is bounded to `>=1.27,<2`.
+- Development tooling extras use explicit compatibility ranges instead of unbounded requirements.
+- Project metadata now includes Homepage, Documentation, Repository, Issues, Changelog, and Security URLs.
+- README guide links are absolute for package-index rendering.
+- The sdist is explicitly limited to package sources, build metadata, README, changelog, and security policy.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- Repository-only CI, tests, examples, documentation corpus, typing fixtures, and integration fixtures are excluded from the published source distribution.
+
+### Fixed
+
+- Distribution contents no longer depend on implicit VCS inclusion behavior.
+- The package now proves that its official sdist can rebuild an equivalent wheel.
+
+### Security
+
+- Published extras and clean installations are validated with `pip check`.
+
 ## 0.9.0b1 - 2026-09-27
 
 ### Added

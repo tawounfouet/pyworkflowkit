@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0b1 / RQ-04**
+Status: **active — 0.9.0b2 / RQ-05**
 
 ## Objective
 
@@ -32,8 +32,8 @@ strictly required to make an already-promised contract correct.
 RQ-01 Public API Freeze                    0.9.0a1   ✅
 RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
 RQ-03 Typing & Static Contracts            0.9.0a3   ✅
-RQ-04 Developer Experience & Documentation 0.9.0b1   ACTIVE
-RQ-05 Packaging & Distribution             0.9.0b2
+RQ-04 Developer Experience & Documentation 0.9.0b1   ✅
+RQ-05 Packaging & Distribution             0.9.0b2   ACTIVE
 RQ-06 1.0 Release Qualification            0.9.0rc1
                                            1.0.0
 ```
@@ -175,8 +175,36 @@ built-wheel Release Qualification gate is green
 
 ## RQ-05 — Packaging & Distribution
 
-RQ-05 will harden metadata, dependency bounds, optional extras, wheel/sdist completeness,
-clean installation, upgrade installation, and distribution-facing documentation.
+RQ-05 qualifies the exact distribution artifacts consumed by downstream users.
+
+The milestone freezes:
+
+- bounded Hatchling build-backend requirements;
+- direct runtime dependency ranges;
+- published optional extras;
+- well-known project URLs and index-safe README links;
+- pure-Python wheel contents and required package resources;
+- an explicit minimal sdist scope;
+- wheel reconstruction from the sdist;
+- clean core and extra installations;
+- the package upgrade path from the exact stable 0.8.0 commit.
+
+Exit criteria:
+
+```text
+package version = 0.9.0b2
+Distribution Contract v1 targets 1.0.0
+build backend bounded
+runtime dependencies/extras metadata qualified
+wheel and sdist pass twine check
+wheel contains py.typed + migration resources
+repository-only files absent from artifacts
+wheel rebuilt from sdist is equivalent
+clean core and published-extra installs pass pip check
+0.8.0 -> 0.9.0b2 package upgrade succeeds
+regular CI is green
+built-artifact Release Qualification gate is green
+```
 
 ## RQ-06 — 1.0 Release Qualification
 

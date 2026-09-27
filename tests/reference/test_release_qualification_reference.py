@@ -21,6 +21,7 @@ def test_m46_release_qualification_contract_is_frozen() -> None:
     assert dict(REQUIRED_CONTRACT_VERSIONS) == {
         "cli_machine": "1",
         "developer_experience": "1",
+        "distribution": "1",
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
@@ -36,6 +37,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
     assert snapshot["contracts"] == {
         "cli_machine": "1",
         "developer_experience": "1",
+        "distribution": "1",
         "manifest": "1",
         "persistence": "1",
         "plugin_api": "1",
@@ -48,6 +50,8 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
     assert snapshot["compatibility"]["by_status"]["remove-before-1.0"] == []
     assert snapshot["developer_experience"]["contract_version"] == "1"
     assert snapshot["developer_experience"]["target_release"] == "1.0.0"
+    assert snapshot["distribution"]["contract_version"] == "1"
+    assert snapshot["distribution"]["target_release"] == "1.0.0"
     assert snapshot["typing"]["contract_version"] == "1"
     assert snapshot["typing"]["target_release"] == "1.0.0"
 
