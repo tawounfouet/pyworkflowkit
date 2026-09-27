@@ -44,8 +44,7 @@ def ecosystem_contract_snapshot() -> dict[str, object]:
             "references": REFERENCE_INTEROPERABILITY_CONTRACT_VERSION,
         },
         "entry_point_groups": {
-            plugin_type.value: ENTRY_POINT_GROUPS[plugin_type]
-            for plugin_type in PluginType
+            plugin_type.value: ENTRY_POINT_GROUPS[plugin_type] for plugin_type in PluginType
         },
     }
 
