@@ -125,7 +125,11 @@ class ExternalWorkloadAdapter:
                 provider=self.provider,
                 workload_ref=self.workload_ref,
                 error_type=result.error_type or "ExternalWorkloadFailed",
-                error_message=result.error_message or result.error_type or "external workload failed",
+                error_message=(
+                    result.error_message
+                    or result.error_type
+                    or "external workload failed"
+                ),
                 error_category=result.error_category or result.error_type or "external_workload",
                 external_run_id=result.external_run_id,
             )
