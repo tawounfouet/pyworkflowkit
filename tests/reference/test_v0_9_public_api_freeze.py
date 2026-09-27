@@ -33,7 +33,7 @@ def test_rq01_only_intentional_facades_are_frozen() -> None:
 def test_rq01_frozen_facades_match_exported_symbols() -> None:
     for module_name, expected_symbols in PUBLIC_API_SURFACES.items():
         module = import_module(module_name)
-        exported = tuple(getattr(module, "__all__"))
+        exported = tuple(module.__all__)
 
         assert len(exported) == len(set(exported)), module_name
         assert set(exported) == set(expected_symbols), module_name
