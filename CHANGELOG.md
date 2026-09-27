@@ -45,6 +45,7 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 ### Fixed
 
 - The repository's first example no longer teaches internal implementation imports as the normal user path.
+- CLI `module:attribute` workflow targets now resolve explicit modules from the current working directory when using the installed console script.
 - Cross-process CLI inspection is documented and qualified with a durable SQLite backend instead of the default in-memory store.
 
 ### Security
