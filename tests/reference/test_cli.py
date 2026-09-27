@@ -103,7 +103,6 @@ def test_cli_version() -> None:
     assert result.stdout.strip()
 
 
-
 def test_cli_imports_explicit_workflow_target_from_current_directory(
     tmp_path: Path,
     monkeypatch,
