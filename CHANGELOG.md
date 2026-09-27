@@ -8,9 +8,6 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
-- Progressive Zero-to-Hero documentation architecture under `docs/guides/`, starting from installation, tasks, workflow definitions, DAGs, planning, runtime, data flow, retries, events, and manifests.
-- Compatibility redirects from historical beginner/retry guide paths to the canonical numbered learning chapters.
-
 ### Changed
 
 ### Deprecated
@@ -20,6 +17,39 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 ### Fixed
 
 ### Security
+
+## 1.1.0a3 - 2026-09-27
+
+### Added
+
+- Canonical Zero-to-Hero learning index under `docs/guides/README.md`.
+- Twenty-nine numbered learning chapters covering beginner, runtime, persistence, CLI, concurrency, executor, ecosystem, integration, testing, debugging, and production topics.
+- Complete guide-level reference application based on a `fetch → validate → transform → publish` workflow.
+- DX03 acceptance qualification for guide topology, chapter progression, local Markdown links, beginner public-import boundaries, canonical `pwk` usage, and compatibility redirects.
+- Release note `docs/releases/1.1.0a3.md`.
+
+### Changed
+
+- Repository first-use navigation now enters the canonical numbered Zero-to-Hero path.
+- Historical guide paths are preserved as compatibility redirects instead of maintaining duplicate beginner content.
+- Beginner chapters use the stable package-root API and canonical `pwk` command.
+- References to executable examples and notebooks explicitly remain DX04/DX05 targets.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Guide navigation now provides a continuous linked learning path from chapter 00 through chapter 99.
+
+### Security
+
+- No runtime security contract changes.
 
 ## 1.1.0a2 - 2026-09-27
 
