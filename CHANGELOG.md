@@ -8,13 +8,16 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M42 deprecation infrastructure with typed categories, visible warning classes, versioned DeprecationSpec metadata, once-per-identity emission, decorator support, and an explicit active-deprecation catalog.
+- Enforced normal deprecation removal no earlier than the next minor release line, with a documented emergency security/invariant exception.
+- M42 unit and reference coverage for warning categories, caller stack location, duplicate suppression, decorator behavior, and policy validation.
 - M41 Compatibility Contract Foundation with executable freezes for package-root API, lifecycle/event vocabularies, MetadataStore/UnitOfWork protocols, CLI command/exit-code surface, Manifest schema v1, and Plugin API v1.
 - 0.7 compatibility/stabilization roadmap and compatibility policy documentation.
 - 0.7.0a1 release note establishing the first pre-1.0 hardening milestone.
 
 ### Changed
 
-- The development line advances to `0.7.0a1` without adding new runtime functionality.
+- The development line advances to `0.7.0a2`; M42 adds compatibility-evolution mechanics without deprecating an existing API.
 - README roadmap now marks 0.6 stable and 0.7 as the active compatibility-contract line.
 
 ### Deprecated
