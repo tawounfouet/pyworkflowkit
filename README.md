@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.6.0`; current development line `0.7.0a1`.
-> M41 starts the compatibility/stabilization phase by freezing the contracts that the
-> ecosystem must be able to rely on before 1.0.
+> **Status:** stable release `0.6.0`; current development line `0.7.0a2`.
+> M41 freezes the compatibility baseline; M42 adds explicit deprecation warnings and
+> removal-window rules so stable-intent contracts cannot disappear silently.
 
 ## What 0.6 provides
 
@@ -1038,6 +1038,7 @@ The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
 SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
 qualification promoted the line to **0.5.0 stable**.
 
-The 0.6 line is now stable. The 0.7 line starts with **M41 — Compatibility Contract
-Foundation** at **0.7.0a1**. Its purpose is to turn previously implicit compatibility
-expectations into executable reference contracts before ecosystem expansion and 1.0.
+The 0.6 line is stable. The 0.7 line now contains **M41 — Compatibility Contract
+Foundation** and **M42 — Deprecation Policy & Compatibility Warnings** at
+**0.7.0a2**. No existing API is deprecated by M42; it establishes the mechanism future
+changes must use.
