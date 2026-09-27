@@ -7,7 +7,7 @@ name = "pyworkflowkit-qualification-broken-optional"
 version = "0.1.0"
 description = "Deliberately broken optional integration for isolation qualification."
 requires-python = ">=3.11"
-dependencies = ["pyworkflowkit>=0.8.0b1,<1.0"]
+dependencies = ["pyworkflowkit>=0.8.0b1,<2.0"]
 
 [project.entry-points."pyworkflowkit.events"]
 broken-optional = "pyworkflowkit_qualification_broken_optional.missing:plugin"
