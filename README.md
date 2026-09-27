@@ -7,13 +7,13 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.8.0`; current release candidate `0.9.0rc1`.
-> RQ-01 through RQ-05 are qualified; RQ-06 now composes them into the final
-> 1.0 release-candidate gate.
+> **Status:** stable release `1.0.0`.
+> The 1.0 implementation is promoted from the fully qualified `0.9.0rc1` candidate
+> under the `same-qualified-code-version-metadata-only` policy.
 
-## What the stable 0.8 baseline provides
+## What the stable 1.0 release provides
 
-The stable `0.8.0` baseline combines the local developer framework, durable persistence,
+The stable `1.0.0` release combines the local developer framework, durable persistence,
 concurrency, hardened execution, recovery, and executable compatibility contracts:
 
 - immutable `WorkflowDefinition` and `TaskDefinition` domain values;
@@ -1082,5 +1082,6 @@ The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the public facades,
 **0.9.0a2 / RQ-02** made compatibility policy executable, **0.9.0a3 / RQ-03** qualified
 strict external-consumer typing, and **0.9.0b1 / RQ-04** qualified the first-use journey.
 **0.9.0b2 / RQ-05** qualified package metadata, wheel/sdist contents, clean installs,
-published extras, and upgrade from stable `0.8.0`. **0.9.0rc1 / RQ-06** now composes
-all frozen evidence into the final 1.0 release-candidate gate.
+published extras, and upgrade from stable `0.8.0`. **0.9.0rc1 / RQ-06** composed all
+frozen evidence into the final release-candidate gate. **1.0.0** promotes that same
+qualified implementation as stable.
