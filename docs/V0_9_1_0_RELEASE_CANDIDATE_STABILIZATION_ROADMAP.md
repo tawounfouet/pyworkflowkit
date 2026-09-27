@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0a2 / RQ-02**
+Status: **active — 0.9.0a3 / RQ-03**
 
 ## Objective
 
@@ -30,8 +30,8 @@ strictly required to make an already-promised contract correct.
 
 ```text
 RQ-01 Public API Freeze                    0.9.0a1   ✅
-RQ-02 Compatibility & Deprecation          0.9.0a2   ACTIVE
-RQ-03 Typing & Static Contracts            0.9.0a3
+RQ-02 Compatibility & Deprecation          0.9.0a2   ✅
+RQ-03 Typing & Static Contracts            0.9.0a3   ACTIVE
 RQ-04 Developer Experience & Documentation 0.9.0b1
 RQ-05 Packaging & Distribution             0.9.0b2
 RQ-06 1.0 Release Qualification            0.9.0rc1
@@ -107,8 +107,36 @@ built-wheel Release Qualification gate is green
 
 ## RQ-03 — Typing & Static Contracts
 
-RQ-03 will pressure public Protocols, annotations, `py.typed`, Optional/None semantics,
-callback signatures, plugin interfaces, and static-checker usability.
+RQ-03 qualifies the frozen facades as real external-consumer typing surfaces rather than
+relying only on internal source-tree `mypy --strict`.
+
+The milestone keeps the existing PEP 561 `py.typed` marker, adds a machine-readable
+Typing Contract v1, and tests consumer code against Python 3.11, 3.12, and 3.13.
+
+It also closes two typing gaps discovered by the audit:
+
+- `@task` now accepts statically only the signatures the runtime can execute: zero
+  arguments or one `RunContext`;
+- `pyworkflowkit.ecosystem` re-exports the support types needed to implement its public
+  `Executor`, `MetadataStore`, `UnitOfWork`, and `RuntimeEventSink` Protocols without
+  importing internal module paths.
+
+Exit criteria:
+
+```text
+package version = 0.9.0a3
+Typing Contract v1 targets 1.0.0
+py.typed is present in the installed wheel
+all frozen facades are typing targets
+public-consumer fixture passes mypy --strict
+invalid two-argument @task handler fails static typing
+Executor / MetadataStore / UnitOfWork / RuntimeEventSink are implementable from public facades
+plugin_registration preserves generic factory result types
+WorkflowRuntimeProvider satisfies ControlPlaneProvider structurally
+typing passes for Python 3.11 / 3.12 / 3.13
+regular CI is green
+built-wheel Release Qualification gate is green
+```
 
 ## RQ-04 — Developer Experience & Documentation
 
