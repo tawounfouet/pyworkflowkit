@@ -40,7 +40,7 @@ CANONICAL_CHAPTERS = (
 
 NEXT_CHAPTER = {
     current: following
-    for current, following in zip(CANONICAL_CHAPTERS, CANONICAL_CHAPTERS[1:], strict=True)
+    for current, following in zip(CANONICAL_CHAPTERS[:-1], CANONICAL_CHAPTERS[1:], strict=True)
 }
 
 LEGACY_REDIRECTS = {
