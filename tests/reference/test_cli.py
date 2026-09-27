@@ -101,3 +101,29 @@ def test_cli_version() -> None:
 
     assert result.exit_code == 0
     assert result.stdout.strip()
+
+
+
+def test_cli_imports_explicit_workflow_target_from_current_directory(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    module = tmp_path / "rq04_local_workflow.py"
+    module.write_text(
+        (
+            "from pyworkflowkit import TaskHandle, task, workflow\n\n"
+            "@task\n"
+            "def hello() -> str:\n"
+            "    return 'hello'\n\n"
+            "@workflow(id='rq04.local', version='1')\n"
+            "def demo() -> tuple[TaskHandle, ...]:\n"
+            "    return (hello,)\n"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["validate", "rq04_local_workflow:demo", "--json"])
+
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["valid"] is True
