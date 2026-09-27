@@ -7,7 +7,7 @@ name = "pyworkflowkit-qualification-executor"
 version = "0.1.0"
 description = "Third-party executor fixture for PyWorkflowKit 0.8 transverse qualification."
 requires-python = ">=3.11"
-dependencies = ["pyworkflowkit>=0.8.0b1,<1.0"]
+dependencies = ["pyworkflowkit>=0.8.0b1,<2.0"]
 
 [project.entry-points."pyworkflowkit.executors"]
 reference-executor = "pyworkflowkit_qualification_executor:plugin"
