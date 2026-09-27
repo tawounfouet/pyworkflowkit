@@ -392,6 +392,13 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             rationale="Normal removals require an explicit deprecation window.",
         ),
         CompatibilitySubject(
+            key="developer_experience.first_use",
+            area="documentation",
+            status=CompatibilityStatus.STABLE,
+            contract_version="1",
+            rationale="The 1.0 first-use API, CLI, persistence, and plugin journey is executable.",
+        ),
+        CompatibilitySubject(
             key="module.adapters",
             area="module",
             status=CompatibilityStatus.INTERNAL,
