@@ -83,9 +83,7 @@ REQUIRED_QUALIFICATION_JOB_IDS: tuple[str, ...] = (
 
 PROMOTION_POLICY = "same-qualified-code-version-metadata-only"
 
-MANUAL_1_0_PUBLICATION_DECISIONS: tuple[str, ...] = (
-    "software_license",
-)
+MANUAL_1_0_PUBLICATION_DECISIONS: tuple[str, ...] = ("software_license",)
 
 
 def release_candidate_contract_snapshot() -> dict[str, object]:
@@ -96,8 +94,7 @@ def release_candidate_contract_snapshot() -> dict[str, object]:
         "candidate_version": RELEASE_CANDIDATE_VERSION,
         "target_release": RELEASE_CANDIDATE_TARGET_RELEASE,
         "stabilization_tracks": {
-            track: dict(values)
-            for track, values in sorted(STABILIZATION_TRACKS.items())
+            track: dict(values) for track, values in sorted(STABILIZATION_TRACKS.items())
         },
         "required_qualification_jobs": list(REQUIRED_QUALIFICATION_JOB_IDS),
         "promotion_policy": PROMOTION_POLICY,
