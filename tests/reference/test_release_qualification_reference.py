@@ -38,6 +38,10 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
         "plugin_api": "1",
     }
     assert snapshot["migration_head"] == "0003_retry_eligible_at"
+    assert snapshot["compatibility"]["contract_version"] == "1"
+    assert snapshot["compatibility"]["target_release"] == "1.0.0"
+    assert snapshot["compatibility"]["by_status"]["deprecated"] == []
+    assert snapshot["compatibility"]["by_status"]["remove-before-1.0"] == []
 
 
 def test_m46_current_version_has_release_note_and_changelog_gate() -> None:
