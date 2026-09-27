@@ -18,6 +18,36 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0a2 - 2026-09-27
+
+### Added
+
+- RQ-02 machine-readable compatibility classification with `stable`, `deprecated`, `internal`, and `remove-before-1.0` statuses.
+- Frozen console-script aliases, RuntimeSettings precedence/defaults, stable facade exception exports, and internal module-prefix boundaries.
+- Compatibility snapshot integrated into the release qualification contract.
+- Dedicated source and built-wheel RQ-02 qualification gates.
+
+### Changed
+
+- The development line advances from `0.9.0a1` to `0.9.0a2`.
+- Ecosystem SDK v1 compatibility is extended from `>=0.8.0b1,<0.9` to `>=0.8.0b1,<1.0`, preserving interoperability across the 0.8 and 0.9 stabilization lines.
+- Reference and qualification integration package dependency bounds are aligned with the same `<1.0` window.
+- Direct imports from implementation module families such as `application`, `domain`, `adapters`, `ports`, and migration implementation modules are explicitly non-frozen; facade re-exports remain the compatibility boundary.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No pre-1.0 removal is scheduled.
+
+### Fixed
+
+- Removed the self-contradictory ecosystem compatibility ceiling that excluded PyWorkflowKit 0.9 while Ecosystem SDK contract v1 remained unchanged.
+
+### Security
+
 ## 0.9.0a1 - 2026-09-27
 
 ### Added
