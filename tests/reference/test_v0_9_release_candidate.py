@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_rq06_candidate_identity_and_target_are_frozen() -> None:
     assert RELEASE_CANDIDATE_CONTRACT_VERSION == "1"
-    assert RELEASE_CANDIDATE_VERSION == "0.9.0rc1"
+    assert RELEASE_CANDIDATE_VERSION == "0.9.0rc2"
     assert RELEASE_CANDIDATE_TARGET_RELEASE == "1.0.0"
     assert PROMOTION_POLICY == "same-qualified-code-version-metadata-only"
 
