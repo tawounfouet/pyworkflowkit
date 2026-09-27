@@ -8,6 +8,10 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- M49 Observability Interoperability Contract v1 with vendor-neutral telemetry events, correlations, metrics, projections, backends, and RuntimeTelemetrySink.
+- Generic runtime counters/histograms for committed events, workflow/task lifecycle, retries, and durations with bounded-cardinality labels.
+- Dependency-free OpenTelemetryBackend accepting injected tracer/meter objects instead of making OpenTelemetry a core dependency.
+- M49 acceptance coverage for committed-event projection, domain-ID correlation, redaction, retry metrics, duration metrics, and telemetry-backend failure isolation.
 - M48 Portable Reference & Integration Evidence Contract v1 with stable provider-name validation, absolute URI validation, strict JSON-portable metadata checks, and explicit reference portability helpers.
 - `ReferenceInteroperabilityError` for deterministic provider / URI / metadata contract diagnostics.
 - Durable M48 acceptance proving exact foreign identifier/URI preservation through serialization and SQLite persistence.
@@ -20,6 +24,9 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Changed
 
+- The development line advances to `0.8.0a3`; telemetry remains a secondary projection over durable RuntimeEvent evidence.
+- Runtime identifiers are carried as event/span correlation attributes but are deliberately excluded from metric labels to avoid high-cardinality series.
+- OpenTelemetry interoperability is provided through injected API objects rather than a mandatory package dependency.
 - The development line advances to `0.8.0a2`; M48 strengthens portable evidence without making the stable 0.7 reference constructors stricter.
 - M47 external workloads now consume the M48 provider / URI / metadata portability contract before emitting TaskResult evidence.
 - RunManifest projections now recursively redact sensitive keys from artifact and external-reference metadata while durable stored evidence remains unchanged.
