@@ -97,7 +97,7 @@ runtime.observability_failures
 
 ## Related example
 
-DX04 target: `examples/10_events.py`.
+Canonical companion: [`examples/10_events.py`](../../examples/10_events.py).
 
 ## Related notebook
 
