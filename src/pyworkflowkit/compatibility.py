@@ -99,7 +99,7 @@ class DeprecationSpec:
         if self.replacement is not None:
             parts.append(f"Use {self.replacement} instead.")
         if self.reason is not None:
-            parts.append(f"{self.reason.rstrip('.')}." )
+            parts.append(f"{self.reason.rstrip('.')}.")
         if self.emergency:
             parts.append("This deprecation uses the documented emergency compatibility exception.")
         return " ".join(parts)
