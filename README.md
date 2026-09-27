@@ -93,6 +93,9 @@ python -m pip install "pyworkflowkit[postgres]"
 The supported first-use path is documented in
 [`docs/guides/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/docs/guides/README.md).
 
+The historical `docs/guides/getting-started.md` path remains available as a compatibility
+redirect into this canonical learning journey.
+
 The minimal public-API example is executable:
 
 ```bash
