@@ -9,11 +9,11 @@ from __future__ import annotations
 import json
 
 from pyworkflowkit import TaskHandle, WorkflowRuntime, workflow
+from pyworkflowkit.ecosystem import RunContext
 from pyworkflowkit.integrations.pyingestkit import (
     PyIngestKitRunResult,
     pyingestkit_task,
 )
-from pyworkflowkit.ecosystem import RunContext
 
 
 class ExamplePyIngestKitJob:
