@@ -80,6 +80,10 @@ include = [
   "/SECURITY.md",
   "/pyproject.toml",
 ]
+exclude = [
+  "/.gitignore",
+  "/.editorconfig",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
