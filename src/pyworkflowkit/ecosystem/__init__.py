@@ -1,6 +1,9 @@
 """Public SDK facade for third-party PyWorkflowKit integrations."""
 
 from pyworkflowkit.control_plane import ControlPlaneProvider, WorkflowRuntimeProvider
+from pyworkflowkit.domain.definitions import TaskDefinition
+from pyworkflowkit.domain.ids import TaskRunId, WorkflowRunId
+from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.domain.values import ArtifactReference, ExternalRunRef, TaskResult
 from pyworkflowkit.ecosystem.authoring import entry_point_group, plugin_registration
 from pyworkflowkit.ecosystem.conformance import (
@@ -35,7 +38,14 @@ from pyworkflowkit.plugins import (
     PluginType,
     RegisteredPlugin,
 )
-from pyworkflowkit.ports.executor import Executor, ExecutorCapabilities, RunContext
+from pyworkflowkit.ports.executor import (
+    CancellationCapability,
+    Executor,
+    ExecutorCapabilities,
+    RunContext,
+    TaskHandler,
+    TimeoutCapability,
+)
 from pyworkflowkit.ports.metadata_store import MetadataStore, UnitOfWork
 from pyworkflowkit.ports.observability import RuntimeEventSink
 
@@ -47,6 +57,16 @@ __all__ = [
     "ENTRY_POINT_GROUPS",
     "PLUGIN_API_VERSION",
     "ArtifactReference",
+    "CancellationCapability",
+    "RuntimeEvent",
+    "TaskAttempt",
+    "TaskDefinition",
+    "TaskHandler",
+    "TaskRun",
+    "TaskRunId",
+    "TimeoutCapability",
+    "WorkflowRun",
+    "WorkflowRunId",
     "ControlPlaneProvider",
     "EcosystemConformanceReport",
     "Executor",
