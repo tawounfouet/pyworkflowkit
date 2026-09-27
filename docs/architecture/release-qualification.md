@@ -33,6 +33,7 @@ supported Python versions
 CLI machine contract v1
 Developer Experience contract v1
 Distribution contract v1
+Release-Candidate contract v1
 RunManifest schema v1
 Persistence schema v1
 Plugin API v1
@@ -86,6 +87,9 @@ Build wheel + sdist                         Source-backed contract gates
       ├── reference integrations
       ├── control-plane provider
       └── transverse 0.8 compatibility
+                       │
+                       ▼
+             1.0 release candidate
                        │
                        ▼
              Release qualification gate
@@ -206,6 +210,30 @@ The stable upgrade baseline is the exact 0.8.0 commit:
 Database migration compatibility is still proven separately by the SQLite/PostgreSQL
 historical upgrade matrix.
 
+## RQ-06 — 1.0 release candidate
+
+RQ-06 introduces an aggregate gate over every inherited qualification family.
+
+The candidate contract freezes:
+
+```text
+candidate = 0.9.0rc1
+target    = 1.0.0
+tracks    = RQ-01 through RQ-05
+promotion = same-qualified-code-version-metadata-only
+```
+
+The aggregate job uses `if: always()`, checks every inherited job result explicitly,
+then installs the same built wheel and executes the RQ-06 reference and artifact
+qualifiers.
+
+A functional change after RC qualification requires another RC iteration. Direct
+promotion to `1.0.0` is reserved for the same qualified implementation plus release
+metadata.
+
+Software-license selection remains an explicit manual publication decision and is not
+inferred by the technical qualification pipeline.
+
 ## Security
 
 Blocking release checks remain:
@@ -249,5 +277,5 @@ publish containers
 ```
 
 Those are separate mutating/project decisions. RQ-05 proves that the artifacts are
-technically distributable; RQ-06 will compose all frozen evidence for the 1.0 release
-candidate.
+technically distributable; RQ-06 composes all frozen evidence into the 1.0 release
+candidate without performing publication.
