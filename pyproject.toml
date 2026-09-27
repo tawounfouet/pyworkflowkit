@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [project]
 name = "pyworkflowkit"
-version = "0.9.0b1"
+version = "0.9.0b2"
 description = "Reliable workflows without running a workflow platform."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,10 +22,13 @@ keywords = [
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -45,12 +48,12 @@ postgres = [
   "psycopg[binary]>=3.2,<4",
 ]
 dev = [
-  "build",
-  "hypothesis",
-  "mypy",
-  "pytest",
-  "pytest-cov",
-  "ruff",
+  "build>=1.3,<2",
+  "hypothesis>=6,<7",
+  "mypy>=1.15,<3",
+  "pytest>=8,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
 ]
 security = [
   "bandit>=1.8,<2",
@@ -59,12 +62,24 @@ security = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/tawounfouet/pyworkflowkit"
+Documentation = "https://github.com/tawounfouet/pyworkflowkit/tree/main/docs"
 Repository = "https://github.com/tawounfouet/pyworkflowkit"
 Issues = "https://github.com/tawounfouet/pyworkflowkit/issues"
 Changelog = "https://github.com/tawounfouet/pyworkflowkit/blob/main/CHANGELOG.md"
+Security = "https://github.com/tawounfouet/pyworkflowkit/blob/main/SECURITY.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pyworkflowkit"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/pyworkflowkit",
+  "/README.md",
+  "/CHANGELOG.md",
+  "/SECURITY.md",
+  "/pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
