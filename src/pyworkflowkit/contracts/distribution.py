@@ -7,6 +7,7 @@ from types import MappingProxyType
 
 DISTRIBUTION_CONTRACT_VERSION = "1"
 DISTRIBUTION_TARGET_RELEASE = "1.0.0"
+BUILD_BACKEND_REQUIREMENT = "hatchling>=1.27,<2"
 PACKAGE_NAME = "pyworkflowkit"
 PYTHON_REQUIRES = ">=3.11"
 STABLE_UPGRADE_BASELINE_VERSION = "0.8.0"
@@ -37,6 +38,7 @@ OPTIONAL_EXTRA_NAMES: tuple[str, ...] = (
 REQUIRED_PROJECT_URL_NAMES: tuple[str, ...] = (
     "Changelog",
     "Documentation",
+    "Homepage",
     "Issues",
     "Repository",
     "Security",
@@ -93,6 +95,7 @@ def distribution_contract_snapshot() -> dict[str, object]:
         "target_release": DISTRIBUTION_TARGET_RELEASE,
         "package_name": PACKAGE_NAME,
         "python_requires": PYTHON_REQUIRES,
+        "build_backend_requirement": BUILD_BACKEND_REQUIREMENT,
         "artifacts": list(DISTRIBUTION_ARTIFACTS),
         "console_scripts": dict(sorted(CONSOLE_SCRIPTS.items())),
         "runtime_dependencies": list(RUNTIME_DEPENDENCY_RANGES),
@@ -114,6 +117,7 @@ def distribution_contract_snapshot() -> dict[str, object]:
 
 
 __all__ = [
+    "BUILD_BACKEND_REQUIREMENT",
     "CONSOLE_SCRIPTS",
     "DISTRIBUTION_ARTIFACTS",
     "DISTRIBUTION_CONTRACT_VERSION",
