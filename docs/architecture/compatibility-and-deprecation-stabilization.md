@@ -186,7 +186,7 @@ conformance assertions accordingly.
 The contract therefore becomes:
 
 ```text
-series            = 0.8-1.x-1.x
+series            = 0.8-1.x
 minimum           = 0.8.0b1
 maximum_exclusive = 2.0
 SDK contract      = 1
