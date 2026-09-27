@@ -63,9 +63,17 @@ of the frozen facades:
 ```text
 pyworkflowkit.adapters.*
 pyworkflowkit.application.*
+pyworkflowkit.cli
+pyworkflowkit.cli_contract
+pyworkflowkit.compatibility
+pyworkflowkit.config
+pyworkflowkit.contracts.*
+pyworkflowkit.declarative
 pyworkflowkit.domain.*
+pyworkflowkit.errors
 pyworkflowkit.migrations.*
 pyworkflowkit.ports.*
+pyworkflowkit.release_contract
 ```
 
 This distinction is important:
