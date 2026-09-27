@@ -74,7 +74,10 @@ def render_plugins(payload: Mapping[str, object]) -> None:
 
 def render_doctor(payload: Mapping[str, object]) -> None:
     healthy = bool(payload.get("healthy"))
-    header = Text("Healthy" if healthy else "Unhealthy", style="bold green" if healthy else "bold red")
+    header = Text(
+        "Healthy" if healthy else "Unhealthy",
+        style="bold green" if healthy else "bold red",
+    )
     header.append(f" · Plugin API {payload.get('plugin_api_version', '-')}")
     console().print(header)
 
