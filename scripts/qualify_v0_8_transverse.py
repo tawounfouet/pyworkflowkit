@@ -288,9 +288,9 @@ print("F broken optional integration isolation: ok")
 
 snapshot = ecosystem_contract_snapshot()
 assert snapshot["compatibility"] == {
-    "series": "0.8",
+    "series": "0.8-0.9",
     "minimum": "0.8.0b1",
-    "maximum_exclusive": "0.9",
+    "maximum_exclusive": "1.0",
 }
 assert snapshot["contracts"] == {
     "control_plane": "1",

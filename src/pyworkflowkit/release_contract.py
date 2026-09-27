@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 from pyworkflowkit.application.manifest import MANIFEST_SCHEMA_VERSION
 from pyworkflowkit.cli_contract import CLI_MACHINE_CONTRACT_VERSION
+from pyworkflowkit.compatibility import compatibility_contract_snapshot
 from pyworkflowkit.migrations.contract import (
     MIGRATION_HEAD_REVISION,
     PERSISTENCE_SCHEMA_CONTRACT_VERSION,
@@ -41,6 +42,7 @@ def release_contract_snapshot() -> dict[str, object]:
         "supported_python_versions": list(SUPPORTED_PYTHON_VERSIONS),
         "contracts": dict(sorted(REQUIRED_CONTRACT_VERSIONS.items())),
         "migration_head": MIGRATION_HEAD_REVISION,
+        "compatibility": compatibility_contract_snapshot(),
     }
 
 

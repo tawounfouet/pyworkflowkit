@@ -1,6 +1,6 @@
 # PyWorkflowKit 0.9 — 1.0 Release-Candidate Stabilization Roadmap
 
-Status: **active — 0.9.0a1 / RQ-01**
+Status: **active — 0.9.0a2 / RQ-02**
 
 ## Objective
 
@@ -29,8 +29,8 @@ strictly required to make an already-promised contract correct.
 ## Tracks
 
 ```text
-RQ-01 Public API Freeze                    0.9.0a1   ACTIVE
-RQ-02 Compatibility & Deprecation          0.9.0a2   NEXT
+RQ-01 Public API Freeze                    0.9.0a1   ✅
+RQ-02 Compatibility & Deprecation          0.9.0a2   ACTIVE
 RQ-03 Typing & Static Contracts            0.9.0a3
 RQ-04 Developer Experience & Documentation 0.9.0b1
 RQ-05 Packaging & Distribution             0.9.0b2
@@ -80,9 +80,30 @@ built-wheel Release Qualification gate is green
 
 ## RQ-02 — Compatibility & Deprecation
 
-RQ-02 will audit aliases, defaults, exception compatibility, versioned schemas, CLI
-contracts, persistence contracts, and the removal/deprecation policy. It must remove
-ambiguity without silently breaking the RQ-01 surfaces.
+RQ-02 classifies existing contracts as `stable`, `deprecated`, `internal`, or
+`remove-before-1.0`. It freezes the documented console aliases and RuntimeSettings
+defaults, cross-checks every versioned v1 contract, narrows stable exception imports to
+frozen facade re-exports, and keeps implementation module paths explicitly internal.
+
+The audit also fixes one 0.9 compatibility inconsistency: Ecosystem SDK v1 now declares
+`>=0.8.0b1,<1.0` instead of excluding the current 0.9 line with `<0.9`.
+
+Exit criteria:
+
+```text
+package version = 0.9.0a2
+compatibility classification contract v1
+all versioned public contracts remain v1
+console aliases pyworkflow / pyworkflowkit remain installed
+RuntimeSettings precedence and defaults are frozen
+stable exception exports resolve through frozen facades
+internal module prefixes do not overlap public facades
+no active deprecation
+no remove-before-1.0 subject
+Ecosystem SDK v1 supports 0.8 and 0.9 (<1.0)
+regular CI is green
+built-wheel Release Qualification gate is green
+```
 
 ## RQ-03 — Typing & Static Contracts
 

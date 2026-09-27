@@ -8,6 +8,11 @@ import warnings
 import pytest
 
 from pyworkflowkit.compatibility import (
+    COMPATIBILITY_CONTRACT_VERSION,
+    COMPATIBILITY_SUBJECTS,
+    COMPATIBILITY_TARGET_RELEASE,
+    CompatibilityStatus,
+    CompatibilitySubject,
     DeprecationEmitter,
     DeprecationKind,
     DeprecationSpec,
@@ -119,3 +124,52 @@ def test_catalog_rejects_duplicate_kind_and_subject() -> None:
     duplicate = api_spec(since="0.7.1", removal="0.8.1")
     with pytest.raises(ValueError, match="duplicate active deprecation"):
         validate_deprecation_catalog((first, duplicate))
+
+
+def test_compatibility_subject_validation_rejects_ambiguous_entries() -> None:
+    with pytest.raises(ValueError, match="key"):
+        CompatibilitySubject(
+            key="",
+            area="api",
+            status=CompatibilityStatus.STABLE,
+        )
+
+    with pytest.raises(ValueError, match="area"):
+        CompatibilitySubject(
+            key="sample",
+            area="",
+            status=CompatibilityStatus.STABLE,
+        )
+
+    with pytest.raises(TypeError, match="CompatibilityStatus"):
+        CompatibilitySubject(
+            key="sample",
+            area="api",
+            status="stable",  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError, match="contract_version"):
+        CompatibilitySubject(
+            key="sample",
+            area="api",
+            status=CompatibilityStatus.STABLE,
+            contract_version="",
+        )
+
+    with pytest.raises(ValueError, match="rationale"):
+        CompatibilitySubject(
+            key="sample",
+            area="api",
+            status=CompatibilityStatus.STABLE,
+            rationale="",
+        )
+
+
+def test_compatibility_catalog_is_unique_and_targets_1_0() -> None:
+    assert COMPATIBILITY_CONTRACT_VERSION == "1"
+    assert COMPATIBILITY_TARGET_RELEASE == "1.0.0"
+
+    keys = tuple(subject.key for subject in COMPATIBILITY_SUBJECTS)
+    assert len(keys) == len(set(keys))
+    assert any(subject.status is CompatibilityStatus.STABLE for subject in COMPATIBILITY_SUBJECTS)
+    assert any(subject.status is CompatibilityStatus.INTERNAL for subject in COMPATIBILITY_SUBJECTS)
