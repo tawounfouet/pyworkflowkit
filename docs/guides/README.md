@@ -91,9 +91,7 @@ Each major chapter aims to provide:
 10. a related notebook;
 11. the next chapter.
 
-The executable examples and notebooks are separate roadmap lots. Until DX04 and DX05 land,
-guide links may explicitly say that the companion artifact is planned rather than pretend it
-already exists.
+Executable companions now live under [`examples/`](../../examples/README.md) as DX04. Interactive notebook companions remain the separate DX05 roadmap lot.
 
 ## Product boundary
 
