@@ -51,9 +51,7 @@ def test_rq03_ecosystem_protocol_support_types_are_public() -> None:
 
 def test_rq03_typing_contract_is_stable_compatibility_evidence() -> None:
     matching = [
-        subject
-        for subject in COMPATIBILITY_SUBJECTS
-        if subject.key == "typing.static_contract"
+        subject for subject in COMPATIBILITY_SUBJECTS if subject.key == "typing.static_contract"
     ]
     assert len(matching) == 1
     assert matching[0].status is CompatibilityStatus.STABLE
