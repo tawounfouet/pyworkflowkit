@@ -56,11 +56,11 @@ production patterns
 | [08](08_FAILURES_AND_RETRIES.md) | Failures and retries | Available |
 | [09](09_EVENTS_AND_OBSERVABILITY.md) | Events and observability | Available |
 | [10](10_MANIFEST_AND_EVIDENCE.md) | Manifest and evidence | Available |
-| 11 | MetadataStore | Planned in DX03 |
-| 12 | SQLite persistence | Planned in DX03 |
-| 13 | PostgreSQL persistence | Planned in DX03 |
-| 14 | Configuration | Planned in DX03 |
-| 15 | CLI Zero-to-Hero | Existing CLI guide will be promoted |
+| [11](11_METADATA_STORE.md) | MetadataStore | Available |
+| [12](12_SQLITE_PERSISTENCE.md) | SQLite persistence | Available |
+| [13](13_POSTGRESQL_PERSISTENCE.md) | PostgreSQL persistence | Available |
+| [14](14_CONFIGURATION.md) | Configuration | Available |
+| [15](15_CLI_ZERO_TO_HERO.md) | CLI Zero-to-Hero | Available |
 | 16–27 | Advanced runtime, integrations and production patterns | Planned in DX03 |
 | 99 | Complete reference application | Planned in DX03 |
 
