@@ -120,12 +120,10 @@ ExecutionPlan
 
 ## Related example
 
-DX04 targets:
+Canonical companions:
 
-```text
-examples/03_dependencies.py
-examples/04_dag.py
-```
+- [`examples/03_dependencies.py`](../../examples/03_dependencies.py)
+- [`examples/04_dag.py`](../../examples/04_dag.py)
 
 ## Related notebook
 
