@@ -18,7 +18,7 @@ def test_version_is_the_only_v1_command_without_json_contract() -> None:
 
 
 def test_error_contract_is_small_and_shared() -> None:
-    assert CLI_ERROR_REQUIRED_KEYS == {"error", "exit_code"}
+    assert {"error", "exit_code"} == CLI_ERROR_REQUIRED_KEYS
 
 
 def test_manifest_nested_contracts_cover_portable_evidence_collections() -> None:
