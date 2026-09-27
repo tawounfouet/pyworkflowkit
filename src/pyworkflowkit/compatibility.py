@@ -399,6 +399,13 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             rationale="The 1.0 first-use API, CLI, persistence, and plugin journey is executable.",
         ),
         CompatibilitySubject(
+            key="distribution.artifact_contract",
+            area="distribution",
+            status=CompatibilityStatus.STABLE,
+            contract_version="1",
+            rationale="Wheel/sdist metadata, contents, installability, and upgrade path are qualified.",
+        ),
+        CompatibilitySubject(
             key="module.adapters",
             area="module",
             status=CompatibilityStatus.INTERNAL,
