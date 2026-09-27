@@ -18,6 +18,38 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.1.0a2 - 2026-09-27
+
+### Added
+
+- Rich-backed human presentation for validation, planning, execution, inspection, events, manifests, plugins, doctor diagnostics, and handled errors.
+- Internal `pyworkflowkit.cli_rendering` package separating console, panel, table, and tree presentation concerns.
+- Direct `rich>=13.8,<16` runtime dependency because PyWorkflowKit now imports Rich directly.
+- DX02 reference acceptance proving human rendering and JSON isolation.
+
+### Changed
+
+- Human `pwk` output now uses structured panels, tables, and trees where appropriate.
+- `pyworkflowkit.cli_rendering` is explicitly classified as an internal module family.
+- Documentation now distinguishes the Rich human path from the stable `--json` machine path.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Human presentation no longer has to be constructed inline inside CLI command handlers.
+
+### Security
+
+- Dynamic runtime values are rendered as Rich `Text` objects rather than interpreted as Rich markup.
+- Machine JSON and error streams remain isolated from Rich formatting.
+
 ## 1.1.0a1 - 2026-09-27
 
 ### Added
