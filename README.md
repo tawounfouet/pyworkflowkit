@@ -96,7 +96,10 @@ The supported first-use path is documented in
 The historical `docs/guides/getting-started.md` path remains available as a compatibility
 redirect into this canonical learning journey.
 
-The minimal public-API example is executable:
+The canonical executable companion suite is indexed in
+[`examples/README.md`](https://github.com/tawounfouet/pyworkflowkit/blob/main/examples/README.md).
+
+Start with the minimal public-API example:
 
 ```bash
 python examples/00_hello_world.py
