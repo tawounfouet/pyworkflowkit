@@ -59,8 +59,7 @@ ecosystem conformance surface.
 
 ## Related example
 
-A canonical custom store example is planned in DX04 as
-`examples/22_custom_metadata_store.py` if retained in the final example topology.
+DX04 deliberately does not add a standalone custom MetadataStore script. The official example topology stops at `21_control_plane.py`; a meaningful third-party store requires a full contract implementation rather than a misleading toy adapter.
 
 ## Next chapter
 
