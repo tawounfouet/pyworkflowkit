@@ -80,7 +80,10 @@ retry or terminal failure
 
 ## Related example
 
-DX04 targets: `examples/16_timeout.py` and `examples/17_cancellation.py`.
+Canonical companions:
+
+- [`examples/16_timeout.py`](../../examples/16_timeout.py)
+- [`examples/17_cancellation.py`](../../examples/17_cancellation.py)
 
 ## Next chapter
 
