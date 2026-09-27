@@ -119,13 +119,8 @@ def test_telemetry_backend_failure_is_isolated_from_workflow_outcome() -> None:
     assert run.status is WorkflowRunStatus.SUCCEEDED
     assert recording.events
     assert runtime.observability_failures
-    assert {failure.sink_name for failure in runtime.observability_failures} == {
-        "telemetry:broken"
-    }
-    assert all(
-        failure.error_message == "<redacted>"
-        for failure in runtime.observability_failures
-    )
+    assert {failure.sink_name for failure in runtime.observability_failures} == {"telemetry:broken"}
+    assert all(failure.error_message == "<redacted>" for failure in runtime.observability_failures)
 
 
 def test_telemetry_projection_redacts_committed_event_payload() -> None:
