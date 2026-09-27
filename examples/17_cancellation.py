@@ -8,7 +8,6 @@ from pyworkflowkit import WorkflowRuntime
 from pyworkflowkit.control_plane import ControlPlaneOperation, WorkflowRuntimeProvider
 from pyworkflowkit.ecosystem import CancellationCapability, ExecutorCapabilities
 
-
 provider_capabilities = WorkflowRuntimeProvider(WorkflowRuntime()).inspect_capabilities()
 cooperative_executor = ExecutorCapabilities(
     supports_parallelism=True,

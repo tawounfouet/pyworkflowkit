@@ -7,7 +7,6 @@ import json
 from pyworkflowkit import WorkflowRuntime
 from pyworkflowkit.control_plane import WorkflowRuntimeProvider
 
-
 runtime = WorkflowRuntime()
 runtime.register("handlers:hello", lambda: "hello")
 

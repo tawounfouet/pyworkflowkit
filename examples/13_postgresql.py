@@ -6,7 +6,6 @@ import json
 
 from pyworkflowkit import RuntimeSettings
 
-
 settings = RuntimeSettings.load(
     overrides={
         "metadata": {

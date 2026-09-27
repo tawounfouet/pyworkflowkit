@@ -7,7 +7,6 @@ import json
 from pyworkflowkit import WorkflowRuntime
 from pyworkflowkit.control_plane import WorkflowRuntimeProvider
 
-
 workflow_definition: dict[str, object] = {
     "workflow_id": "examples.concurrency",
     "version": "1",

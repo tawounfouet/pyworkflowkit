@@ -7,7 +7,6 @@ from pathlib import Path
 
 from pyworkflowkit import RuntimeSettings
 
-
 settings = RuntimeSettings.load(
     overrides={
         "runtime": {"workspace": Path(".pyworkflow-example")},

@@ -7,7 +7,6 @@ import json
 from pyworkflowkit import TaskDefinition, TaskId, TimeoutMode
 from pyworkflowkit.ecosystem import ExecutorCapabilities, TimeoutCapability
 
-
 task_definition = TaskDefinition(
     task_id=TaskId("remote_call"),
     handler_ref="handlers:remote_call",
