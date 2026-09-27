@@ -260,15 +260,13 @@ class RuntimeTelemetrySink:
 
 
 class _OpenTelemetrySpan(Protocol):
-    def set_attribute(self, key: str, value: TelemetryAttributeValue) -> object:
-        ...
+    def set_attribute(self, key: str, value: TelemetryAttributeValue) -> object: ...
 
     def add_event(
         self,
         name: str,
         attributes: Mapping[str, TelemetryAttributeValue] | None = None,
-    ) -> object:
-        ...
+    ) -> object: ...
 
 
 class OpenTelemetryTracer(Protocol):
@@ -277,8 +275,7 @@ class OpenTelemetryTracer(Protocol):
     def start_as_current_span(
         self,
         name: str,
-    ) -> AbstractContextManager[_OpenTelemetrySpan]:
-        ...
+    ) -> AbstractContextManager[_OpenTelemetrySpan]: ...
 
 
 class _OpenTelemetryCounter(Protocol):
@@ -307,16 +304,14 @@ class OpenTelemetryMeter(Protocol):
         name: str,
         *,
         unit: str = "",
-    ) -> _OpenTelemetryCounter:
-        ...
+    ) -> _OpenTelemetryCounter: ...
 
     def create_histogram(
         self,
         name: str,
         *,
         unit: str = "",
-    ) -> _OpenTelemetryHistogram:
-        ...
+    ) -> _OpenTelemetryHistogram: ...
 
 
 class OpenTelemetryBackend:
