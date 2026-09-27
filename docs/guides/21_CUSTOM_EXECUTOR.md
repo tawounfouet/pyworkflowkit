@@ -26,8 +26,7 @@ class MyExecutor:
     key = "my-executor"
 
     @property
-    def capabilities(self) -> ExecutorCapabilities:
-        ...
+    def capabilities(self) -> ExecutorCapabilities: ...
 
     def execute(
         self,
@@ -35,8 +34,7 @@ class MyExecutor:
         task: TaskDefinition,
         handler,
         context: RunContext,
-    ) -> TaskResult:
-        ...
+    ) -> TaskResult: ...
 ```
 
 The implementation should satisfy the runtime-checkable `Executor` protocol.
