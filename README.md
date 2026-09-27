@@ -7,9 +7,9 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Status:** stable release `0.8.0`; current development line `0.9.0b1`.
-> RQ-01 froze the public facades, RQ-02 froze compatibility policy, RQ-03 qualified
-> static typing, and RQ-04 now makes the first-use developer journey executable.
+> **Status:** stable release `0.8.0`; current development line `0.9.0b2`.
+> RQ-01 through RQ-04 froze the public/compatibility/typing/DX contracts; RQ-05 now
+> qualifies the wheel, sdist, clean installs, extras, and stable package upgrade path.
 
 ## What the stable 0.8 baseline provides
 
@@ -1079,7 +1079,7 @@ SubprocessExecutor, Observability Plugins, and Security Hardening before transve
 qualification promoted the line to **0.5.0 stable**.
 
 The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the public facades,
-**0.9.0a2 / RQ-02** made compatibility policy executable, and **0.9.0a3 / RQ-03**
-qualified strict external-consumer typing. **0.9.0b1 / RQ-04** now qualifies the
-install → define → run → inspect → persist → plugin-authoring journey as executable
-documentation.
+**0.9.0a2 / RQ-02** made compatibility policy executable, **0.9.0a3 / RQ-03** qualified
+strict external-consumer typing, and **0.9.0b1 / RQ-04** qualified the first-use journey.
+**0.9.0b2 / RQ-05** now qualifies package metadata, wheel/sdist contents, clean installs,
+published extras, and upgrade from stable `0.8.0`.
