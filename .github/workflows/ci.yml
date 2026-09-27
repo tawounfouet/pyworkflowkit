@@ -148,13 +148,36 @@ jobs:
 
       - name: Development metadata smoke
         run: |
-          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.8.0'"
-          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.8.0'"
-          pyworkflow version | grep -Fx "0.8.0"
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '0.9.0a1'"
+          python -c "import pyworkflowkit; assert pyworkflowkit.__version__ == '0.9.0a1'"
+          pyworkflow version | grep -Fx "0.9.0a1"
 
       - name: Migration resources smoke
         run: |
           python -c "from importlib.resources import files; versions=files('pyworkflowkit.migrations.versions'); assert versions.joinpath('0001_runtime_metadata.py').is_file(); assert versions.joinpath('0002_task_output_checkpoints.py').is_file(); assert versions.joinpath('0003_retry_eligible_at.py').is_file()"
+
+
+  public-api-freeze:
+    name: 1.0 public API freeze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Qualify frozen public facades
+        run: pytest tests/reference/test_v0_9_public_api_freeze.py -q
 
 
   transverse-v0-8:
