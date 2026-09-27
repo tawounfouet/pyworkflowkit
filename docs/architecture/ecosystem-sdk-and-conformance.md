@@ -109,8 +109,12 @@ assert_plugin_conforms(...)
 ~~~
 
 Validation combines entry-point name/group compatibility, descriptor type, Plugin API
-version, factory contract, created-instance structural contract, and the ExternalWorkload
-protocol for workload plugins.
+version, factory contract, and the structural instance contracts owned by Plugin API v1.
+
+The WORKLOAD category deliberately remains generic at plugin-registration level. A
+workload plugin may directly create an ExternalWorkload, or it may create an adapter
+factory that later produces an ExternalWorkload. The M47 protocol is therefore enforced
+at workload composition/execution, not by narrowing PluginType.WORKLOAD itself.
 
 The validate variant returns a report and does not raise for ordinary incompatibility.
 The assert variant raises the existing public PluginCompatibilityError.
@@ -270,7 +274,18 @@ leave core workflows operational
 repeat this on Python 3.11 / 3.12 / 3.13
 ~~~
 
+## Stable-line qualification finding
+
+The 0.8 stable transverse qualification validates both supported workload shapes:
+
+~~~text
+direct ExternalWorkload
+adapter/factory -> ExternalWorkload
+~~~
+
+This preserves the canonical PyIngestKit adapter-factory integration while keeping M47
+as the execution boundary.
+
 ## Next
 
-After transverse 0.8 qualification and promotion to 0.8.0 stable, the next roadmap line is
 0.9 release-candidate stabilization toward 1.0.
