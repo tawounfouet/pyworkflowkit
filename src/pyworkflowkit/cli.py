@@ -18,6 +18,7 @@ from pyworkflowkit.application.planning import (
     build_dependency_graph,
 )
 from pyworkflowkit.application.runtime import WorkflowRuntime
+from pyworkflowkit.cli_contract import CLI_EXIT_CODES
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.declarative import WorkflowBuilder
 from pyworkflowkit.domain.definitions import WorkflowDefinition
@@ -37,9 +38,9 @@ app = typer.Typer(
     help="Execute and inspect local PyWorkflowKit workflows.",
 )
 
-VALIDATION_EXIT = 2
-RUN_FAILURE_EXIT = 3
-DOCTOR_FAILURE_EXIT = 4
+VALIDATION_EXIT = CLI_EXIT_CODES["validation"]
+RUN_FAILURE_EXIT = CLI_EXIT_CODES["run_failure"]
+DOCTOR_FAILURE_EXIT = CLI_EXIT_CODES["doctor_failure"]
 
 
 @app.command("version")

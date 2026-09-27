@@ -98,3 +98,26 @@ This policy does not claim that every internal API is frozen before 1.0.
 It establishes a controlled path toward the 1.0 stability review, whose final freeze
 still includes top-level exports, exceptions, states/enums, CLI commands/exit codes,
 Plugin API, MetadataStore, manifest schema, and configuration schema.
+
+
+## M43 CLI machine-contract rules
+
+The CLI machine contract is versioned independently as `CLI_MACHINE_CONTRACT_VERSION = "1"`.
+
+Within v1, existing required JSON keys and their meanings are stable-intent contracts.
+Backward-compatible additive fields are permitted when they do not change the semantics
+of existing keys; consumers should ignore unknown fields.
+
+The following require deprecation or an explicit machine-contract version transition:
+
+~~~text
+command removal or rename
+application exit-code semantic change
+required key removal or rename
+incompatible value-type/semantic repurposing
+success/error stream reversal
+manifest JSON change that bypasses RunManifest schema versioning
+~~~
+
+Machine success JSON is written to stdout. Handled JSON errors are written to stderr
+and retain the shared `error` + `exit_code` contract.
