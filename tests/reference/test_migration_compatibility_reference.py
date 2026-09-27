@@ -35,7 +35,7 @@ def test_m45_persistence_contract_and_migration_lineage_are_frozen() -> None:
         "0003_retry_eligible_at",
     )
     assert MIGRATION_HEAD_REVISION == "0003_retry_eligible_at"
-    assert SUPPORTED_UPGRADE_ORIGINS == frozenset(MIGRATION_HISTORY)
+    assert frozenset(MIGRATION_HISTORY) == SUPPORTED_UPGRADE_ORIGINS
 
     script = ScriptDirectory.from_config(alembic_config())
     packaged = tuple(revision.revision for revision in reversed(tuple(script.walk_revisions())))
