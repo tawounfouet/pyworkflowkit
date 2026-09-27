@@ -8,7 +8,7 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Stable baseline:** `1.0.0`.
-> **Current development:** `1.1.0a1` — Developer Experience, beginning with the canonical `pwk` CLI alias.
+> **Current development:** `1.1.0a2` — Developer Experience with the canonical `pwk` CLI and Rich human rendering.
 > The 1.0 runtime contracts remain the compatibility baseline for the 1.1 line.
 
 ## What the stable 1.0 release provides
@@ -107,6 +107,8 @@ pwk plan examples.getting_started_workflow:demo --json
 ```
 
 The longer `pyworkflowkit` and historical `pyworkflow` commands remain compatible aliases.
+Human terminal output uses Rich presentation where useful; `--json` remains the stable
+machine-facing path governed by CLI Machine Contract v1.
 
 Continue with:
 
