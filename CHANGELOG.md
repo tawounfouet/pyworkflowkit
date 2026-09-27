@@ -18,6 +18,37 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 0.9.0a3 - 2026-09-27
+
+### Added
+
+- RQ-03 Typing Contract v1 targeting `1.0.0`.
+- Strict external-consumer typing fixtures and a negative unsupported-task-signature fixture.
+- Python 3.11/3.12/3.13 static typing qualification in regular CI and Release Qualification.
+- Built-wheel verification of the PEP 561 `py.typed` marker.
+
+### Changed
+
+- The development line advances from `0.9.0a2` to `0.9.0a3`.
+- The Ecosystem SDK re-exports the existing support types required to implement its public Executor, MetadataStore, UnitOfWork, and RuntimeEventSink Protocols without importing internal module paths.
+- Reference executor/event-sink integrations now type against the public ecosystem facade.
+- Ecosystem template plugin registration has an explicit generic return type.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No runtime capability is removed.
+
+### Fixed
+
+- `@task` static typing now rejects handler signatures outside the executable zero-argument / single-RunContext contract.
+- Public Protocol annotations no longer force third-party authors to rely on RQ-02-internal import paths for their support types.
+
+### Security
+
 ## 0.9.0a2 - 2026-09-27
 
 ### Added

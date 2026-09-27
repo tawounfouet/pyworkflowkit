@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pyworkflowkit.domain.runtime import RuntimeEvent
-from pyworkflowkit.plugins import (
+from pyworkflowkit.ecosystem import (
     PLUGIN_API_VERSION,
     PluginDescriptor,
     PluginType,
     RegisteredPlugin,
+    RuntimeEvent,
 )
 
 

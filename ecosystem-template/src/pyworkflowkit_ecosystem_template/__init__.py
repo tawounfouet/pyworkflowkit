@@ -5,6 +5,7 @@ from __future__ import annotations
 from pyworkflowkit.ecosystem import (
     ExternalWorkloadResult,
     PluginType,
+    RegisteredPlugin,
     RunContext,
     plugin_registration,
 )
@@ -23,7 +24,7 @@ class TemplateWorkload:
         )
 
 
-def plugin():
+def plugin() -> RegisteredPlugin[TemplateWorkload]:
     """Return a self-checked Plugin API registration."""
 
     return plugin_registration(

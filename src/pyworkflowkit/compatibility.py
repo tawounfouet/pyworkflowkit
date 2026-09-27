@@ -322,6 +322,13 @@ COMPATIBILITY_SUBJECTS: tuple[CompatibilitySubject, ...] = _validate_compatibili
             rationale="RunManifest remains the portable execution evidence schema.",
         ),
         CompatibilitySubject(
+            key="typing.static_contract",
+            area="typing",
+            status=CompatibilityStatus.STABLE,
+            contract_version="1",
+            rationale="Frozen facades are qualified as PEP 561 typed strict-consumer surfaces.",
+        ),
+        CompatibilitySubject(
             key="plugin.api",
             area="plugin",
             status=CompatibilityStatus.STABLE,
