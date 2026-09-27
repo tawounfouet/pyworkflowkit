@@ -18,6 +18,36 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 1.0.0 - 2026-09-27
+
+### Added
+
+- First stable PyWorkflowKit release.
+- Stable release note documenting the qualified RQ-01 through RQ-06 lineage.
+- Stable promotion lineage from the fully qualified `0.9.0rc2` candidate.
+
+### Changed
+
+- Package version promoted from `0.9.0rc2` to `1.0.0`.
+- Development Status classifier promoted from Beta to Production/Stable.
+- Release qualification expectations validate the stable artifact while preserving the RC2 lineage.
+
+### Deprecated
+
+- No active deprecations.
+
+### Removed
+
+- No runtime capability is removed.
+
+### Fixed
+
+- No functional code change is introduced by the stable promotion.
+
+### Security
+
+- The stable artifact inherits the fully qualified RQ-06 security, migration, distribution, typing, ecosystem, and compatibility gates.
+
 ## 0.9.0rc2 - 2026-09-27
 
 ### Added
