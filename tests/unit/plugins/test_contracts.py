@@ -119,9 +119,7 @@ def test_non_registration_provider_result_is_reported() -> None:
 
     assert report.compatible is False
     assert report.descriptor is None
-    assert PluginContractIssueCode.REGISTRATION_TYPE in {
-        issue.code for issue in report.issues
-    }
+    assert PluginContractIssueCode.REGISTRATION_TYPE in {issue.code for issue in report.issues}
 
 
 def test_non_callable_factory_is_reported_without_invocation() -> None:
