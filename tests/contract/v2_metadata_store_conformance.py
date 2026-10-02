@@ -257,10 +257,7 @@ class MetadataStoreContractSuite:
             transitioned_at=T1,
         )
 
-        assert (
-            self.store.get_task_attempt(first.attempt_id).status
-            is TaskAttemptStatus.STARTING
-        )
+        assert self.store.get_task_attempt(first.attempt_id).status is TaskAttemptStatus.STARTING
 
     def test_external_run_refs_are_scoped_to_attempt_and_sorted(self) -> None:
         run = workflow_run()
