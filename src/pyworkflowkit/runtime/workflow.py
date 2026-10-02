@@ -122,8 +122,7 @@ class WorkflowRuntime:
 
         for entry in plan.tasks:
             persisted_runs = {
-                value.task_key: value
-                for value in self._metadata.list_task_runs(run_id)
+                value.task_key: value for value in self._metadata.list_task_runs(run_id)
             }
             current = persisted_runs[entry.key]
             statuses = {key: value.status for key, value in persisted_runs.items()}
@@ -178,9 +177,7 @@ class WorkflowRuntime:
                     attempt_id=attempt.attempt_id,
                 ),
                 dependency_outputs={
-                    key: outputs[key]
-                    for key in entry.dependencies
-                    if key in outputs
+                    key: outputs[key] for key in entry.dependencies if key in outputs
                 },
                 workload_parameters=_workload_parameters(entry),
             )
@@ -347,17 +344,13 @@ class WorkflowRuntime:
             )
 
     def _assert_terminal_task_runs(self, run_id: WorkflowRunId) -> None:
-        statuses = tuple(
-            task_run.status for task_run in self._metadata.list_task_runs(run_id)
-        )
+        statuses = tuple(task_run.status for task_run in self._metadata.list_task_runs(run_id))
         if not statuses or any(status not in TASK_RUN_TERMINAL_STATUSES for status in statuses):
             raise RuntimeInvariantError(
                 reason="workflow exhausted execution plan with non-terminal TaskRuns"
             )
         if any(status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT} for status in statuses):
-            raise RuntimeInvariantError(
-                reason="workflow success path contains failed TaskRuns"
-            )
+            raise RuntimeInvariantError(reason="workflow success path contains failed TaskRuns")
 
     def _transition_workflow(
         self,
