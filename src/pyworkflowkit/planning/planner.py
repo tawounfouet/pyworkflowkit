@@ -35,11 +35,7 @@ class WorkflowPlanner:
         workflow.validate()
         graph = _DependencyGraph(workflow)
         groups = graph.topological_layers()
-        topological_order = tuple(
-            task_key
-            for group in groups
-            for task_key in group
-        )
+        topological_order = tuple(task_key for group in groups for task_key in group)
         definitions = {task.key: task for task in workflow.tasks}
 
         diagnostics: list[Diagnostic] = [
@@ -121,9 +117,7 @@ def _executor_requirement(task: TaskDefinition) -> ExecutorRequirement:
         declared_executor = getattr(workload, "executor_key", None)
         if declared_executor is not None:
             if not isinstance(declared_executor, str) or not declared_executor.strip():
-                raise ValueError(
-                    f"task {task.key!r} declares an invalid executor_key"
-                )
+                raise ValueError(f"task {task.key!r} declares an invalid executor_key")
             executor_key = declared_executor
 
     return ExecutorRequirement(
@@ -148,9 +142,7 @@ def _integration_requirements(task: TaskDefinition) -> tuple[str, ...]:
         explicit = getattr(workload, "integration_key", None)
         if explicit is not None:
             if not isinstance(explicit, str) or not explicit.strip():
-                raise ValueError(
-                    f"task {task.key!r} declares an invalid integration_key"
-                )
+                raise ValueError(f"task {task.key!r} declares an invalid integration_key")
             requirements.add(explicit)
 
         kind = workload.workload_kind.lower()
