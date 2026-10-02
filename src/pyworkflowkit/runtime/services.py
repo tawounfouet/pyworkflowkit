@@ -1,8 +1,9 @@
-"""Injectable V2 runtime clock and identity services."""
+"""Injectable V2 runtime clock, identity and retry-wait services."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from time import sleep
 from typing import Protocol, runtime_checkable
 
 from pyworkflowkit.runtime.identity import (
@@ -22,6 +23,24 @@ class Clock(Protocol):
 class SystemClock:
     def now(self) -> datetime:
         return datetime.now(UTC)
+
+
+@runtime_checkable
+class RetryWaiter(Protocol):
+    """Wait boundary used by retry execution."""
+
+    def wait(self, seconds: float) -> None:
+        """Wait for the requested retry delay."""
+
+
+class SystemRetryWaiter:
+    def wait(self, seconds: float) -> None:
+        if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
+            raise TypeError("seconds must be a number")
+        if seconds < 0:
+            raise ValueError("seconds must be greater than or equal to 0")
+        if seconds:
+            sleep(seconds)
 
 
 @runtime_checkable
@@ -51,7 +70,9 @@ class UuidRuntimeIdentityFactory:
 
 __all__ = [
     "Clock",
+    "RetryWaiter",
     "RuntimeIdentityFactory",
     "SystemClock",
+    "SystemRetryWaiter",
     "UuidRuntimeIdentityFactory",
 ]
