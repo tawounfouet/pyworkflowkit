@@ -22,10 +22,7 @@ class _DependencyGraph:
         workflow.validate()
 
         task_keys = tuple(sorted(task.key for task in workflow.tasks))
-        dependencies = {
-            task.key: tuple(sorted(task.dependencies))
-            for task in workflow.tasks
-        }
+        dependencies = {task.key: tuple(sorted(task.dependencies)) for task in workflow.tasks}
         downstream: dict[str, list[str]] = {key: [] for key in task_keys}
         edges: list[_DependencyEdge] = []
 
@@ -36,13 +33,8 @@ class _DependencyGraph:
 
         self._task_keys = task_keys
         self._dependencies = dependencies
-        self._downstream = {
-            key: tuple(sorted(values))
-            for key, values in downstream.items()
-        }
-        self._edges = tuple(
-            sorted(edges, key=lambda edge: (edge.upstream, edge.downstream))
-        )
+        self._downstream = {key: tuple(sorted(values)) for key, values in downstream.items()}
+        self._edges = tuple(sorted(edges, key=lambda edge: (edge.upstream, edge.downstream)))
 
     @property
     def task_keys(self) -> tuple[str, ...]:
@@ -61,10 +53,7 @@ class _DependencyGraph:
     def topological_layers(self) -> tuple[tuple[str, ...], ...]:
         """Return deterministic topological layers using lexical tie-breaking."""
 
-        in_degree = {
-            key: len(self._dependencies[key])
-            for key in self._task_keys
-        }
+        in_degree = {key: len(self._dependencies[key]) for key in self._task_keys}
         ready = tuple(sorted(key for key, degree in in_degree.items() if degree == 0))
         layers: list[tuple[str, ...]] = []
         visited = 0
@@ -84,23 +73,14 @@ class _DependencyGraph:
             ready = tuple(sorted(next_ready))
 
         if visited != len(self._task_keys):
-            remaining = tuple(
-                sorted(key for key, degree in in_degree.items() if degree > 0)
-            )
+            remaining = tuple(sorted(key for key, degree in in_degree.items() if degree > 0))
             rendered = ", ".join(remaining)
-            raise ValueError(
-                "workflow dependency topology contains a cycle involving: "
-                f"{rendered}"
-            )
+            raise ValueError(f"workflow dependency topology contains a cycle involving: {rendered}")
 
         return tuple(layers)
 
     def topological_order(self) -> tuple[str, ...]:
-        return tuple(
-            task_key
-            for layer in self.topological_layers()
-            for task_key in layer
-        )
+        return tuple(task_key for layer in self.topological_layers() for task_key in layer)
 
 
 __all__: list[str] = []
