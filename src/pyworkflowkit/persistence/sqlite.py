@@ -234,10 +234,7 @@ class SQLiteMetadataStore:
                     entity_type="TaskRun",
                     entity_id=str(task_run.task_run_id),
                 )
-            if (
-                session.get(models.WorkflowRunRow, str(task_run.workflow_run_id))
-                is None
-            ):
+            if session.get(models.WorkflowRunRow, str(task_run.workflow_run_id)) is None:
                 raise MetadataNotFoundError(
                     entity_type="WorkflowRun",
                     entity_id=str(task_run.workflow_run_id),
@@ -297,14 +294,10 @@ class SQLiteMetadataStore:
                     started_at=task_run.started_at,
                     ended_at=task_run.ended_at,
                     skip_reason=(
-                        task_run.skip_reason.value
-                        if task_run.skip_reason is not None
-                        else None
+                        task_run.skip_reason.value if task_run.skip_reason is not None else None
                     ),
                     block_reason=(
-                        task_run.block_reason.value
-                        if task_run.block_reason is not None
-                        else None
+                        task_run.block_reason.value if task_run.block_reason is not None else None
                     ),
                     failure_json=failure_to_json(task_run.failure),
                 )
@@ -470,8 +463,7 @@ class SQLiteMetadataStore:
                     models.ExternalRunRefRow.attempt_id == str(attempt_id),
                     models.ExternalRunRefRow.provider == external_ref.provider,
                     models.ExternalRunRefRow.kind == external_ref.kind,
-                    models.ExternalRunRefRow.external_run_id
-                    == external_ref.external_run_id,
+                    models.ExternalRunRefRow.external_run_id == external_ref.external_run_id,
                 )
             )
             if duplicate is not None:
@@ -516,9 +508,7 @@ class SQLiteMetadataStore:
         if entity_type is not None:
             if not isinstance(entity_type, StateEntityType):
                 raise TypeError("entity_type must be a StateEntityType or None")
-            statement = statement.where(
-                models.StateTransitionRow.entity_type == entity_type.value
-            )
+            statement = statement.where(models.StateTransitionRow.entity_type == entity_type.value)
         if entity_id is not None:
             if not isinstance(entity_id, str):
                 raise TypeError("entity_id must be a string or None")
@@ -527,9 +517,7 @@ class SQLiteMetadataStore:
             statement = statement.where(models.StateTransitionRow.entity_id == entity_id)
 
         with self._session_factory() as session:
-            rows = session.scalars(
-                statement.order_by(models.StateTransitionRow.sequence)
-            ).all()
+            rows = session.scalars(statement.order_by(models.StateTransitionRow.sequence)).all()
             return tuple(transition_from_row(row) for row in rows)
 
     def set_manifest_reference(
@@ -602,9 +590,7 @@ class SQLiteMetadataStore:
         occurred_at: datetime | None,
     ) -> None:
         if occurred_at is None:
-            raise MetadataInvariantError(
-                reason="state transition evidence requires occurred_at"
-            )
+            raise MetadataInvariantError(reason="state transition evidence requires occurred_at")
         session.add(
             models.StateTransitionRow(
                 entity_type=entity_type.value,
@@ -655,9 +641,7 @@ class SQLiteMetadataStore:
         expected: WorkflowRunStatus,
     ) -> None:
         actual = session.scalar(
-            select(models.WorkflowRunRow.status).where(
-                models.WorkflowRunRow.run_id == str(run_id)
-            )
+            select(models.WorkflowRunRow.status).where(models.WorkflowRunRow.run_id == str(run_id))
         )
         raise MetadataConflictError(
             entity_type="WorkflowRun",
@@ -712,8 +696,7 @@ def _require_initial_status(
     if type(actual) is not type(expected) or actual != expected:
         raise MetadataInvariantError(
             reason=(
-                f"new {entity_type} {entity_id} must begin in {expected.value}; "
-                f"got {actual.value}"
+                f"new {entity_type} {entity_id} must begin in {expected.value}; got {actual.value}"
             )
         )
 
@@ -745,9 +728,7 @@ def _require_workflow_identity(current: WorkflowRun, candidate: WorkflowRun) -> 
         and current.created_at == candidate.created_at
     )
     if not stable:
-        raise MetadataInvariantError(
-            reason="WorkflowRun immutable identity fields changed"
-        )
+        raise MetadataInvariantError(reason="WorkflowRun immutable identity fields changed")
 
 
 def _require_task_run_identity(current: TaskRun, candidate: TaskRun) -> None:
@@ -769,9 +750,7 @@ def _require_attempt_identity(current: TaskAttempt, candidate: TaskAttempt) -> N
         and current.created_at == candidate.created_at
     )
     if not stable:
-        raise MetadataInvariantError(
-            reason="TaskAttempt immutable identity fields changed"
-        )
+        raise MetadataInvariantError(reason="TaskAttempt immutable identity fields changed")
 
 
 def _require_transition_timestamp(
@@ -780,9 +759,7 @@ def _require_transition_timestamp(
     transitioned_at: datetime | None,
 ) -> None:
     if current_status != candidate_status and transitioned_at is None:
-        raise MetadataInvariantError(
-            reason="status-changing update requires transitioned_at"
-        )
+        raise MetadataInvariantError(reason="status-changing update requires transitioned_at")
 
 
 __all__ = [
