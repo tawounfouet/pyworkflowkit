@@ -1,9 +1,15 @@
-"""V2 semantic planning namespace.
+"""Canonical PyWorkflowKit V2 planning surface."""
 
-The current ExecutionPlan is exposed as a migration baseline. WorkflowPlanner and
-the final V2 compiled-plan contract are introduced by LOT-03.
-"""
+from pyworkflowkit.planning.model import (
+    ExecutionPlan,
+    ExecutorRequirement,
+    TaskPlanEntry,
+)
+from pyworkflowkit.planning.planner import WorkflowPlanner
 
-from pyworkflowkit.application.planning import ExecutionPlan
-
-__all__ = ["ExecutionPlan"]
+__all__ = [
+    "ExecutionPlan",
+    "ExecutorRequirement",
+    "TaskPlanEntry",
+    "WorkflowPlanner",
+]
