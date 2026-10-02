@@ -298,7 +298,6 @@ def test_executor_descriptor_rejects_non_boolean_retry_ownership_flag() -> None:
         )
 
 
-
 def test_execution_request_validates_deadline_boundary() -> None:
     naive = datetime(2026, 10, 2, 18, 0)
 
