@@ -18,6 +18,7 @@ from pyworkflowkit.executors import (
     TaskExecutionRequest,
     TaskExecutionResult,
 )
+from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.persistence import InMemoryMetadataStore
 from pyworkflowkit.policies import (
     BackoffStrategy,
@@ -309,7 +310,7 @@ def test_runtime_rejects_stacked_equivalent_retry_scope() -> None:
 
     import pytest
 
-    with pytest.raises(RuntimeError, match="implicit workload retry"):
+    with pytest.raises(RuntimeInvariantError, match="implicit workload retry"):
         _runtime(store, executor=ImplicitRetryExecutor()).run(workflow)
 
     assert store.list_workflow_runs() == ()
