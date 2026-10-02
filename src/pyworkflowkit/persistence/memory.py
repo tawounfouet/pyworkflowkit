@@ -454,9 +454,7 @@ class InMemoryMetadataStore:
         occurred_at: datetime | None,
     ) -> None:
         if occurred_at is None:
-            raise MetadataInvariantError(
-                reason="state transition evidence requires occurred_at"
-            )
+            raise MetadataInvariantError(reason="state transition evidence requires occurred_at")
         record = StateTransitionRecord(
             sequence=self._state.next_transition_sequence,
             entity_type=entity_type,
@@ -475,9 +473,7 @@ class InMemoryMetadataStore:
         transitioned_at: datetime | None,
     ) -> None:
         if current_status != candidate_status and transitioned_at is None:
-            raise MetadataInvariantError(
-                reason="status-changing update requires transitioned_at"
-            )
+            raise MetadataInvariantError(reason="status-changing update requires transitioned_at")
 
 
 def _require_initial_status(
@@ -489,8 +485,7 @@ def _require_initial_status(
     if type(actual) is not type(expected) or actual != expected:
         raise MetadataInvariantError(
             reason=(
-                f"new {entity_type} {entity_id} must begin in {expected.value}; "
-                f"got {actual.value}"
+                f"new {entity_type} {entity_id} must begin in {expected.value}; got {actual.value}"
             )
         )
 
