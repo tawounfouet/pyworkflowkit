@@ -161,10 +161,7 @@ def test_local_callable_requires_inline_and_emits_portability_diagnostic() -> No
     assert plan.portable is False
     assert "executor:inline" in plan.required_capabilities
     assert "workload:python_callable" in plan.required_capabilities
-    assert any(
-        diagnostic.code == "PWK-PLAN-PORTABILITY-001"
-        for diagnostic in plan.diagnostics
-    )
+    assert any(diagnostic.code == "PWK-PLAN-PORTABILITY-001" for diagnostic in plan.diagnostics)
 
 
 def test_registered_workload_executor_requirement_is_extracted() -> None:
