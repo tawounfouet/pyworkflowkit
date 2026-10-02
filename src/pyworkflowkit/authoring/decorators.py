@@ -10,7 +10,7 @@ from pyworkflowkit.authoring.definitions import TaskDefinition, WorkflowDefiniti
 from pyworkflowkit.authoring.io import InputDeclaration, OutputDeclaration
 from pyworkflowkit.authoring.workloads import LocalCallable
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.domain.values import RetryPolicy
+from pyworkflowkit.policies.retry import RetryPolicy
 from pyworkflowkit.policies.timeout import TimeoutPolicy
 from pyworkflowkit.policies.trigger import TriggerRule
 
