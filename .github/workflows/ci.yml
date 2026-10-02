@@ -158,7 +158,7 @@ jobs:
 
       - name: Migration resources smoke
         run: |
-          python -c "from importlib.resources import files; versions=files('pyworkflowkit.migrations.versions'); assert versions.joinpath('0001_runtime_metadata.py').is_file(); assert versions.joinpath('0002_task_output_checkpoints.py').is_file(); assert versions.joinpath('0003_retry_eligible_at.py').is_file()"
+          python -c "from importlib.resources import files; versions=files('pyworkflowkit.migrations.versions'); assert versions.joinpath('0001_runtime_metadata.py').is_file(); assert versions.joinpath('0002_task_output_checkpoints.py').is_file(); assert versions.joinpath('0003_retry_eligible_at.py').is_file(); assert versions.joinpath('0004_v2_runtime_metadata.py').is_file()"
 
 
   public-api-freeze:

@@ -34,6 +34,12 @@ EXPECTED_TABLES = {
     "task_output_checkpoints",
     "task_runs",
     "workflow_runs",
+    "v2_external_run_refs",
+    "v2_manifest_references",
+    "v2_state_transitions",
+    "v2_task_attempts",
+    "v2_task_runs",
+    "v2_workflow_runs",
 }
 
 pytestmark = pytest.mark.skipif(
@@ -194,6 +200,7 @@ def _seed_postgres_historical_data(engine, *, revision: str) -> None:  # type: i
     [
         "0001_runtime_metadata",
         "0002_task_output_checkpoints",
+        "0003_retry_eligible_at",
     ],
 )
 def test_postgres_historical_upgrade_preserves_data_and_accepts_current_writes(

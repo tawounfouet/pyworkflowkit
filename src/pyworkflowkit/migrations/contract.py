@@ -8,6 +8,7 @@ MIGRATION_HISTORY: tuple[str, ...] = (
     "0001_runtime_metadata",
     "0002_task_output_checkpoints",
     "0003_retry_eligible_at",
+    "0004_v2_runtime_metadata",
 )
 
 MIGRATION_HEAD_REVISION = MIGRATION_HISTORY[-1]

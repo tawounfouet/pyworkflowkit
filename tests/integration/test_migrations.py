@@ -37,6 +37,12 @@ EXPECTED_TABLES = {
     "task_output_checkpoints",
     "task_runs",
     "workflow_runs",
+    "v2_external_run_refs",
+    "v2_manifest_references",
+    "v2_state_transitions",
+    "v2_task_attempts",
+    "v2_task_runs",
+    "v2_workflow_runs",
 }
 
 
@@ -62,6 +68,7 @@ def test_migration_revisions_are_packaged() -> None:
     assert versions.joinpath("0001_runtime_metadata.py").is_file()
     assert versions.joinpath("0002_task_output_checkpoints.py").is_file()
     assert versions.joinpath("0003_retry_eligible_at.py").is_file()
+    assert versions.joinpath("0004_v2_runtime_metadata.py").is_file()
 
 
 def _seed_sqlite_historical_data(engine, *, revision: str) -> None:  # type: ignore[no-untyped-def]
@@ -151,6 +158,7 @@ def _seed_sqlite_historical_data(engine, *, revision: str) -> None:  # type: ign
     [
         "0001_runtime_metadata",
         "0002_task_output_checkpoints",
+        "0003_retry_eligible_at",
     ],
 )
 def test_sqlite_historical_upgrade_preserves_data_and_accepts_current_writes(

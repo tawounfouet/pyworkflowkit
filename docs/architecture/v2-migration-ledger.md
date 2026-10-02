@@ -35,8 +35,9 @@ REMOVED
 | other executor adapters | MOVE + ADAPT | executors | 13/14 | PLANNED |
 | `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
 | metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
-| SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | PLANNED |
+| SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IN_PROGRESS |
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
+| Alembic 0004 V2 runtime metadata | ADD | persistence migrations | 10 | IMPLEMENTED |
 | `contracts.serialization` | MOVE + REBUILD | serialization | 15 | PLANNED |
 | lineage modules | MOVE | lineage | 12 | PLANNED |
 | `application.inspection` | MOVE | diagnostics | 11/12 | PLANNED |
@@ -327,3 +328,35 @@ later reconciliation establishes that retry is safe.
 
 LOT-09 remains process-local because the canonical V2 store is still
 InMemoryMetadataStore. Durable restart-safe evidence is owned by LOT-10.
+
+
+
+## LOT-10 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| SQLiteMetadataStore | pyworkflowkit.persistence | IMPLEMENTED |
+| SQLiteSettings | pyworkflowkit.persistence | IMPLEMENTED |
+| internal V2 SQLAlchemy Base | pyworkflowkit.persistence._sqlalchemy | IMPLEMENTED |
+| V2 relational runtime rows | pyworkflowkit.persistence._sqlalchemy | IMPLEMENTED |
+| V2 domain ↔ relational mapping | pyworkflowkit.persistence._sqlalchemy | IMPLEMENTED |
+| Alembic 0004_v2_runtime_metadata | pyworkflowkit.migrations | IMPLEMENTED |
+| WorkflowRun durable persistence | SQLiteMetadataStore | IMPLEMENTED |
+| TaskRun durable persistence | SQLiteMetadataStore | IMPLEMENTED |
+| TaskAttempt durable persistence | SQLiteMetadataStore | IMPLEMENTED |
+| attempt-scoped ExternalRunRef durability | SQLiteMetadataStore | IMPLEMENTED |
+| FailureEvidence durable JSON mapping | SQLiteMetadataStore | IMPLEMENTED |
+| CorrelationContext durable JSON mapping | SQLiteMetadataStore | IMPLEMENTED |
+| append-only state transition durability | SQLiteMetadataStore | IMPLEMENTED |
+| ManifestReference durability | SQLiteMetadataStore | IMPLEMENTED |
+| compare-and-set status writes | SQLiteMetadataStore | IMPLEMENTED |
+| restart/reopen acceptance | tests/contract | IMPLEMENTED |
+| reusable MetadataStore conformance suite | tests/contract | IMPLEMENTED |
+
+LOT-10 extends the existing migration lineage without mutating the published 0001–0003
+sources. The new V2 relational tables are deliberately separate from the legacy 1.1
+tables, allowing both persistence models to coexist during the 1.1 → 2.0 migration.
+
+SQLite now provides durable evidence for UNKNOWN_OUTCOME and
+REQUIRES_RECONCILIATION. LOT-11 can therefore perform recovery and external
+reconciliation from evidence loaded after process restart.
