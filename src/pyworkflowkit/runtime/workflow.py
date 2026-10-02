@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from threading import RLock
 
@@ -35,6 +35,7 @@ from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
+from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
     Clock,
@@ -580,6 +581,10 @@ class WorkflowRuntime:
         )
         attempt = self._metadata.get_task_attempt(attempt.attempt_id)
         task_run = self._metadata.get_task_run(task_run_id)
+        self._append_external_run_refs(
+            attempt_id=attempt.attempt_id,
+            external_refs=executor_result.external_runs,
+        )
 
         if executor_result.status is CancellationStatus.CONFIRMED:
             self._transition_attempt(attempt, TaskAttemptStatus.CANCELLED)
@@ -611,11 +616,22 @@ class WorkflowRuntime:
         if result.failure is not None and result.failure.external_run is not None:
             refs.append(result.failure.external_run)
 
+        self._append_external_run_refs(
+            attempt_id=attempt_id,
+            external_refs=refs,
+        )
+
+    def _append_external_run_refs(
+        self,
+        *,
+        attempt_id: TaskAttemptId,
+        external_refs: Iterable[ExternalRunRef],
+    ) -> None:
         existing = {
             (ref.provider, ref.kind, ref.external_run_id)
             for ref in self._metadata.list_external_run_refs(attempt_id)
         }
-        for external_ref in refs:
+        for external_ref in external_refs:
             key = (
                 external_ref.provider,
                 external_ref.kind,
