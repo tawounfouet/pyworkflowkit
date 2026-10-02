@@ -13,7 +13,11 @@ from pyworkflowkit.diagnostics import (
     Retryability,
 )
 from pyworkflowkit.persistence._sqlalchemy import models
-from pyworkflowkit.persistence.contracts import ManifestReference, StateEntityType, StateTransitionRecord
+from pyworkflowkit.persistence.contracts import (
+    ManifestReference,
+    StateEntityType,
+    StateTransitionRecord,
+)
 from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
