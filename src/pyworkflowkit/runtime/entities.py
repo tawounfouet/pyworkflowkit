@@ -70,6 +70,19 @@ class WorkflowRun:
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
 
+        if self._status is WorkflowRunStatus.PENDING:
+            if self.started_at is not None or self.ended_at is not None:
+                raise ValueError("PENDING WorkflowRun cannot have runtime timestamps")
+        elif self._status in {
+            WorkflowRunStatus.RUNNING,
+            WorkflowRunStatus.CANCELLATION_REQUESTED,
+            WorkflowRunStatus.UNKNOWN_OUTCOME,
+        }:
+            if self.ended_at is not None:
+                raise ValueError(f"{self._status.value} WorkflowRun cannot have ended_at")
+        elif self.ended_at is None:
+            raise ValueError("terminal WorkflowRun must have ended_at")
+
     @property
     def status(self) -> WorkflowRunStatus:
         return self._status
@@ -124,6 +137,30 @@ class TaskRun:
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
+
+        if self._status is TaskRunStatus.SKIPPED:
+            if self.skip_reason is None:
+                raise ValueError("SKIPPED TaskRun requires skip_reason")
+        elif self.skip_reason is not None:
+            raise ValueError("skip_reason is only valid for SKIPPED TaskRun")
+
+        if self._status is TaskRunStatus.BLOCKED:
+            if self.block_reason is None:
+                raise ValueError("BLOCKED TaskRun requires block_reason")
+        elif self.block_reason is not None:
+            raise ValueError("block_reason is only valid for BLOCKED TaskRun")
+
+        if self._status in {
+            TaskRunStatus.PENDING,
+            TaskRunStatus.READY,
+            TaskRunStatus.BLOCKED,
+            TaskRunStatus.RUNNING,
+            TaskRunStatus.UNKNOWN_OUTCOME,
+        }:
+            if self.ended_at is not None:
+                raise ValueError(f"{self._status.value} TaskRun cannot have ended_at")
+        elif self.ended_at is None:
+            raise ValueError("terminal TaskRun must have ended_at")
 
     @property
     def status(self) -> TaskRunStatus:
@@ -180,6 +217,20 @@ class TaskAttempt:
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
+
+        if self._status in {
+            TaskAttemptStatus.PENDING,
+            TaskAttemptStatus.STARTING,
+            TaskAttemptStatus.RUNNING,
+            TaskAttemptStatus.CANCELLATION_REQUESTED,
+            TaskAttemptStatus.CANCELLATION_UNCONFIRMED,
+            TaskAttemptStatus.UNKNOWN_OUTCOME,
+            TaskAttemptStatus.REQUIRES_RECONCILIATION,
+        }:
+            if self.ended_at is not None:
+                raise ValueError(f"{self._status.value} TaskAttempt cannot have ended_at")
+        elif self.ended_at is None:
+            raise ValueError("terminal TaskAttempt must have ended_at")
 
     @property
     def status(self) -> TaskAttemptStatus:
