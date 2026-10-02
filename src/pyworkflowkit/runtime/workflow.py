@@ -229,10 +229,18 @@ class WorkflowRuntime:
                     )
                 )
 
-                if evaluation.decision is RetryDecision.RECONCILE:
+                if evaluation.decision in {
+                    RetryDecision.RECONCILE,
+                    RetryDecision.ESCALATE,
+                }:
+                    uncertain_attempt_status = (
+                        TaskAttemptStatus.REQUIRES_RECONCILIATION
+                        if evaluation.decision is RetryDecision.RECONCILE
+                        else TaskAttemptStatus.UNKNOWN_OUTCOME
+                    )
                     self._transition_attempt(
                         attempt,
-                        TaskAttemptStatus.REQUIRES_RECONCILIATION,
+                        uncertain_attempt_status,
                         failure=failure,
                     )
                     self._transition_task(
