@@ -21,8 +21,8 @@ REMOVED
 | `pyworkflowkit.__init__` | ADAPT later | root facade | 00/22 | IN_PROGRESS |
 | `domain.definitions` | MOVE + ADAPT | authoring | 02 | IMPLEMENTED |
 | `declarative` | SPLIT | authoring | 02 | IMPLEMENTED |
-| `domain.graph` | MOVE + INTERNALIZE | planning | 03 | PLANNED |
-| `application.planning` | MOVE + ADAPT | planning | 03 | PLANNED |
+| `domain.graph` | MOVE + INTERNALIZE | planning | 03 | IMPLEMENTED |
+| `application.planning` | MOVE + ADAPT | planning | 03 | IMPLEMENTED |
 | `domain.runtime` | SPLIT | runtime | 04/06 | PLANNED |
 | `domain.enums` | SPLIT | states/policies | 04/07/08 | PLANNED |
 | `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
@@ -126,3 +126,26 @@ replace the remaining legacy runtime/persistence/wire usage.
 The frozen 1.1 root continues to expose the legacy definition/declarative classes.
 Canonical V2 code must use the qualified `pyworkflowkit.authoring` surface until the
 root migration/freeze is completed.
+
+
+## LOT-03 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `WorkflowPlanner` | `pyworkflowkit.planning` | IMPLEMENTED |
+| `ExecutionPlan` | `pyworkflowkit.planning` | IMPLEMENTED |
+| `TaskPlanEntry` | `pyworkflowkit.planning` | IMPLEMENTED |
+| `ExecutorRequirement` | `pyworkflowkit.planning` | IMPLEMENTED |
+| deterministic topological ordering | planning internals | IMPLEMENTED |
+| deterministic execution groups | planning internals | IMPLEMENTED |
+| policy normalization | `TaskPlanEntry` | IMPLEMENTED |
+| executor requirement extraction | `ExecutorRequirement` | IMPLEMENTED |
+| integration requirement extraction | `ExecutionPlan.required_integrations` | IMPLEMENTED |
+| structured planning diagnostics | `ExecutionPlan.diagnostics` | IMPLEMENTED |
+| plan fingerprint | `ExecutionPlan.fingerprint()` | IMPLEMENTED |
+| plan inspection | `ExecutionPlan.explain()` | IMPLEMENTED |
+| internal dependency graph | `pyworkflowkit.planning._graph` | IMPLEMENTED |
+
+The qualified V2 planning namespace now replaces the LOT-00 compatibility re-export.
+The frozen 1.1 package root remains unchanged. Runtime integration with V2 ExecutionPlan
+is owned by LOT-06.
