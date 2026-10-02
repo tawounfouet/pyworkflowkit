@@ -314,7 +314,7 @@ class TaskAttemptStateMachine:
             )
 
         started_at = attempt.started_at
-        if target is TaskAttemptStatus.STARTING and started_at is None:
+        if target in {TaskAttemptStatus.STARTING, TaskAttemptStatus.RUNNING} and started_at is None:
             started_at = at
 
         ended_at = at if target in TASK_ATTEMPT_TERMINAL_STATUSES else None
