@@ -1,25 +1,28 @@
-"""V2 executor namespace baseline.
+"""Canonical PyWorkflowKit V2 executor surface.
 
-LOT-06 rewrites the Executor protocol around TaskExecutionRequest/Result and
-renames LocalExecutor to InlineExecutor. The exports here are transitional.
+Legacy 1.1 executor contracts remain available from their historical module paths.
 """
 
-from pyworkflowkit.adapters.executors.local import LocalExecutor
-from pyworkflowkit.adapters.executors.thread import ThreadExecutor
-from pyworkflowkit.ports.executor import (
-    CancellationCapability,
+from pyworkflowkit.executors.contracts import (
+    V2_EXECUTOR_CONTRACT_VERSION,
+    V2_EXECUTOR_PROTOCOL_METHODS,
     Executor,
-    ExecutorCapabilities,
-    RunContext,
-    TimeoutCapability,
+    ExecutorDescriptor,
+    TaskExecutionContext,
+    TaskExecutionRequest,
+    TaskExecutionResult,
+    v2_executor_contract_snapshot,
 )
+from pyworkflowkit.executors.inline import InlineExecutor
 
 __all__ = [
-    "CancellationCapability",
     "Executor",
-    "ExecutorCapabilities",
-    "LocalExecutor",
-    "RunContext",
-    "ThreadExecutor",
-    "TimeoutCapability",
+    "ExecutorDescriptor",
+    "InlineExecutor",
+    "TaskExecutionContext",
+    "TaskExecutionRequest",
+    "TaskExecutionResult",
+    "V2_EXECUTOR_CONTRACT_VERSION",
+    "V2_EXECUTOR_PROTOCOL_METHODS",
+    "v2_executor_contract_snapshot",
 ]
