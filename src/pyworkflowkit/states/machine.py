@@ -8,11 +8,11 @@ from pyworkflowkit.diagnostics import FailureEvidence
 from pyworkflowkit.errors import InvalidStateTransitionError, TerminalStateError
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.states.enums import (
-    BlockReason,
-    SkipReason,
     TASK_ATTEMPT_TERMINAL_STATUSES,
     TASK_RUN_TERMINAL_STATUSES,
     WORKFLOW_TERMINAL_STATUSES,
+    BlockReason,
+    SkipReason,
     TaskAttemptStatus,
     TaskRunStatus,
     WorkflowRunStatus,
