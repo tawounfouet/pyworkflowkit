@@ -31,12 +31,18 @@ def test_executor_contract_snapshot_is_machine_readable() -> None:
     assert snapshot["contract_version"] == V2_EXECUTOR_CONTRACT_VERSION
     assert snapshot["protocol_members"] == list(V2_EXECUTOR_PROTOCOL_METHODS)
     assert tuple(executors.__all__) == (
+        "CancellationCapability",
+        "CancellationStatus",
+        "CancellableExecutor",
         "Executor",
         "ExecutorDescriptor",
         "InlineExecutor",
+        "TaskCancellationRequest",
+        "TaskCancellationResult",
         "TaskExecutionContext",
         "TaskExecutionRequest",
         "TaskExecutionResult",
+        "V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS",
         "V2_EXECUTOR_CONTRACT_VERSION",
         "V2_EXECUTOR_PROTOCOL_METHODS",
         "v2_executor_contract_snapshot",
@@ -50,7 +56,8 @@ def test_runtime_mvp_contract_snapshot_records_deferred_semantics() -> None:
     assert snapshot["surface"] == list(V2_RUNTIME_MVP_SURFACE)
     assert snapshot["run_inputs"] == list(V2_RUNTIME_MVP_RUN_INPUTS)
     assert snapshot["retry_execution"] is True
-    assert snapshot["timeout_execution"] is False
+    assert snapshot["timeout_execution"] is True
+    assert snapshot["cancellation_commands"] is True
     assert snapshot["durable_outputs"] is False
     assert snapshot["basic_events"] == "metadata_state_transitions"
 

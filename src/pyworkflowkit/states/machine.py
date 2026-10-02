@@ -59,6 +59,7 @@ _WORKFLOW_TRANSITIONS: dict[WorkflowRunStatus, frozenset[WorkflowRunStatus]] = {
     ),
     WorkflowRunStatus.CANCELLATION_REQUESTED: frozenset(
         {
+            WorkflowRunStatus.RUNNING,
             WorkflowRunStatus.CANCELLED,
             WorkflowRunStatus.UNKNOWN_OUTCOME,
         }
@@ -156,6 +157,7 @@ _TASK_ATTEMPT_TRANSITIONS: dict[
     ),
     TaskAttemptStatus.CANCELLATION_REQUESTED: frozenset(
         {
+            TaskAttemptStatus.RUNNING,
             TaskAttemptStatus.CANCELLED,
             TaskAttemptStatus.CANCELLATION_UNCONFIRMED,
             TaskAttemptStatus.SUCCEEDED,

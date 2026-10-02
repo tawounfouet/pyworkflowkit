@@ -12,7 +12,11 @@ from pyworkflowkit.policies.retry import (
     SystemRetryJitterSource,
     v2_retry_contract_snapshot,
 )
-from pyworkflowkit.policies.timeout import TimeoutPolicy
+from pyworkflowkit.policies.timeout import (
+    V2_TIMEOUT_CONTRACT_VERSION,
+    TimeoutPolicy,
+    v2_timeout_contract_snapshot,
+)
 from pyworkflowkit.policies.trigger import TriggerRule
 
 __all__ = [
@@ -27,7 +31,9 @@ __all__ = [
     "SystemRetryJitterSource",
     "TimeoutMode",
     "TimeoutPolicy",
+    "V2_TIMEOUT_CONTRACT_VERSION",
     "TriggerRule",
     "V2_RETRY_CONTRACT_VERSION",
     "v2_retry_contract_snapshot",
+    "v2_timeout_contract_snapshot",
 ]

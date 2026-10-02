@@ -226,10 +226,10 @@ def test_trigger_rule_can_skip_task_without_failing_workflow() -> None:
     assert store.list_task_attempts(task_b.task_run_id) == ()
 
 
-def test_runtime_rejects_timeout_policy_until_lot08_before_creating_run() -> None:
+def test_runtime_rejects_timeout_when_executor_cannot_enforce_deadline() -> None:
     store = InMemoryMetadataStore()
     workflow = WorkflowDefinition(
-        name="timeout-deferred",
+        name="timeout-unsupported",
         tasks=(
             TaskDefinition(
                 key="a",
@@ -239,7 +239,7 @@ def test_runtime_rejects_timeout_policy_until_lot08_before_creating_run() -> Non
         ),
     )
 
-    with pytest.raises(RuntimeInvariantError, match="LOT-08"):
+    with pytest.raises(RuntimeInvariantError, match="does not support execution deadlines"):
         _runtime(store).run(workflow)
 
     assert store.list_workflow_runs() == ()

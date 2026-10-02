@@ -13,6 +13,7 @@ from pyworkflowkit.diagnostics.failure import (
     Retryability,
 )
 from pyworkflowkit.executors.contracts import (
+    CancellationCapability,
     Executor,
     ExecutorDescriptor,
     TaskExecutionContext,
@@ -34,6 +35,8 @@ class InlineExecutor:
         execution_modes=("current_process",),
         portability_constraints=("process_local_execution",),
         supported_workload_kinds=("python_callable", "registered"),
+        supports_execution_timeout=False,
+        cancellation_capability=CancellationCapability.UNSUPPORTED,
     )
 
     def __init__(self, bindings: Mapping[str, LocalHandler] | None = None) -> None:

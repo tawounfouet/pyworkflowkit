@@ -16,8 +16,12 @@ from pyworkflowkit.diagnostics import (
     Retryability,
 )
 from pyworkflowkit.executors import (
+    CancellationCapability,
+    CancellationStatus,
     ExecutorDescriptor,
     InlineExecutor,
+    TaskCancellationRequest,
+    TaskCancellationResult,
     TaskExecutionContext,
     TaskExecutionRequest,
     TaskExecutionResult,
@@ -292,3 +296,119 @@ def test_executor_descriptor_rejects_non_boolean_retry_ownership_flag() -> None:
             executor_version="1",
             performs_implicit_workload_retry=1,  # type: ignore[arg-type]
         )
+
+
+def test_execution_request_validates_deadline_boundary() -> None:
+    naive = datetime(2026, 10, 2, 18, 0)
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        TaskExecutionRequest(
+            task_key="a",
+            workload=lambda: None,
+            executor_key="inline",
+            context=_context(),
+            deadline_at=naive,
+        )
+
+    aware = datetime(2026, 10, 2, 18, 0, tzinfo=UTC)
+    request = TaskExecutionRequest(
+        task_key="a",
+        workload=lambda: None,
+        executor_key="inline",
+        context=_context(),
+        deadline_at=aware,
+    )
+    assert request.deadline_at == aware
+
+
+def test_executor_descriptor_validates_timeout_and_cancellation_capabilities() -> None:
+    descriptor = ExecutorDescriptor(
+        executor_id="deadline",
+        display_name="Deadline",
+        executor_version="1",
+        supports_execution_timeout=True,
+        cancellation_capability=CancellationCapability.CONFIRMED,
+    )
+
+    assert descriptor.supports_execution_timeout is True
+    assert descriptor.cancellation_capability is CancellationCapability.CONFIRMED
+
+    with pytest.raises(TypeError, match="supports_execution_timeout"):
+        ExecutorDescriptor(
+            executor_id="bad",
+            display_name="Bad",
+            executor_version="1",
+            supports_execution_timeout=1,  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="cancellation_capability"):
+        ExecutorDescriptor(
+            executor_id="bad",
+            display_name="Bad",
+            executor_version="1",
+            cancellation_capability="confirmed",  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("workflow_run_id", "W", "workflow_run_id"),
+        ("task_run_id", "TR", "task_run_id"),
+        ("attempt_id", "TA", "attempt_id"),
+        ("requested_at", "now", "requested_at"),
+    ),
+)
+def test_task_cancellation_request_rejects_invalid_identity_fields(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "workflow_run_id": WorkflowRunId.parse("W"),
+        "task_run_id": TaskRunId.parse("TR"),
+        "attempt_id": TaskAttemptId.parse("TA"),
+        "task_key": "task",
+        "requested_at": datetime(2026, 10, 2, 18, 0, tzinfo=UTC),
+    }
+    values[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=message):
+        TaskCancellationRequest(**values)  # type: ignore[arg-type]
+
+
+def test_task_cancellation_request_rejects_naive_timestamp() -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        TaskCancellationRequest(
+            workflow_run_id=WorkflowRunId.parse("W"),
+            task_run_id=TaskRunId.parse("TR"),
+            attempt_id=TaskAttemptId.parse("TA"),
+            task_key="task",
+            requested_at=datetime(2026, 10, 2, 18, 0),
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("status", "confirmed", "status"),
+        ("attempt_id", "TA", "attempt_id"),
+        ("reason", "", "reason"),
+        ("diagnostics", (object(),), "diagnostics"),
+    ),
+)
+def test_task_cancellation_result_rejects_invalid_values(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "status": CancellationStatus.CONFIRMED,
+        "attempt_id": TaskAttemptId.parse("TA"),
+        "reason": "confirmed",
+        "diagnostics": (),
+    }
+    values[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=message):
+        TaskCancellationResult(**values)  # type: ignore[arg-type]

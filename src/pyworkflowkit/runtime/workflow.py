@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import datetime, timedelta
+from threading import RLock
 
 from pyworkflowkit.authoring.definitions import WorkflowDefinition
 from pyworkflowkit.authoring.workloads import RegisteredWorkload
@@ -17,7 +18,11 @@ from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.domain.enums import FailurePolicy
 from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
 from pyworkflowkit.executors import (
+    CancellableExecutor,
+    CancellationCapability,
+    CancellationStatus,
     Executor,
+    TaskCancellationRequest,
     TaskExecutionContext,
     TaskExecutionRequest,
     TaskExecutionResult,
@@ -30,7 +35,7 @@ from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
-from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
+from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
     Clock,
     RetryWaiter,
@@ -83,6 +88,8 @@ class WorkflowRuntime:
         self._workflow_states = WorkflowRunStateMachine()
         self._task_states = TaskRunStateMachine()
         self._attempt_states = TaskAttemptStateMachine()
+        self._active_requests: dict[TaskAttemptId, TaskExecutionRequest] = {}
+        self._active_requests_lock = RLock()
 
     def run(
         self,
@@ -198,14 +205,48 @@ class WorkflowRuntime:
                     workload=entry.task.workload,
                     executor_key=entry.executor_requirement.executor_key,
                     context=context,
+                    deadline_at=self._execution_deadline(entry),
                 )
-                result = self._execute(request)
+                self._remember_active_request(request)
+                try:
+                    result = self._execute(request)
+                finally:
+                    self._forget_active_request(attempt.attempt_id)
+
+                attempt = self._metadata.get_task_attempt(attempt.attempt_id)
+                current = self._metadata.get_task_run(current.task_run_id)
+                run = self._metadata.get_workflow_run(run_id)
                 diagnostics.extend(result.diagnostics)
+
+                if attempt.status is TaskAttemptStatus.CANCELLED:
+                    if current.status is not TaskRunStatus.CANCELLED:
+                        self._transition_task(current, TaskRunStatus.CANCELLED)
+                    self._cancel_not_started_tasks(run_id)
+                    if run.status in {
+                        WorkflowRunStatus.RUNNING,
+                        WorkflowRunStatus.CANCELLATION_REQUESTED,
+                    }:
+                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                    return self._build_result(
+                        run_id=run_id,
+                        outputs=outputs,
+                        diagnostics=tuple(diagnostics),
+                    )
 
                 if result.succeeded:
                     self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
                     self._transition_task(current, TaskRunStatus.SUCCEEDED)
                     outputs[entry.key] = result.output
+
+                    run = self._metadata.get_workflow_run(run_id)
+                    if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                        self._cancel_not_started_tasks(run_id)
+                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                        return self._build_result(
+                            run_id=run_id,
+                            outputs=outputs,
+                            diagnostics=tuple(diagnostics),
+                        )
                     break
 
                 failure = result.failure
@@ -259,9 +300,16 @@ class WorkflowRuntime:
                         diagnostics=tuple(diagnostics),
                     )
 
+                attempt_terminal_status = (
+                    TaskAttemptStatus.TIMED_OUT
+                    if failure.category is FailureCategory.TIMEOUT
+                    else TaskAttemptStatus.CANCELLED
+                    if failure.category is FailureCategory.CANCELLED
+                    else TaskAttemptStatus.FAILED
+                )
                 self._transition_attempt(
                     attempt,
-                    TaskAttemptStatus.FAILED,
+                    attempt_terminal_status,
                     failure=failure,
                 )
 
@@ -285,9 +333,16 @@ class WorkflowRuntime:
                         self._retry_waiter.wait(evaluation.delay_seconds)
                     continue
 
+                task_terminal_status = (
+                    TaskRunStatus.TIMED_OUT
+                    if failure.category is FailureCategory.TIMEOUT
+                    else TaskRunStatus.CANCELLED
+                    if failure.category is FailureCategory.CANCELLED
+                    else TaskRunStatus.FAILED
+                )
                 self._transition_task(
                     current,
-                    TaskRunStatus.FAILED,
+                    task_terminal_status,
                     failure=failure,
                 )
                 diagnostics.append(
@@ -322,9 +377,16 @@ class WorkflowRuntime:
                 plan=plan,
                 failed_entry=failed_entry,
             )
+            workflow_terminal_status = (
+                WorkflowRunStatus.TIMED_OUT
+                if failure is not None and failure.category is FailureCategory.TIMEOUT
+                else WorkflowRunStatus.CANCELLED
+                if failure is not None and failure.category is FailureCategory.CANCELLED
+                else WorkflowRunStatus.FAILED
+            )
             self._transition_workflow(
                 run,
-                WorkflowRunStatus.FAILED,
+                workflow_terminal_status,
                 failure=failure,
             )
         else:
@@ -336,6 +398,231 @@ class WorkflowRuntime:
             outputs=outputs,
             diagnostics=tuple(diagnostics),
         )
+
+    def cancel(self, workflow_run_id: WorkflowRunId) -> CancellationResult:
+        run = self._metadata.get_workflow_run(workflow_run_id)
+        if run.status in {
+            WorkflowRunStatus.SUCCEEDED,
+            WorkflowRunStatus.FAILED,
+            WorkflowRunStatus.CANCELLED,
+            WorkflowRunStatus.TIMED_OUT,
+        }:
+            return CancellationResult(
+                status=CancellationStatus.ALREADY_TERMINAL,
+                workflow_run_id=workflow_run_id,
+                reason="workflow_already_terminal",
+            )
+
+        if run.status is WorkflowRunStatus.UNKNOWN_OUTCOME:
+            return CancellationResult(
+                status=CancellationStatus.UNCONFIRMED,
+                workflow_run_id=workflow_run_id,
+                reason="workflow_outcome_already_unknown",
+            )
+
+        if run.status is not WorkflowRunStatus.CANCELLATION_REQUESTED:
+            self._transition_workflow(run, WorkflowRunStatus.CANCELLATION_REQUESTED)
+
+        statuses: list[CancellationStatus] = []
+        for task_run in self._metadata.list_task_runs(workflow_run_id):
+            if task_run.status in {
+                TaskRunStatus.PENDING,
+                TaskRunStatus.READY,
+                TaskRunStatus.BLOCKED,
+            }:
+                self._transition_task(task_run, TaskRunStatus.CANCELLED)
+                statuses.append(CancellationStatus.CONFIRMED)
+            elif task_run.status is TaskRunStatus.RUNNING:
+                statuses.append(self.cancel_task(task_run.task_run_id).status)
+            elif task_run.status is TaskRunStatus.UNKNOWN_OUTCOME:
+                statuses.append(CancellationStatus.UNCONFIRMED)
+
+        run = self._metadata.get_workflow_run(workflow_run_id)
+        if CancellationStatus.UNCONFIRMED in statuses:
+            if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                self._transition_workflow(run, WorkflowRunStatus.UNKNOWN_OUTCOME)
+            return CancellationResult(
+                status=CancellationStatus.UNCONFIRMED,
+                workflow_run_id=workflow_run_id,
+                reason="at_least_one_task_cancellation_unconfirmed",
+            )
+        if CancellationStatus.REQUESTED in statuses:
+            return CancellationResult(
+                status=CancellationStatus.REQUESTED,
+                workflow_run_id=workflow_run_id,
+                reason="cancellation_requested_but_not_confirmed",
+            )
+        if CancellationStatus.UNSUPPORTED in statuses:
+            return CancellationResult(
+                status=CancellationStatus.UNSUPPORTED,
+                workflow_run_id=workflow_run_id,
+                reason="executor_does_not_support_active_task_cancellation",
+            )
+
+        if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+            self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+        return CancellationResult(
+            status=CancellationStatus.CONFIRMED,
+            workflow_run_id=workflow_run_id,
+            reason="workflow_cancellation_confirmed",
+        )
+
+    def cancel_task(self, task_run_id: object) -> CancellationResult:
+        from pyworkflowkit.runtime.identity import TaskRunId
+
+        if not isinstance(task_run_id, TaskRunId):
+            raise TypeError("task_run_id must be a TaskRunId")
+
+        task_run = self._metadata.get_task_run(task_run_id)
+        workflow_run_id = task_run.workflow_run_id
+
+        if task_run.status in {
+            TaskRunStatus.SUCCEEDED,
+            TaskRunStatus.FAILED,
+            TaskRunStatus.SKIPPED,
+            TaskRunStatus.CANCELLED,
+            TaskRunStatus.TIMED_OUT,
+        }:
+            return CancellationResult(
+                status=CancellationStatus.ALREADY_TERMINAL,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                reason="task_run_already_terminal",
+            )
+
+        if task_run.status in {
+            TaskRunStatus.PENDING,
+            TaskRunStatus.READY,
+            TaskRunStatus.BLOCKED,
+        }:
+            self._transition_task(task_run, TaskRunStatus.CANCELLED)
+            return CancellationResult(
+                status=CancellationStatus.CONFIRMED,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                reason="task_never_started_and_is_cancelled",
+            )
+
+        if task_run.status is TaskRunStatus.UNKNOWN_OUTCOME:
+            return CancellationResult(
+                status=CancellationStatus.UNCONFIRMED,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                reason="task_outcome_already_unknown",
+            )
+
+        attempts = self._metadata.list_task_attempts(task_run_id)
+        if not attempts:
+            return CancellationResult(
+                status=CancellationStatus.UNCONFIRMED,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                reason="running_task_has_no_persisted_attempt",
+            )
+        attempt = attempts[-1]
+        if attempt.status in {
+            TaskAttemptStatus.SUCCEEDED,
+            TaskAttemptStatus.FAILED,
+            TaskAttemptStatus.TIMED_OUT,
+            TaskAttemptStatus.CANCELLED,
+        }:
+            return CancellationResult(
+                status=CancellationStatus.ALREADY_TERMINAL,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                attempt_id=attempt.attempt_id,
+                reason="task_attempt_already_terminal",
+            )
+
+        if attempt.status is not TaskAttemptStatus.CANCELLATION_REQUESTED:
+            self._transition_attempt(attempt, TaskAttemptStatus.CANCELLATION_REQUESTED)
+
+        request = self._active_request(attempt.attempt_id)
+        if request is None:
+            attempt = self._metadata.get_task_attempt(attempt.attempt_id)
+            self._transition_attempt(attempt, TaskAttemptStatus.CANCELLATION_UNCONFIRMED)
+            task_run = self._metadata.get_task_run(task_run_id)
+            self._transition_task(task_run, TaskRunStatus.UNKNOWN_OUTCOME)
+            return CancellationResult(
+                status=CancellationStatus.UNCONFIRMED,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                attempt_id=attempt.attempt_id,
+                reason="active_execution_handle_not_available",
+            )
+
+        if (
+            self._executor.descriptor.cancellation_capability is CancellationCapability.UNSUPPORTED
+            or not isinstance(self._executor, CancellableExecutor)
+        ):
+            attempt = self._metadata.get_task_attempt(attempt.attempt_id)
+            self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
+            return CancellationResult(
+                status=CancellationStatus.UNSUPPORTED,
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                attempt_id=attempt.attempt_id,
+                reason="executor_cancellation_unsupported",
+            )
+
+        executor_result = self._executor.cancel(
+            TaskCancellationRequest(
+                workflow_run_id=workflow_run_id,
+                task_run_id=task_run_id,
+                attempt_id=attempt.attempt_id,
+                task_key=task_run.task_key,
+                requested_at=self._now(),
+            )
+        )
+        attempt = self._metadata.get_task_attempt(attempt.attempt_id)
+        task_run = self._metadata.get_task_run(task_run_id)
+
+        if executor_result.status is CancellationStatus.CONFIRMED:
+            self._transition_attempt(attempt, TaskAttemptStatus.CANCELLED)
+            self._transition_task(task_run, TaskRunStatus.CANCELLED)
+        elif executor_result.status is CancellationStatus.UNCONFIRMED:
+            self._transition_attempt(attempt, TaskAttemptStatus.CANCELLATION_UNCONFIRMED)
+            self._transition_task(task_run, TaskRunStatus.UNKNOWN_OUTCOME)
+        elif executor_result.status in {
+            CancellationStatus.UNSUPPORTED,
+            CancellationStatus.ALREADY_TERMINAL,
+        }:
+            self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
+
+        return CancellationResult(
+            status=executor_result.status,
+            workflow_run_id=workflow_run_id,
+            task_run_id=task_run_id,
+            attempt_id=attempt.attempt_id,
+            reason=executor_result.reason,
+        )
+
+    def _remember_active_request(self, request: TaskExecutionRequest) -> None:
+        with self._active_requests_lock:
+            self._active_requests[request.context.attempt_id] = request
+
+    def _forget_active_request(self, attempt_id: TaskAttemptId) -> None:
+        with self._active_requests_lock:
+            self._active_requests.pop(attempt_id, None)
+
+    def _active_request(self, attempt_id: TaskAttemptId) -> TaskExecutionRequest | None:
+        with self._active_requests_lock:
+            return self._active_requests.get(attempt_id)
+
+    def _cancel_not_started_tasks(self, workflow_run_id: WorkflowRunId) -> None:
+        for task_run in self._metadata.list_task_runs(workflow_run_id):
+            if task_run.status in {
+                TaskRunStatus.PENDING,
+                TaskRunStatus.READY,
+                TaskRunStatus.BLOCKED,
+            }:
+                self._transition_task(task_run, TaskRunStatus.CANCELLED)
+
+    def _execution_deadline(self, entry: TaskPlanEntry) -> datetime | None:
+        timeout = entry.timeout_policy.execution_timeout
+        if timeout is None:
+            return None
+        return self._now() + timedelta(seconds=timeout)
 
     def _compile(self, workflow: WorkflowDefinition | ExecutionPlan) -> ExecutionPlan:
         if isinstance(workflow, WorkflowDefinition):
@@ -369,11 +656,14 @@ class WorkflowRuntime:
                         f"{executor_id!r} declares implicit workload retry"
                     )
                 )
-            if entry.timeout_policy.execution_timeout is not None:
+            if (
+                entry.timeout_policy.execution_timeout is not None
+                and not self._executor.descriptor.supports_execution_timeout
+            ):
                 raise RuntimeInvariantError(
                     reason=(
-                        f"task {entry.key!r} requests execution_timeout; "
-                        "timeout execution starts in LOT-08"
+                        f"task {entry.key!r} requests execution_timeout but executor "
+                        f"{executor_id!r} does not support execution deadlines"
                     )
                 )
 

@@ -8,9 +8,11 @@ import pytest
 
 from pyworkflowkit.authoring import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.diagnostics import Diagnostic, DiagnosticSeverity
+from pyworkflowkit.executors import CancellationStatus
 from pyworkflowkit.planning import WorkflowPlanner
 from pyworkflowkit.policies import TriggerRule
 from pyworkflowkit.runtime import (
+    CancellationResult,
     CorrelationContext,
     CorrelationId,
     SystemClock,
@@ -240,3 +242,31 @@ def test_system_retry_waiter_validates_delay_and_delegates_sleep(
         waiter.wait(float("inf"))
     with pytest.raises(ValueError, match="greater than or equal"):
         waiter.wait(-0.1)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("status", "confirmed", "status"),
+        ("workflow_run_id", "W", "workflow_run_id"),
+        ("task_run_id", "TR", "task_run_id"),
+        ("attempt_id", "TA", "attempt_id"),
+        ("reason", "", "reason"),
+    ),
+)
+def test_cancellation_result_rejects_invalid_boundary_values(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "status": CancellationStatus.CONFIRMED,
+        "workflow_run_id": WorkflowRunId.parse("W"),
+        "task_run_id": TaskRunId.parse("TR"),
+        "attempt_id": TaskAttemptId.parse("TA"),
+        "reason": "confirmed",
+    }
+    values[field] = value
+
+    with pytest.raises((TypeError, ValueError), match=message):
+        CancellationResult(**values)  # type: ignore[arg-type]

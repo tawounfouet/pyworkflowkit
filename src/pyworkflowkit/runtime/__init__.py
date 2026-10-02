@@ -32,10 +32,11 @@ from pyworkflowkit.runtime.services import (
 )
 
 if TYPE_CHECKING:
-    from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
+    from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
     from pyworkflowkit.runtime.workflow import WorkflowRuntime
 
 _LAZY_EXPORTS = {
+    "CancellationResult": ("pyworkflowkit.runtime.results", "CancellationResult"),
     "TaskOutcome": ("pyworkflowkit.runtime.results", "TaskOutcome"),
     "WorkflowResult": ("pyworkflowkit.runtime.results", "WorkflowResult"),
     "WorkflowRuntime": ("pyworkflowkit.runtime.workflow", "WorkflowRuntime"),
@@ -52,6 +53,7 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
+    "CancellationResult",
     "Clock",
     "CorrelationContext",
     "CorrelationId",

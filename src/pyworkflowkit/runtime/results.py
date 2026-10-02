@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pyworkflowkit.diagnostics import Diagnostic, FailureEvidence
+from pyworkflowkit.executors.contracts import CancellationStatus
 from pyworkflowkit.persistence import ManifestReference
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
@@ -84,4 +85,27 @@ class WorkflowResult:
         raise KeyError(key)
 
 
-__all__ = ["TaskOutcome", "WorkflowResult"]
+@dataclass(frozen=True, slots=True)
+class CancellationResult:
+    """Caller-facing result of a workflow/task cancellation command."""
+
+    status: CancellationStatus
+    workflow_run_id: WorkflowRunId
+    task_run_id: TaskRunId | None = None
+    attempt_id: TaskAttemptId | None = None
+    reason: str = "cancellation_command_processed"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.status, CancellationStatus):
+            raise TypeError("status must be a CancellationStatus")
+        if not isinstance(self.workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        if self.task_run_id is not None and not isinstance(self.task_run_id, TaskRunId):
+            raise TypeError("task_run_id must be TaskRunId or None")
+        if self.attempt_id is not None and not isinstance(self.attempt_id, TaskAttemptId):
+            raise TypeError("attempt_id must be TaskAttemptId or None")
+        if not isinstance(self.reason, str) or not self.reason.strip():
+            raise ValueError("reason must not be empty")
+
+
+__all__ = ["CancellationResult", "TaskOutcome", "WorkflowResult"]
