@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pyworkflowkit.diagnostics import Diagnostic, FailureEvidence
+from pyworkflowkit.executors.contracts import CancellationStatus
 from pyworkflowkit.persistence import ManifestReference
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
-from pyworkflowkit.executors.contracts import CancellationStatus
 from pyworkflowkit.states import TaskRunStatus, WorkflowRunStatus
 from pyworkflowkit.states.enums import WORKFLOW_TERMINAL_STATUSES
 
