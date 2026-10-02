@@ -282,3 +282,14 @@ def test_missing_registered_workload_keeps_failure_identity() -> None:
     assert result.failure.workflow_run_id == "W-guard"
     assert result.failure.task_run_id == "TR-guard"
     assert result.failure.task_attempt_id == "TA-guard"
+
+
+
+def test_executor_descriptor_rejects_non_boolean_retry_ownership_flag() -> None:
+    with pytest.raises(TypeError, match="performs_implicit_workload_retry"):
+        ExecutorDescriptor(
+            executor_id="inline",
+            display_name="Inline",
+            executor_version="1",
+            performs_implicit_workload_retry=1,  # type: ignore[arg-type]
+        )
