@@ -28,7 +28,6 @@ from pyworkflowkit.states import (
     WorkflowRunStatus,
 )
 
-
 T0 = datetime(2026, 10, 2, 12, 0, tzinfo=UTC)
 T1 = T0 + timedelta(seconds=1)
 T2 = T0 + timedelta(seconds=2)
