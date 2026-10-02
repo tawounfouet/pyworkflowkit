@@ -61,6 +61,12 @@ class InMemoryMetadataStore:
 
     def create_workflow_run(self, run: WorkflowRun) -> None:
         candidate = _clone_workflow_run(run)
+        _require_initial_status(
+            "WorkflowRun",
+            str(candidate.run_id),
+            candidate.status,
+            WorkflowRunStatus.PENDING,
+        )
         with self._lock:
             if candidate.run_id in self._state.workflow_runs:
                 raise DuplicateMetadataError(
@@ -139,6 +145,12 @@ class InMemoryMetadataStore:
 
     def create_task_run(self, task_run: TaskRun) -> None:
         candidate = _clone_task_run(task_run)
+        _require_initial_status(
+            "TaskRun",
+            str(candidate.task_run_id),
+            candidate.status,
+            TaskRunStatus.PENDING,
+        )
         with self._lock:
             if candidate.task_run_id in self._state.task_runs:
                 raise DuplicateMetadataError(
@@ -218,6 +230,12 @@ class InMemoryMetadataStore:
 
     def append_task_attempt(self, attempt: TaskAttempt) -> None:
         candidate = _clone_task_attempt(attempt)
+        _require_initial_status(
+            "TaskAttempt",
+            str(candidate.attempt_id),
+            candidate.status,
+            TaskAttemptStatus.PENDING,
+        )
         with self._lock:
             if candidate.attempt_id in self._state.task_attempts:
                 raise DuplicateMetadataError(
@@ -460,6 +478,21 @@ class InMemoryMetadataStore:
             raise MetadataInvariantError(
                 reason="status-changing update requires transitioned_at"
             )
+
+
+def _require_initial_status(
+    entity_type: str,
+    entity_id: str,
+    actual: WorkflowRunStatus | TaskRunStatus | TaskAttemptStatus,
+    expected: WorkflowRunStatus | TaskRunStatus | TaskAttemptStatus,
+) -> None:
+    if type(actual) is not type(expected) or actual != expected:
+        raise MetadataInvariantError(
+            reason=(
+                f"new {entity_type} {entity_id} must begin in {expected.value}; "
+                f"got {actual.value}"
+            )
+        )
 
 
 def _require_status(
