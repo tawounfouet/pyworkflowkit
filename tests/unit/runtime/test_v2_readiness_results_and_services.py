@@ -218,6 +218,7 @@ def test_system_clock_and_uuid_identity_factory_return_canonical_values() -> Non
     assert str(attempt_id)
     assert str(correlation_id)
 
+
 def test_system_retry_waiter_validates_delay_and_delegates_sleep(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
