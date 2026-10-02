@@ -236,6 +236,16 @@ class WorkflowRuntime:
                     self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
                     self._transition_task(current, TaskRunStatus.SUCCEEDED)
                     outputs[entry.key] = result.output
+
+                    run = self._metadata.get_workflow_run(run_id)
+                    if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                        self._cancel_not_started_tasks(run_id)
+                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                        return self._build_result(
+                            run_id=run_id,
+                            outputs=outputs,
+                            diagnostics=tuple(diagnostics),
+                        )
                     break
 
                 failure = result.failure
