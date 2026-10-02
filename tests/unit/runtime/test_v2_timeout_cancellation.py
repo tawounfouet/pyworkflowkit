@@ -232,8 +232,10 @@ def test_unconfirmed_cancellation_preserves_unknown_outcome() -> None:
 
 def test_cancel_is_idempotent_for_terminal_workflow() -> None:
     store = InMemoryMetadataStore()
+    from pyworkflowkit.executors import InlineExecutor
+
     runtime = WorkflowRuntime(
-        executor=DeadlineExecutor(),
+        executor=InlineExecutor(),
         metadata=store,
     )
     result = runtime.run(_workflow())
@@ -250,3 +252,44 @@ def test_cancel_task_before_execution_is_confirmed_without_executor_call() -> No
 
     with pytest.raises(TypeError, match="TaskRunId"):
         runtime.cancel_task("TR-invalid")  # type: ignore[arg-type]
+
+
+
+def test_unsupported_active_cancellation_is_explicit_and_does_not_fake_cancel() -> None:
+    from pyworkflowkit.executors import InlineExecutor
+
+    store = InMemoryMetadataStore()
+    started = Event()
+    release = Event()
+    results: list[WorkflowResult] = []
+
+    def blocking() -> str:
+        started.set()
+        release.wait(timeout=5)
+        return "done"
+
+    workflow = WorkflowDefinition(
+        name="unsupported-cancel",
+        tasks=(TaskDefinition(key="work", workload=blocking),),
+    )
+    runtime = WorkflowRuntime(executor=InlineExecutor(), metadata=store)
+
+    thread = Thread(target=lambda: results.append(runtime.run(workflow)))
+    thread.start()
+    assert started.wait(timeout=5)
+
+    run_id = store.list_workflow_runs()[0].run_id
+    cancellation = runtime.cancel(run_id)
+
+    assert cancellation.status is CancellationStatus.UNSUPPORTED
+    assert store.get_workflow_run(run_id).status is WorkflowRunStatus.CANCELLATION_REQUESTED
+
+    release.set()
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+    assert results[0].status is WorkflowRunStatus.CANCELLED
+
+    task = store.list_task_runs(run_id)[0]
+    attempt = store.list_task_attempts(task.task_run_id)[0]
+    assert task.status is TaskRunStatus.SUCCEEDED
+    assert attempt.status is TaskAttemptStatus.SUCCEEDED
