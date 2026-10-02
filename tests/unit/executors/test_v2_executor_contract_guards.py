@@ -16,6 +16,7 @@ from pyworkflowkit.diagnostics import (
     Retryability,
 )
 from pyworkflowkit.executors import (
+    CancellationCapability,
     ExecutorDescriptor,
     InlineExecutor,
     TaskExecutionContext,
@@ -291,4 +292,57 @@ def test_executor_descriptor_rejects_non_boolean_retry_ownership_flag() -> None:
             display_name="Inline",
             executor_version="1",
             performs_implicit_workload_retry=1,  # type: ignore[arg-type]
+        )
+
+
+
+def test_execution_request_validates_deadline_boundary() -> None:
+    naive = datetime(2026, 10, 2, 18, 0)
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        TaskExecutionRequest(
+            task_key="a",
+            workload=lambda: None,
+            executor_key="inline",
+            context=_context(),
+            deadline_at=naive,
+        )
+
+    aware = datetime(2026, 10, 2, 18, 0, tzinfo=UTC)
+    request = TaskExecutionRequest(
+        task_key="a",
+        workload=lambda: None,
+        executor_key="inline",
+        context=_context(),
+        deadline_at=aware,
+    )
+    assert request.deadline_at == aware
+
+
+def test_executor_descriptor_validates_timeout_and_cancellation_capabilities() -> None:
+    descriptor = ExecutorDescriptor(
+        executor_id="deadline",
+        display_name="Deadline",
+        executor_version="1",
+        supports_execution_timeout=True,
+        cancellation_capability=CancellationCapability.CONFIRMED,
+    )
+
+    assert descriptor.supports_execution_timeout is True
+    assert descriptor.cancellation_capability is CancellationCapability.CONFIRMED
+
+    with pytest.raises(TypeError, match="supports_execution_timeout"):
+        ExecutorDescriptor(
+            executor_id="bad",
+            display_name="Bad",
+            executor_version="1",
+            supports_execution_timeout=1,  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(TypeError, match="cancellation_capability"):
+        ExecutorDescriptor(
+            executor_id="bad",
+            display_name="Bad",
+            executor_version="1",
+            cancellation_capability="confirmed",  # type: ignore[arg-type]
         )
