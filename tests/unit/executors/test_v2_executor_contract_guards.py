@@ -350,7 +350,6 @@ def test_executor_descriptor_validates_timeout_and_cancellation_capabilities() -
         )
 
 
-
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     (
