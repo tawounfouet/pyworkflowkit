@@ -8,9 +8,9 @@ import pytest
 
 from pyworkflowkit.authoring import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.diagnostics import Diagnostic, DiagnosticSeverity
+from pyworkflowkit.executors import CancellationStatus
 from pyworkflowkit.planning import WorkflowPlanner
 from pyworkflowkit.policies import TriggerRule
-from pyworkflowkit.executors import CancellationStatus
 from pyworkflowkit.runtime import (
     CancellationResult,
     CorrelationContext,
