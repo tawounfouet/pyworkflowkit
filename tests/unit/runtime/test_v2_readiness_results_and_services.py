@@ -14,6 +14,7 @@ from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
     SystemClock,
+    SystemRetryWaiter,
     TaskAttemptId,
     TaskOutcome,
     TaskRunId,
@@ -216,3 +217,27 @@ def test_system_clock_and_uuid_identity_factory_return_canonical_values() -> Non
     assert str(task_run_id)
     assert str(attempt_id)
     assert str(correlation_id)
+
+
+
+def test_system_retry_waiter_validates_delay_and_delegates_sleep(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[float] = []
+    monkeypatch.setattr(
+        "pyworkflowkit.runtime.services.sleep",
+        lambda seconds: calls.append(seconds),
+    )
+    waiter = SystemRetryWaiter()
+
+    waiter.wait(0.0)
+    waiter.wait(0.25)
+
+    assert calls == [0.25]
+
+    with pytest.raises(TypeError, match="number"):
+        waiter.wait(True)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="finite"):
+        waiter.wait(float("inf"))
+    with pytest.raises(ValueError, match="greater than or equal"):
+        waiter.wait(-0.1)
