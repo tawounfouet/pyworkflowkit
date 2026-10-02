@@ -136,8 +136,7 @@ Dependency outputs and registered-workload parameters are exposed as read-only m
 A trusted local callable may accept:
 
 ```python
-def workload():
-    ...
+def workload(): ...
 ```
 
 or:
