@@ -141,9 +141,7 @@ def test_retry_reuses_task_run_and_creates_new_attempt_identity() -> None:
                     max_attempts=3,
                     backoff_strategy=BackoffStrategy.FIXED,
                     initial_delay_seconds=2.5,
-                    retryable_failure_categories=frozenset(
-                        {FailureCategory.TRANSIENT}
-                    ),
+                    retryable_failure_categories=frozenset({FailureCategory.TRANSIENT}),
                 ),
             ),
         ),
