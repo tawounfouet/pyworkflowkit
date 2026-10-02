@@ -1,12 +1,9 @@
-"""Canonical and transitional PyWorkflowKit V2 runtime surface.
+"""Canonical PyWorkflowKit V2 runtime surface.
 
-LOT-04 promotes the canonical V2 WorkflowRun/TaskRun/TaskAttempt entities.
-WorkflowRuntime and RuntimeEvent remain transitional 1.1 implementations until
-LOT-06 and LOT-12 respectively.
+The frozen package root still exposes the 1.1 WorkflowRuntime until the final V2
+root migration. Qualified `pyworkflowkit.runtime` now owns the canonical V2 runtime.
 """
 
-from pyworkflowkit.application.runtime import WorkflowRuntime
-from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.domain.runtime import RuntimeEvent
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
@@ -17,18 +14,31 @@ from pyworkflowkit.runtime.identity import (
     WorkflowRunId,
 )
 from pyworkflowkit.runtime.references import ExternalRunRef, WorkflowExecutionReference
+from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
+from pyworkflowkit.runtime.services import (
+    Clock,
+    RuntimeIdentityFactory,
+    SystemClock,
+    UuidRuntimeIdentityFactory,
+)
+from pyworkflowkit.runtime.workflow import WorkflowRuntime
 
 __all__ = [
+    "Clock",
     "CorrelationContext",
     "CorrelationId",
     "ExternalRunRef",
     "RuntimeEvent",
-    "RuntimeSettings",
+    "RuntimeIdentityFactory",
+    "SystemClock",
     "TaskAttempt",
     "TaskAttemptId",
+    "TaskOutcome",
     "TaskRun",
     "TaskRunId",
+    "UuidRuntimeIdentityFactory",
     "WorkflowExecutionReference",
+    "WorkflowResult",
     "WorkflowRun",
     "WorkflowRunId",
     "WorkflowRuntime",
