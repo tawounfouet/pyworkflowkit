@@ -6,8 +6,8 @@ from collections.abc import Callable, Mapping
 from inspect import Parameter, Signature, signature
 from typing import cast
 
-from pyworkflowkit.authoring import RegisteredWorkload
-from pyworkflowkit.diagnostics import (
+from pyworkflowkit.authoring.workloads import RegisteredWorkload
+from pyworkflowkit.diagnostics.failure import (
     FailureCategory,
     FailureEvidence,
     OutcomeUncertainty,
