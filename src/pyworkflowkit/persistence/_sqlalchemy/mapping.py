@@ -83,9 +83,7 @@ def correlation_from_json(value: Mapping[str, Any]) -> CorrelationContext:
         task_run_id=_optional_string(value.get("task_run_id")),
         task_attempt_id=_optional_string(value.get("task_attempt_id")),
         ingestion_run_id=_optional_string(value.get("ingestion_run_id")),
-        transformation_execution_id=_optional_string(
-            value.get("transformation_execution_id")
-        ),
+        transformation_execution_id=_optional_string(value.get("transformation_execution_id")),
         trace_id=_optional_string(value.get("trace_id")),
         span_id=_optional_string(value.get("span_id")),
     )
@@ -98,9 +96,7 @@ def external_ref_to_json(value: ExternalRunRef) -> dict[str, Any]:
         "kind": value.kind,
         "status_hint": value.status_hint,
         "status_locator": value.status_locator,
-        "correlation_id": (
-            str(value.correlation_id) if value.correlation_id is not None else None
-        ),
+        "correlation_id": (str(value.correlation_id) if value.correlation_id is not None else None),
         "causation_id": value.causation_id,
         "metadata": _pairs_to_json(value.metadata),
         "namespace": value.namespace,
@@ -140,9 +136,7 @@ def failure_to_json(value: FailureEvidence | None) -> dict[str, Any] | None:
         "task_run_id": value.task_run_id,
         "task_attempt_id": value.task_attempt_id,
         "external_run": (
-            external_ref_to_json(value.external_run)
-            if value.external_run is not None
-            else None
+            external_ref_to_json(value.external_run) if value.external_run is not None else None
         ),
         "source_component": value.source_component,
         "provider_code": value.provider_code,
@@ -302,9 +296,7 @@ def external_ref_to_row(
         external_run_id=value.external_run_id,
         status_hint=value.status_hint,
         status_locator=value.status_locator,
-        correlation_id=(
-            str(value.correlation_id) if value.correlation_id is not None else None
-        ),
+        correlation_id=(str(value.correlation_id) if value.correlation_id is not None else None),
         causation_id=value.causation_id,
         metadata_json=_pairs_to_json(value.metadata),
         namespace=value.namespace,
