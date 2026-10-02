@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import datetime
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Protocol, runtime_checkable
 
@@ -13,8 +15,9 @@ from pyworkflowkit.diagnostics.model import Diagnostic
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 
-V2_EXECUTOR_CONTRACT_VERSION = "1"
+V2_EXECUTOR_CONTRACT_VERSION = "2"
 V2_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("descriptor", "execute")
+V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("cancel",)
 
 
 def _require_text(value: str, *, field_name: str) -> str:
@@ -23,6 +26,29 @@ def _require_text(value: str, *, field_name: str) -> str:
     if not value.strip():
         raise ValueError(f"{field_name} must not be empty")
     return value
+
+
+def _require_aware(value: datetime, *, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+
+
+class CancellationCapability(StrEnum):
+    """Executor cancellation strength."""
+
+    UNSUPPORTED = "unsupported"
+    BEST_EFFORT = "best_effort"
+    CONFIRMED = "confirmed"
+
+
+class CancellationStatus(StrEnum):
+    """Structured cancellation command result."""
+
+    REQUESTED = "requested"
+    CONFIRMED = "confirmed"
+    UNSUPPORTED = "unsupported"
+    UNCONFIRMED = "unconfirmed"
+    ALREADY_TERMINAL = "already_terminal"
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +63,8 @@ class ExecutorDescriptor:
     portability_constraints: tuple[str, ...] = ()
     supported_workload_kinds: tuple[str, ...] = ()
     performs_implicit_workload_retry: bool = False
+    supports_execution_timeout: bool = False
+    cancellation_capability: CancellationCapability = CancellationCapability.UNSUPPORTED
 
     def __post_init__(self) -> None:
         _require_text(self.executor_id, field_name="executor_id")
@@ -54,6 +82,10 @@ class ExecutorDescriptor:
             object.__setattr__(self, name, tuple(sorted(set(values))))
         if not isinstance(self.performs_implicit_workload_retry, bool):
             raise TypeError("performs_implicit_workload_retry must be a bool")
+        if not isinstance(self.supports_execution_timeout, bool):
+            raise TypeError("supports_execution_timeout must be a bool")
+        if not isinstance(self.cancellation_capability, CancellationCapability):
+            raise TypeError("cancellation_capability must be a CancellationCapability")
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +136,7 @@ class TaskExecutionRequest:
     workload: Workload
     executor_key: str
     context: TaskExecutionContext
+    deadline_at: datetime | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.task_key, field_name="task_key")
@@ -112,6 +145,10 @@ class TaskExecutionRequest:
             raise TypeError("workload must be callable or implement WorkloadDescriptor")
         if not isinstance(self.context, TaskExecutionContext):
             raise TypeError("context must be a TaskExecutionContext")
+        if self.deadline_at is not None:
+            if not isinstance(self.deadline_at, datetime):
+                raise TypeError("deadline_at must be datetime or None")
+            _require_aware(self.deadline_at, field_name="deadline_at")
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,6 +172,52 @@ class TaskExecutionResult:
         return self.failure is None
 
 
+@dataclass(frozen=True, slots=True)
+class TaskCancellationRequest:
+    """Cancellation command for one concrete TaskAttempt."""
+
+    workflow_run_id: WorkflowRunId
+    task_run_id: TaskRunId
+    attempt_id: TaskAttemptId
+    task_key: str
+    requested_at: datetime
+    reason: str = "requested_by_runtime"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        if not isinstance(self.task_run_id, TaskRunId):
+            raise TypeError("task_run_id must be a TaskRunId")
+        if not isinstance(self.attempt_id, TaskAttemptId):
+            raise TypeError("attempt_id must be a TaskAttemptId")
+        _require_text(self.task_key, field_name="task_key")
+        if not isinstance(self.requested_at, datetime):
+            raise TypeError("requested_at must be datetime")
+        _require_aware(self.requested_at, field_name="requested_at")
+        _require_text(self.reason, field_name="reason")
+
+
+@dataclass(frozen=True, slots=True)
+class TaskCancellationResult:
+    """Executor-owned cancellation acknowledgement."""
+
+    status: CancellationStatus
+    attempt_id: TaskAttemptId
+    reason: str
+    diagnostics: tuple[Diagnostic, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.status, CancellationStatus):
+            raise TypeError("status must be a CancellationStatus")
+        if not isinstance(self.attempt_id, TaskAttemptId):
+            raise TypeError("attempt_id must be a TaskAttemptId")
+        _require_text(self.reason, field_name="reason")
+        diagnostics = tuple(self.diagnostics)
+        if not all(isinstance(item, Diagnostic) for item in diagnostics):
+            raise TypeError("diagnostics must contain only Diagnostic values")
+        object.__setattr__(self, "diagnostics", diagnostics)
+
+
 @runtime_checkable
 class Executor(Protocol):
     """Stable V2 execution extension boundary."""
@@ -147,19 +230,36 @@ class Executor(Protocol):
         """Execute exactly one TaskAttempt."""
 
 
+@runtime_checkable
+class CancellableExecutor(Protocol):
+    """Capability protocol for executors able to receive cancellation commands."""
+
+    def cancel(self, request: TaskCancellationRequest) -> TaskCancellationResult:
+        """Request cancellation for one concrete TaskAttempt."""
+
+
 def v2_executor_contract_snapshot() -> dict[str, object]:
     return {
         "contract_version": V2_EXECUTOR_CONTRACT_VERSION,
         "protocol_members": list(V2_EXECUTOR_PROTOCOL_METHODS),
+        "cancellable_protocol_members": list(V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS),
+        "cancellation_statuses": [value.value for value in CancellationStatus],
+        "cancellation_capabilities": [value.value for value in CancellationCapability],
     }
 
 
 __all__ = [
+    "CancellationCapability",
+    "CancellationStatus",
+    "CancellableExecutor",
     "Executor",
     "ExecutorDescriptor",
+    "TaskCancellationRequest",
+    "TaskCancellationResult",
     "TaskExecutionContext",
     "TaskExecutionRequest",
     "TaskExecutionResult",
+    "V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS",
     "V2_EXECUTOR_CONTRACT_VERSION",
     "V2_EXECUTOR_PROTOCOL_METHODS",
     "v2_executor_contract_snapshot",
