@@ -5,15 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 
-from pyworkflowkit.authoring import RegisteredWorkload, WorkflowDefinition
-from pyworkflowkit.diagnostics import (
-    Diagnostic,
-    DiagnosticSeverity,
+from pyworkflowkit.authoring.definitions import WorkflowDefinition
+from pyworkflowkit.authoring.workloads import RegisteredWorkload
+from pyworkflowkit.diagnostics.failure import (
     FailureCategory,
     FailureEvidence,
     OutcomeUncertainty,
     Retryability,
 )
+from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.domain.enums import FailurePolicy
 from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
 from pyworkflowkit.executors import (
@@ -27,7 +27,8 @@ from pyworkflowkit.planning import ExecutionPlan, TaskPlanEntry, WorkflowPlanner
 from pyworkflowkit.runtime._attempts import next_task_attempt
 from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
-from pyworkflowkit.runtime.entities import TaskRun, WorkflowRun
+from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
 from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
     Clock,
@@ -342,10 +343,9 @@ class WorkflowRuntime:
                 skip_reason=reason,
             )
 
-    def _assert_terminal_task_runs(self, run_id: object) -> None:
+    def _assert_terminal_task_runs(self, run_id: WorkflowRunId) -> None:
         statuses = tuple(
-            task_run.status
-            for task_run in self._metadata.list_task_runs(run_id)  # type: ignore[arg-type]
+            task_run.status for task_run in self._metadata.list_task_runs(run_id)
         )
         if not statuses or any(status not in TASK_RUN_TERMINAL_STATUSES for status in statuses):
             raise RuntimeInvariantError(
@@ -397,15 +397,11 @@ class WorkflowRuntime:
 
     def _transition_attempt(
         self,
-        attempt: object,
+        attempt: TaskAttempt,
         target: TaskAttemptStatus,
         *,
         failure: FailureEvidence | None = None,
     ) -> None:
-        from pyworkflowkit.runtime.entities import TaskAttempt
-
-        if not isinstance(attempt, TaskAttempt):
-            raise TypeError("attempt must be a TaskAttempt")
         expected = attempt.status
         at = self._now()
         self._attempt_states.transition(
@@ -423,14 +419,10 @@ class WorkflowRuntime:
     def _build_result(
         self,
         *,
-        run_id: object,
+        run_id: WorkflowRunId,
         outputs: Mapping[str, object],
         diagnostics: tuple[Diagnostic, ...],
     ) -> WorkflowResult:
-        from pyworkflowkit.runtime.identity import WorkflowRunId
-
-        if not isinstance(run_id, WorkflowRunId):
-            raise TypeError("run_id must be a WorkflowRunId")
         run = self._metadata.get_workflow_run(run_id)
         outcomes: list[TaskOutcome] = []
 
@@ -468,12 +460,8 @@ class WorkflowRuntime:
 def _bind_workflow_correlation(
     correlation: CorrelationContext,
     *,
-    run_id: object,
+    run_id: WorkflowRunId,
 ) -> CorrelationContext:
-    from pyworkflowkit.runtime.identity import WorkflowRunId
-
-    if not isinstance(run_id, WorkflowRunId):
-        raise TypeError("run_id must be a WorkflowRunId")
     return CorrelationContext(
         correlation_id=correlation.correlation_id,
         causation_id=correlation.causation_id,
@@ -490,12 +478,8 @@ def _bind_task_correlation(
     correlation: CorrelationContext,
     *,
     task_run: TaskRun,
-    attempt_id: object,
+    attempt_id: TaskAttemptId,
 ) -> CorrelationContext:
-    from pyworkflowkit.runtime.identity import TaskAttemptId
-
-    if not isinstance(attempt_id, TaskAttemptId):
-        raise TypeError("attempt_id must be a TaskAttemptId")
     return CorrelationContext(
         correlation_id=correlation.correlation_id,
         causation_id=correlation.causation_id,
@@ -523,7 +507,7 @@ def _diagnostic(
     *,
     run: WorkflowRun,
     task_run: TaskRun,
-    attempt_id: object | None = None,
+    attempt_id: TaskAttemptId | None = None,
     severity: DiagnosticSeverity = DiagnosticSeverity.INFO,
     details: tuple[tuple[str, str], ...] = (),
 ) -> Diagnostic:
