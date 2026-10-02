@@ -197,12 +197,12 @@ class RetryEvaluator:
             decision = (
                 RetryDecision.RECONCILE
                 if policy.reconciliation_required
-                else RetryDecision.DO_NOT_RETRY
+                else RetryDecision.ESCALATE
             )
             reason = (
                 "uncertain_outcome_requires_reconciliation"
                 if decision is RetryDecision.RECONCILE
-                else "uncertain_outcome_retry_forbidden"
+                else "uncertain_outcome_escalated"
             )
             return self._evaluation(
                 policy=policy,
