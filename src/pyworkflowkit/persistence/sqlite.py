@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Self
+from typing import Any, Self, cast
 
 from sqlalchemy import URL, Engine, create_engine, event, func, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
 from pyworkflowkit.errors import (
@@ -191,7 +192,7 @@ class SQLiteMetadataStore:
                     failure_json=failure_to_json(run.failure),
                 )
             )
-            if result.rowcount != 1:
+            if cast(CursorResult[Any], result).rowcount != 1:
                 self._raise_workflow_conflict(session, run.run_id, expected_status)
 
             if current.status is not run.status:
@@ -302,7 +303,7 @@ class SQLiteMetadataStore:
                     failure_json=failure_to_json(task_run.failure),
                 )
             )
-            if result.rowcount != 1:
+            if cast(CursorResult[Any], result).rowcount != 1:
                 self._raise_task_conflict(
                     session,
                     task_run.task_run_id,
@@ -417,7 +418,7 @@ class SQLiteMetadataStore:
                     failure_json=failure_to_json(attempt.failure),
                 )
             )
-            if result.rowcount != 1:
+            if cast(CursorResult[Any], result).rowcount != 1:
                 self._raise_attempt_conflict(
                     session,
                     attempt.attempt_id,
