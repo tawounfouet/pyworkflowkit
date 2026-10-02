@@ -1,19 +1,25 @@
-"""V2 semantic authoring namespace.
+"""Canonical PyWorkflowKit V2 workflow authoring surface."""
 
-LOT-00 intentionally re-exports the qualified 1.1 authoring implementation.
-LOT-02 will migrate these contracts to their final V2 shapes.
-"""
-
-from pyworkflowkit.declarative import TaskHandle, WorkflowBuilder, task, workflow
-from pyworkflowkit.domain.definitions import TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.values import WorkflowParameter
+from pyworkflowkit.authoring.builders import WorkflowDefinitionBuilder
+from pyworkflowkit.authoring.decorators import WorkflowTemplate, task, workflow
+from pyworkflowkit.authoring.definitions import TaskDefinition, WorkflowDefinition
+from pyworkflowkit.authoring.io import InputDeclaration, OutputDeclaration
+from pyworkflowkit.authoring.workloads import (
+    RegisteredWorkload,
+    WorkloadDescriptor,
+    WorkloadPortability,
+)
 
 __all__ = [
+    "InputDeclaration",
+    "OutputDeclaration",
+    "RegisteredWorkload",
     "TaskDefinition",
-    "TaskHandle",
-    "WorkflowBuilder",
     "WorkflowDefinition",
-    "WorkflowParameter",
+    "WorkflowDefinitionBuilder",
+    "WorkflowTemplate",
+    "WorkloadDescriptor",
+    "WorkloadPortability",
     "task",
     "workflow",
 ]
