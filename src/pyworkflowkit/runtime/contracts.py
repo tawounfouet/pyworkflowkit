@@ -1,6 +1,6 @@
 """Machine-readable LOT-06 V2 runtime MVP contract."""
 
-V2_RUNTIME_MVP_CONTRACT_VERSION = "1"
+V2_RUNTIME_MVP_CONTRACT_VERSION = "2"
 
 V2_RUNTIME_MVP_SURFACE: tuple[str, ...] = (
     "TaskOutcome",
@@ -20,7 +20,8 @@ def v2_runtime_mvp_contract_snapshot() -> dict[str, object]:
         "surface": list(V2_RUNTIME_MVP_SURFACE),
         "run_inputs": list(V2_RUNTIME_MVP_RUN_INPUTS),
         "retry_execution": True,
-        "timeout_execution": False,
+        "timeout_execution": True,
+        "cancellation_commands": True,
         "durable_outputs": False,
         "basic_events": "metadata_state_transitions",
     }
