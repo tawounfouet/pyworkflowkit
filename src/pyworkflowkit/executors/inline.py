@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from inspect import Parameter, Signature, signature
-from typing import cast
 
 from pyworkflowkit.authoring.workloads import RegisteredWorkload
 from pyworkflowkit.diagnostics.failure import (
@@ -120,7 +119,7 @@ class InlineExecutor:
         if isinstance(workload, RegisteredWorkload):
             return self._bindings.get(workload.registry_key), dict(workload.parameters)
         if callable(workload):
-            return cast(LocalHandler, workload), {}
+            return workload, {}
         return None, {}
 
 
