@@ -16,7 +16,7 @@ from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
 
-V2_EXECUTOR_CONTRACT_VERSION = "2"
+V2_EXECUTOR_CONTRACT_VERSION = "3"
 V2_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("descriptor", "execute")
 V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("cancel",)
 
@@ -256,6 +256,8 @@ def v2_executor_contract_snapshot() -> dict[str, object]:
         "cancellable_protocol_members": list(V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS),
         "cancellation_statuses": [value.value for value in CancellationStatus],
         "cancellation_capabilities": [value.value for value in CancellationCapability],
+        "task_execution_result_external_runs": True,
+        "task_cancellation_result_external_runs": True,
     }
 
 
