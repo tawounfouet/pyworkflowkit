@@ -89,8 +89,7 @@ class TaskDefinition:
                 "max_delay_seconds": self.retry_policy.max_delay_seconds,
                 "jitter": self.retry_policy.jitter.value,
                 "retryable_failure_categories": sorted(
-                    category.value
-                    for category in self.retry_policy.retryable_failure_categories
+                    category.value for category in self.retry_policy.retryable_failure_categories
                 ),
                 "total_budget_seconds": self.retry_policy.total_budget_seconds,
                 "reconciliation_required": self.retry_policy.reconciliation_required,
