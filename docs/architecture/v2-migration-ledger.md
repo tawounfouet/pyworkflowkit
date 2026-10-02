@@ -29,7 +29,7 @@ REMOVED
 | `application.runtime` | MOVE + ADAPT | runtime | 06 | IMPLEMENTED |
 | `application.runner` | INTERNALIZE | runtime internals | 06 | IMPLEMENTED |
 | `application.state_machine` | MOVE | states | 04 | IMPLEMENTED |
-| `application.retry` | SPLIT | policies/runtime internals | 07 | PLANNED |
+| `application.retry` | SPLIT | policies/runtime internals | 07 | IMPLEMENTED |
 | `ports.executor` | REWRITE | executors | 06 | IMPLEMENTED |
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | IMPLEMENTED |
 | other executor adapters | MOVE + ADAPT | executors | 13/14 | PLANNED |
@@ -232,3 +232,37 @@ retry behavior starts in LOT-07 and timeout/cancellation semantics in LOT-08.
 
 Task outputs are caller-visible process-local values in the MVP result but are not yet
 declared durable. Portable/durable output policy is owned by LOT-12.
+
+
+## LOT-07 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| V2 RetryPolicy | pyworkflowkit.policies | IMPLEMENTED |
+| RetryDecision vocabulary | pyworkflowkit.policies | IMPLEMENTED |
+| RetryEvaluation | pyworkflowkit.policies | IMPLEMENTED |
+| RetryEvaluator | pyworkflowkit.policies | IMPLEMENTED |
+| RetryJitter | pyworkflowkit.policies | IMPLEMENTED |
+| retry budget | RetryPolicy.total_budget_seconds | IMPLEMENTED |
+| reconciliation requirement | RetryPolicy.reconciliation_required | IMPLEMENTED |
+| fixed/linear/exponential backoff | RetryEvaluator | IMPLEMENTED |
+| full jitter | RetryEvaluator | IMPLEMENTED |
+| injectable RetryWaiter | pyworkflowkit.runtime | IMPLEMENTED |
+| same-TaskRun/new-TaskAttempt retry | WorkflowRuntime | IMPLEMENTED |
+| retry diagnostics | WorkflowResult.diagnostics | IMPLEMENTED |
+| retry amplification guard | ExecutorDescriptor / WorkflowRuntime | IMPLEMENTED |
+| uncertainty-first decision | WorkflowRuntime | IMPLEMENTED |
+
+The V2 RetryPolicy is intentionally distinct from the frozen 1.1 root RetryPolicy.
+The stable 1.1 package root continues to expose pyworkflowkit.domain.values.RetryPolicy,
+while V2 authoring and planning use pyworkflowkit.policies.RetryPolicy.
+
+Retry evaluates structured FailureEvidence. Raw message matching is not used as the
+primary retry contract.
+
+UNKNOWN_OUTCOME and RETRYABLE_AFTER_RECONCILIATION never schedule a blind fresh attempt.
+They produce RECONCILE when automatic reconciliation is required, otherwise ESCALATE,
+while the WorkflowRun remains UNKNOWN_OUTCOME.
+
+A retry preserves TaskRunId and allocates a fresh TaskAttemptId. The TaskRun stays RUNNING
+until the task succeeds or retry is exhausted/non-retryable.
