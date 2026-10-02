@@ -1,0 +1,99 @@
+"""Canonical PyWorkflowKit V2 runtime state vocabulary."""
+
+from enum import StrEnum
+
+
+class WorkflowRunStatus(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLATION_REQUESTED = "CANCELLATION_REQUESTED"
+    CANCELLED = "CANCELLED"
+    TIMED_OUT = "TIMED_OUT"
+    UNKNOWN_OUTCOME = "UNKNOWN_OUTCOME"
+
+
+class TaskRunStatus(StrEnum):
+    PENDING = "PENDING"
+    READY = "READY"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
+    CANCELLED = "CANCELLED"
+    TIMED_OUT = "TIMED_OUT"
+    BLOCKED = "BLOCKED"
+    UNKNOWN_OUTCOME = "UNKNOWN_OUTCOME"
+
+
+class TaskAttemptStatus(StrEnum):
+    PENDING = "PENDING"
+    STARTING = "STARTING"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    TIMED_OUT = "TIMED_OUT"
+    CANCELLATION_REQUESTED = "CANCELLATION_REQUESTED"
+    CANCELLED = "CANCELLED"
+    CANCELLATION_UNCONFIRMED = "CANCELLATION_UNCONFIRMED"
+    UNKNOWN_OUTCOME = "UNKNOWN_OUTCOME"
+    REQUIRES_RECONCILIATION = "REQUIRES_RECONCILIATION"
+
+
+class SkipReason(StrEnum):
+    CONDITION_FALSE = "CONDITION_FALSE"
+    DEPENDENCY_FAILED = "DEPENDENCY_FAILED"
+    FAIL_FAST_ABORT = "FAIL_FAST_ABORT"
+    BRANCH_NOT_SELECTED = "BRANCH_NOT_SELECTED"
+    TRIGGER_RULE_UNSATISFIED = "TRIGGER_RULE_UNSATISFIED"
+    UPSTREAM_SKIPPED = "UPSTREAM_SKIPPED"
+
+
+class BlockReason(StrEnum):
+    UPSTREAM_FAILED = "UPSTREAM_FAILED"
+    UPSTREAM_UNKNOWN = "UPSTREAM_UNKNOWN"
+    MISSING_INPUT = "MISSING_INPUT"
+    POLICY = "POLICY"
+    CANCELLATION = "CANCELLATION"
+
+
+WORKFLOW_TERMINAL_STATUSES = frozenset(
+    {
+        WorkflowRunStatus.SUCCEEDED,
+        WorkflowRunStatus.FAILED,
+        WorkflowRunStatus.CANCELLED,
+        WorkflowRunStatus.TIMED_OUT,
+    }
+)
+
+TASK_RUN_TERMINAL_STATUSES = frozenset(
+    {
+        TaskRunStatus.SUCCEEDED,
+        TaskRunStatus.FAILED,
+        TaskRunStatus.SKIPPED,
+        TaskRunStatus.CANCELLED,
+        TaskRunStatus.TIMED_OUT,
+    }
+)
+
+TASK_ATTEMPT_TERMINAL_STATUSES = frozenset(
+    {
+        TaskAttemptStatus.SUCCEEDED,
+        TaskAttemptStatus.FAILED,
+        TaskAttemptStatus.TIMED_OUT,
+        TaskAttemptStatus.CANCELLED,
+    }
+)
+
+
+__all__ = [
+    "BlockReason",
+    "SkipReason",
+    "TASK_ATTEMPT_TERMINAL_STATUSES",
+    "TASK_RUN_TERMINAL_STATUSES",
+    "WORKFLOW_TERMINAL_STATUSES",
+    "TaskAttemptStatus",
+    "TaskRunStatus",
+    "WorkflowRunStatus",
+]
