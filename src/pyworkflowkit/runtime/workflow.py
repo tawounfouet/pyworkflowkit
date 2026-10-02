@@ -141,7 +141,10 @@ class WorkflowRuntime:
                         "task skipped because its trigger rule was not satisfied",
                         run=run,
                         task_run=current,
-                        details=(("task_key", entry.key), ("trigger_rule", entry.trigger_rule.value)),
+                        details=(
+                            ("task_key", entry.key),
+                            ("trigger_rule", entry.trigger_rule.value),
+                        ),
                     )
                 )
                 continue
