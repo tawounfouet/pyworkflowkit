@@ -254,7 +254,6 @@ def test_cancel_task_before_execution_is_confirmed_without_executor_call() -> No
         runtime.cancel_task("TR-invalid")  # type: ignore[arg-type]
 
 
-
 def test_unsupported_active_cancellation_is_explicit_and_does_not_fake_cancel() -> None:
     from pyworkflowkit.executors import InlineExecutor
 
