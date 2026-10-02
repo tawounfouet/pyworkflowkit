@@ -6,9 +6,9 @@ from pyworkflowkit.diagnostics import (
     OutcomeUncertainty,
     Retryability,
 )
-from pyworkflowkit.executors import TaskCancellationResult, TaskExecutionResult
+from pyworkflowkit.executors import CancellationStatus, TaskCancellationResult, TaskExecutionResult
 from pyworkflowkit.persistence import V2_METADATA_STORE_METHODS
-from pyworkflowkit.runtime import CorrelationId, ExternalRunRef
+from pyworkflowkit.runtime import CorrelationId, ExternalRunRef, TaskAttemptId
 from pyworkflowkit.runtime.contracts import (
     V2_RUNTIME_MVP_CONTRACT_VERSION,
     v2_runtime_mvp_contract_snapshot,
@@ -42,13 +42,14 @@ def test_executor_results_expose_external_run_evidence() -> None:
 
     execution = TaskExecutionResult(external_runs=(external_ref,))
     cancellation = TaskCancellationResult(
-        status="unconfirmed",  # type: ignore[arg-type]
-        attempt_id="TA-invalid",  # type: ignore[arg-type]
-        reason="guard",
+        status=CancellationStatus.UNCONFIRMED,
+        attempt_id=TaskAttemptId.parse("TA-LOT09"),
+        reason="remote_stop_not_confirmed",
+        external_runs=(external_ref,),
     )
 
     assert execution.external_runs == (external_ref,)
-    assert cancellation is not None
+    assert cancellation.external_runs == (external_ref,)
 
 
 def test_failure_evidence_can_identify_uncertain_external_execution() -> None:
