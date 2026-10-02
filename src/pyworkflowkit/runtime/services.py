@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from math import isfinite
 from time import sleep
 from typing import Protocol, runtime_checkable
 
@@ -37,6 +38,8 @@ class SystemRetryWaiter:
     def wait(self, seconds: float) -> None:
         if isinstance(seconds, bool) or not isinstance(seconds, (int, float)):
             raise TypeError("seconds must be a number")
+        if not isfinite(seconds):
+            raise ValueError("seconds must be finite")
         if seconds < 0:
             raise ValueError("seconds must be greater than or equal to 0")
         if seconds:
