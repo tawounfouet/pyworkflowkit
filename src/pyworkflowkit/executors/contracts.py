@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Protocol, runtime_checkable
 
-from pyworkflowkit.authoring.workloads import Workload
-from pyworkflowkit.diagnostics import Diagnostic, FailureEvidence
+from pyworkflowkit.authoring.workloads import Workload, WorkloadDescriptor
+from pyworkflowkit.diagnostics.failure import FailureEvidence
+from pyworkflowkit.diagnostics.model import Diagnostic
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 
@@ -101,7 +102,7 @@ class TaskExecutionRequest:
     def __post_init__(self) -> None:
         _require_text(self.task_key, field_name="task_key")
         _require_text(self.executor_key, field_name="executor_key")
-        if not callable(self.workload) and not hasattr(self.workload, "workload_kind"):
+        if not callable(self.workload) and not isinstance(self.workload, WorkloadDescriptor):
             raise TypeError("workload must be callable or implement WorkloadDescriptor")
         if not isinstance(self.context, TaskExecutionContext):
             raise TypeError("context must be a TaskExecutionContext")
