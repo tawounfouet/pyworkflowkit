@@ -12,13 +12,13 @@ from pyworkflowkit.adapters.metadata.sqlite import (
 )
 from pyworkflowkit.adapters.metadata.sqlite import SQLiteSettings as LegacySQLiteSettings
 from pyworkflowkit.persistence.contracts import (
+    V2_METADATA_STORE_CONTRACT_VERSION,
+    V2_METADATA_STORE_METHODS,
     ManifestReference,
     MetadataStore,
     MetadataStoreMetadata,
     StateEntityType,
     StateTransitionRecord,
-    V2_METADATA_STORE_CONTRACT_VERSION,
-    V2_METADATA_STORE_METHODS,
     v2_metadata_store_contract_snapshot,
 )
 from pyworkflowkit.persistence.memory import InMemoryMetadataStore
