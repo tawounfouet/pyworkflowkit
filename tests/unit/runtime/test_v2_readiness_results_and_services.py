@@ -244,7 +244,6 @@ def test_system_retry_waiter_validates_delay_and_delegates_sleep(
         waiter.wait(-0.1)
 
 
-
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     (
