@@ -25,7 +25,7 @@ REMOVED
 | `application.planning` | MOVE + ADAPT | planning | 03 | IMPLEMENTED |
 | `domain.runtime` | SPLIT | runtime | 04/06 | IMPLEMENTED |
 | `domain.enums` | SPLIT | states/policies | 04/07/08 | IMPLEMENTED |
-| `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
+| `domain.values` | SPLIT | policies/runtime/lineage | 01/07/09/12 | IN_PROGRESS |
 | `application.runtime` | MOVE + ADAPT | runtime | 06 | IMPLEMENTED |
 | `application.runner` | INTERNALIZE | runtime internals | 06 | IMPLEMENTED |
 | `application.state_machine` | MOVE | states | 04 | IMPLEMENTED |
@@ -299,3 +299,31 @@ timeout remains UNKNOWN_OUTCOME / REQUIRES_RECONCILIATION.
 
 Cancellation commands return structured status rather than bool. REQUESTED, CONFIRMED,
 UNSUPPORTED, UNCONFIRMED and ALREADY_TERMINAL are semantically distinct.
+
+
+
+## LOT-09 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| attempt-scoped ExternalRunRef evidence | pyworkflowkit.persistence | IMPLEMENTED |
+| TaskExecutionResult.external_runs | pyworkflowkit.executors | IMPLEMENTED |
+| TaskCancellationResult.external_runs | pyworkflowkit.executors | IMPLEMENTED |
+| FailureEvidence.external_run persistence | WorkflowRuntime | IMPLEMENTED |
+| executor-result external evidence persistence | WorkflowRuntime | IMPLEMENTED |
+| cancellation-result external evidence persistence | WorkflowRuntime | IMPLEMENTED |
+| per-attempt external identity across retries | MetadataStore / WorkflowRuntime | IMPLEMENTED |
+| UNKNOWN_OUTCOME no-blind-retry invariant | RetryEvaluator / WorkflowRuntime | IMPLEMENTED |
+| duplicate reference suppression per attempt | WorkflowRuntime | IMPLEMENTED |
+
+External execution identifiers are evidence, not authority. PyWorkflowKit does not copy
+the provider state machine. It preserves provider + kind + external_run_id on the exact
+TaskAttempt that created the foreign execution.
+
+An uncertain external outcome therefore keeps the current attempt as the reconciliation
+target. The runtime persists available ExternalRunRef evidence before returning
+UNKNOWN_OUTCOME / REQUIRES_RECONCILIATION and does not create a fresh TaskAttempt until
+later reconciliation establishes that retry is safe.
+
+LOT-09 remains process-local because the canonical V2 store is still
+InMemoryMetadataStore. Durable restart-safe evidence is owned by LOT-10.

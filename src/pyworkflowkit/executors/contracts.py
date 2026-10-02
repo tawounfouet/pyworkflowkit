@@ -14,8 +14,9 @@ from pyworkflowkit.diagnostics.failure import FailureEvidence
 from pyworkflowkit.diagnostics.model import Diagnostic
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
+from pyworkflowkit.runtime.references import ExternalRunRef
 
-V2_EXECUTOR_CONTRACT_VERSION = "2"
+V2_EXECUTOR_CONTRACT_VERSION = "3"
 V2_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("descriptor", "execute")
 V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("cancel",)
 
@@ -158,6 +159,7 @@ class TaskExecutionResult:
     output: object = None
     failure: FailureEvidence | None = None
     diagnostics: tuple[Diagnostic, ...] = ()
+    external_runs: tuple[ExternalRunRef, ...] = ()
 
     def __post_init__(self) -> None:
         if self.failure is not None and not isinstance(self.failure, FailureEvidence):
@@ -165,7 +167,11 @@ class TaskExecutionResult:
         diagnostics = tuple(self.diagnostics)
         if not all(isinstance(item, Diagnostic) for item in diagnostics):
             raise TypeError("diagnostics must contain only Diagnostic values")
+        external_runs = tuple(self.external_runs)
+        if not all(isinstance(item, ExternalRunRef) for item in external_runs):
+            raise TypeError("external_runs must contain only ExternalRunRef values")
         object.__setattr__(self, "diagnostics", diagnostics)
+        object.__setattr__(self, "external_runs", external_runs)
 
     @property
     def succeeded(self) -> bool:
@@ -205,6 +211,7 @@ class TaskCancellationResult:
     attempt_id: TaskAttemptId
     reason: str
     diagnostics: tuple[Diagnostic, ...] = ()
+    external_runs: tuple[ExternalRunRef, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.status, CancellationStatus):
@@ -215,7 +222,11 @@ class TaskCancellationResult:
         diagnostics = tuple(self.diagnostics)
         if not all(isinstance(item, Diagnostic) for item in diagnostics):
             raise TypeError("diagnostics must contain only Diagnostic values")
+        external_runs = tuple(self.external_runs)
+        if not all(isinstance(item, ExternalRunRef) for item in external_runs):
+            raise TypeError("external_runs must contain only ExternalRunRef values")
         object.__setattr__(self, "diagnostics", diagnostics)
+        object.__setattr__(self, "external_runs", external_runs)
 
 
 @runtime_checkable
@@ -245,6 +256,8 @@ def v2_executor_contract_snapshot() -> dict[str, object]:
         "cancellable_protocol_members": list(V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS),
         "cancellation_statuses": [value.value for value in CancellationStatus],
         "cancellation_capabilities": [value.value for value in CancellationCapability],
+        "task_execution_result_external_runs": True,
+        "task_cancellation_result_external_runs": True,
     }
 
 
