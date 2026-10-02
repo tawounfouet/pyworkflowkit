@@ -17,6 +17,8 @@ from pyworkflowkit.authoring.contracts import (
 )
 from pyworkflowkit.domain.definitions import (
     TaskDefinition as LegacyTaskDefinition,
+)
+from pyworkflowkit.domain.definitions import (
     WorkflowDefinition as LegacyWorkflowDefinition,
 )
 
