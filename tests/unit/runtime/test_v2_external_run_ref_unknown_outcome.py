@@ -174,8 +174,7 @@ def test_retry_keeps_external_refs_scoped_to_the_attempt_that_created_them() -> 
         TaskAttemptStatus.SUCCEEDED,
     )
     assert tuple(
-        store.list_external_run_refs(attempt.attempt_id)[0].external_run_id
-        for attempt in attempts
+        store.list_external_run_refs(attempt.attempt_id)[0].external_run_id for attempt in attempts
     ) == ("JOB-1", "JOB-2")
 
 
