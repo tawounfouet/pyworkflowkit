@@ -51,9 +51,7 @@ def next_task_attempt(
     expected = tuple(range(1, len(ordered) + 1))
     actual = tuple(item.attempt_number for item in ordered)
     if actual != expected:
-        raise RuntimeInvariantError(
-            reason="existing attempt numbers must be contiguous from one"
-        )
+        raise RuntimeInvariantError(reason="existing attempt numbers must be contiguous from one")
 
     if ordered:
         previous = ordered[-1]
