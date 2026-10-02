@@ -31,10 +31,21 @@ class MetadataStoreMetadata:
     supports_atomic_batch: bool
 
     def __post_init__(self) -> None:
-        if not self.contract_version.strip():
-            raise ValueError("contract_version must not be empty")
-        if not self.schema_version.strip():
-            raise ValueError("schema_version must not be empty")
+        for name, value in (
+            ("contract_version", self.contract_version),
+            ("schema_version", self.schema_version),
+        ):
+            if not isinstance(value, str):
+                raise TypeError(f"{name} must be a string")
+            if not value.strip():
+                raise ValueError(f"{name} must not be empty")
+        for name, value in (
+            ("durable", self.durable),
+            ("supports_concurrent_writers", self.supports_concurrent_writers),
+            ("supports_atomic_batch", self.supports_atomic_batch),
+        ):
+            if not isinstance(value, bool):
+                raise TypeError(f"{name} must be a bool")
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,10 +66,17 @@ class StateTransitionRecord:
             raise ValueError("sequence must be greater than or equal to 1")
         if not isinstance(self.entity_type, StateEntityType):
             raise TypeError("entity_type must be a StateEntityType")
+        if not isinstance(self.entity_id, str):
+            raise TypeError("entity_id must be a string")
         if not self.entity_id.strip():
             raise ValueError("entity_id must not be empty")
-        if self.from_status is not None and not self.from_status.strip():
-            raise ValueError("from_status must not be empty when provided")
+        if self.from_status is not None:
+            if not isinstance(self.from_status, str):
+                raise TypeError("from_status must be a string when provided")
+            if not self.from_status.strip():
+                raise ValueError("from_status must not be empty when provided")
+        if not isinstance(self.to_status, str):
+            raise TypeError("to_status must be a string")
         if not self.to_status.strip():
             raise ValueError("to_status must not be empty")
         if self.occurred_at.tzinfo is None or self.occurred_at.utcoffset() is None:
@@ -74,12 +92,19 @@ class ManifestReference:
     digest: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.locator.strip():
-            raise ValueError("locator must not be empty")
-        if not self.schema_version.strip():
-            raise ValueError("schema_version must not be empty")
-        if self.digest is not None and not self.digest.strip():
-            raise ValueError("digest must not be empty when provided")
+        for name, value in (
+            ("locator", self.locator),
+            ("schema_version", self.schema_version),
+        ):
+            if not isinstance(value, str):
+                raise TypeError(f"{name} must be a string")
+            if not value.strip():
+                raise ValueError(f"{name} must not be empty")
+        if self.digest is not None:
+            if not isinstance(self.digest, str):
+                raise TypeError("digest must be a string when provided")
+            if not self.digest.strip():
+                raise ValueError("digest must not be empty when provided")
 
 
 @runtime_checkable
