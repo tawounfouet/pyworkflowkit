@@ -13,12 +13,12 @@ from pyworkflowkit.errors import (
     MetadataNotFoundError,
 )
 from pyworkflowkit.persistence.contracts import (
+    V2_METADATA_STORE_CONTRACT_VERSION,
     ManifestReference,
     MetadataStore,
     MetadataStoreMetadata,
     StateEntityType,
     StateTransitionRecord,
-    V2_METADATA_STORE_CONTRACT_VERSION,
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
