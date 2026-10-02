@@ -143,8 +143,7 @@ def workload():
 or:
 
 ```python
-def workload(context: TaskExecutionContext):
-    ...
+def workload(context: TaskExecutionContext): ...
 ```
 
 Varargs and unsupported signatures are rejected as execution-contract failures.
@@ -154,9 +153,11 @@ Varargs and unsupported signatures are rejected as execution-contract failures.
 Portable authoring references resolve only through explicit InlineExecutor bindings:
 
 ```python
-executor = InlineExecutor({
-    "jobs.customer": customer_job,
-})
+executor = InlineExecutor(
+    {
+        "jobs.customer": customer_job,
+    }
+)
 ```
 
 No module import, package installation or global registry silently activates a workload.
