@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from pyworkflowkit._architecture import v2_architecture_snapshot
+
 PUBLIC_API_CONTRACT_VERSION = "1"
 PUBLIC_API_TARGET_RELEASE = "1.0.0"
 
@@ -181,6 +183,24 @@ def public_api_contract_snapshot() -> dict[str, object]:
             module_name: list(symbols)
             for module_name, symbols in sorted(PUBLIC_API_SURFACES.items())
         },
+    }
+
+
+# LOT-00 V2 architecture metadata is intentionally not part of the frozen 1.x
+# public_api.__all__ surface. It becomes a public compatibility contract only
+# when the V2 API reaches its dedicated freeze milestone.
+V2_PUBLIC_API_BASELINE_CONTRACT_VERSION = "1"
+V2_PUBLIC_API_TARGET_RELEASE = "2.0.0"
+
+
+def v2_public_api_baseline_snapshot() -> dict[str, object]:
+    """Return the pre-freeze V2 namespace and architecture baseline."""
+
+    snapshot = v2_architecture_snapshot()
+    return {
+        "contract_version": V2_PUBLIC_API_BASELINE_CONTRACT_VERSION,
+        "target_release": V2_PUBLIC_API_TARGET_RELEASE,
+        "architecture": snapshot,
     }
 
 
