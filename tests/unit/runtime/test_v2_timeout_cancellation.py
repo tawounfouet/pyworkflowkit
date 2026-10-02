@@ -248,5 +248,5 @@ def test_cancel_task_before_execution_is_confirmed_without_executor_call() -> No
     store = InMemoryMetadataStore()
     runtime = WorkflowRuntime(executor=DeadlineExecutor(), metadata=store)
 
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError, match="TaskRunId"):
         runtime.cancel_task("TR-invalid")  # type: ignore[arg-type]
