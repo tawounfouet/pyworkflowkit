@@ -1,8 +1,16 @@
 """Canonical PyWorkflowKit V2 runtime surface.
 
 The frozen package root still exposes the 1.1 WorkflowRuntime until the final V2
-root migration. Qualified `pyworkflowkit.runtime` now owns the canonical V2 runtime.
+root migration. Qualified `pyworkflowkit.runtime` owns the canonical V2 runtime.
+
+Heavy runtime orchestration/result imports are lazy so low-level identity/context
+modules remain safe dependencies of executor and persistence contracts.
 """
+
+from __future__ import annotations
+
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
 
 from pyworkflowkit.domain.runtime import RuntimeEvent
 from pyworkflowkit.runtime.context import CorrelationContext
@@ -14,14 +22,32 @@ from pyworkflowkit.runtime.identity import (
     WorkflowRunId,
 )
 from pyworkflowkit.runtime.references import ExternalRunRef, WorkflowExecutionReference
-from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
     Clock,
     RuntimeIdentityFactory,
     SystemClock,
     UuidRuntimeIdentityFactory,
 )
-from pyworkflowkit.runtime.workflow import WorkflowRuntime
+
+if TYPE_CHECKING:
+    from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
+    from pyworkflowkit.runtime.workflow import WorkflowRuntime
+
+_LAZY_EXPORTS = {
+    "TaskOutcome": ("pyworkflowkit.runtime.results", "TaskOutcome"),
+    "WorkflowResult": ("pyworkflowkit.runtime.results", "WorkflowResult"),
+    "WorkflowRuntime": ("pyworkflowkit.runtime.workflow", "WorkflowRuntime"),
+}
+
+
+def __getattr__(name: str) -> Any:
+    target = _LAZY_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(name)
+    module_name, attribute = target
+    module = import_module(module_name)
+    return getattr(module, attribute)
+
 
 __all__ = [
     "Clock",
