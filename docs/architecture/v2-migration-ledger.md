@@ -33,8 +33,8 @@ REMOVED
 | `ports.executor` | REWRITE | executors | 06 | PLANNED |
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | PLANNED |
 | other executor adapters | MOVE + ADAPT | executors | 13/14 | PLANNED |
-| `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | PLANNED |
-| metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | PLANNED |
+| `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
+| metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
 | SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | PLANNED |
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
 | `contracts.serialization` | MOVE + REBUILD | serialization | 15 | PLANNED |
@@ -174,3 +174,29 @@ is owned by LOT-06.
 
 The qualified V2 runtime namespace now owns the V2 run entities. The legacy 1.1
 WorkflowRuntime and RuntimeEvent remain transitional until LOT-06 and LOT-12.
+
+
+## LOT-05 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `MetadataStore` Protocol | `pyworkflowkit.persistence` | IMPLEMENTED |
+| `InMemoryMetadataStore` | `pyworkflowkit.persistence` | IMPLEMENTED |
+| store contract/schema metadata | `MetadataStore.metadata()` | IMPLEMENTED |
+| WorkflowRun persistence | MetadataStore | IMPLEMENTED |
+| TaskRun persistence | MetadataStore | IMPLEMENTED |
+| TaskAttempt append/history | MetadataStore | IMPLEMENTED |
+| compare-and-set status updates | MetadataStore | IMPLEMENTED |
+| append-only state transition history | MetadataStore | IMPLEMENTED |
+| ExternalRunRef per TaskAttempt | MetadataStore | IMPLEMENTED |
+| unfinished WorkflowRun query | MetadataStore | IMPLEMENTED |
+| provisional manifest reference hook | MetadataStore | IMPLEMENTED |
+| reusable MetadataStore conformance suite | tests/contract | IMPLEMENTED |
+
+The V2 store rejects blind last-write-wins updates. State-machine services remain the
+domain authority for legal transitions; MetadataStore protects persisted identity,
+expected-status concurrency and append-only execution history.
+
+The in-memory implementation is process-local and non-durable. It supports concurrent
+threads using one store instance, but does not claim process safety, crash recovery or
+multi-operation atomic batches. SQLite and PostgreSQL remain LOT-10/LOT-17.
