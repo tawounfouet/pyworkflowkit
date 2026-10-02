@@ -8,10 +8,10 @@ from pyworkflowkit.adapters.metadata.memory import (
     MemoryMetadataStore as LegacyMemoryMetadataStore,
 )
 from pyworkflowkit.persistence import (
-    InMemoryMetadataStore,
-    MetadataStore,
     V2_METADATA_STORE_CONTRACT_VERSION,
     V2_METADATA_STORE_METHODS,
+    InMemoryMetadataStore,
+    MetadataStore,
     v2_metadata_store_contract_snapshot,
 )
 from pyworkflowkit.ports.metadata_store import MetadataStore as LegacyMetadataStore
