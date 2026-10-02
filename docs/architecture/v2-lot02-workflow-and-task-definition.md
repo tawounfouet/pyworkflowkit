@@ -122,13 +122,13 @@ Dependencies are explicit task keys.
 The builder accepts either:
 
 ```python
-depends_on=(upstream_task,)
+depends_on = (upstream_task,)
 ```
 
 or:
 
 ```python
-depends_on=("upstream_task",)
+depends_on = ("upstream_task",)
 ```
 
 Both compile into:

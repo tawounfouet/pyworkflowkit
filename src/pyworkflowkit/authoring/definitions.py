@@ -87,9 +87,7 @@ class TaskDefinition:
                 "backoff_strategy": self.retry_policy.backoff_strategy.value,
                 "delay_seconds": self.retry_policy.delay_seconds,
                 "max_delay_seconds": self.retry_policy.max_delay_seconds,
-                "retryable_error_categories": sorted(
-                    self.retry_policy.retryable_error_categories
-                ),
+                "retryable_error_categories": sorted(self.retry_policy.retryable_error_categories),
             },
             "timeout_policy": {
                 "execution_timeout": self.timeout_policy.execution_timeout,
@@ -174,9 +172,7 @@ class WorkflowDefinition:
         for task in self.tasks:
             for dependency in task.dependencies:
                 if dependency not in known:
-                    raise ValueError(
-                        f"task {task.key!r} depends on unknown task {dependency!r}"
-                    )
+                    raise ValueError(f"task {task.key!r} depends on unknown task {dependency!r}")
         _validate_acyclic(self.tasks)
 
     def fingerprint(self) -> str:
@@ -187,8 +183,7 @@ class WorkflowDefinition:
             "version": self.version,
             "failure_policy": self.failure_policy.value,
             "tasks": [
-                task.fingerprint_payload()
-                for task in sorted(self.tasks, key=lambda item: item.key)
+                task.fingerprint_payload() for task in sorted(self.tasks, key=lambda item: item.key)
             ],
             "metadata": _metadata_payload(self.metadata),
         }
@@ -256,28 +251,21 @@ def _validate_acyclic(tasks: tuple[TaskDefinition, ...]) -> None:
     if len(visited) != len(tasks):
         cyclic = sorted(key for key, upstream in dependencies.items() if upstream)
         raise ValueError(
-            "workflow dependency topology contains a cycle involving: "
-            + ", ".join(cyclic)
+            "workflow dependency topology contains a cycle involving: " + ", ".join(cyclic)
         )
 
 
 def _metadata_payload(metadata: Mapping[str, object]) -> dict[str, object]:
     from typing import cast
 
-    return {
-        key: thaw_json_value(cast(FrozenJsonValue, metadata[key]))
-        for key in sorted(metadata)
-    }
+    return {key: thaw_json_value(cast(FrozenJsonValue, metadata[key])) for key in sorted(metadata)}
 
 
 def _canonicalize(value: object) -> object:
     if value is None or isinstance(value, (str, bool, int, float)):
         return value
     if isinstance(value, Mapping):
-        return {
-            str(key): _canonicalize(value[key])
-            for key in sorted(value, key=str)
-        }
+        return {str(key): _canonicalize(value[key]) for key in sorted(value, key=str)}
     if isinstance(value, (tuple, list)):
         return [_canonicalize(item) for item in value]
     raise TypeError(

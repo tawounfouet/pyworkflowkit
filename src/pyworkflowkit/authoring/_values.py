@@ -50,12 +50,10 @@ def freeze_json_value(value: object, *, path: str) -> FrozenJsonValue:
         return MappingProxyType(nested)
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         return tuple(
-            freeze_json_value(item, path=f"{path}[{index}]")
-            for index, item in enumerate(value)
+            freeze_json_value(item, path=f"{path}[{index}]") for index, item in enumerate(value)
         )
     raise TypeError(
-        f"{path} must contain only JSON-like immutable authoring values; "
-        f"got {type(value).__name__}"
+        f"{path} must contain only JSON-like immutable authoring values; got {type(value).__name__}"
     )
 
 
@@ -63,10 +61,7 @@ def thaw_json_value(value: FrozenJsonValue) -> object:
     """Convert a frozen authoring value into canonical JSON-compatible data."""
 
     if isinstance(value, Mapping):
-        return {
-            key: thaw_json_value(value[key])
-            for key in sorted(value)
-        }
+        return {key: thaw_json_value(value[key]) for key in sorted(value)}
     if isinstance(value, tuple):
         return [thaw_json_value(item) for item in value]
     return value

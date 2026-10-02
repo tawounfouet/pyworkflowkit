@@ -54,8 +54,7 @@ def task(
 
     def decorate(handler: LocalCallable) -> TaskDefinition:
         dependencies = tuple(
-            value.key if isinstance(value, TaskDefinition) else value
-            for value in depends_on
+            value.key if isinstance(value, TaskDefinition) else value for value in depends_on
         )
         return TaskDefinition(
             key=key or handler.__name__,

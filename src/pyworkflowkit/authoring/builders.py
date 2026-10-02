@@ -50,8 +50,7 @@ class WorkflowDefinitionBuilder:
             raise ValueError(f"workflow builder already contains task key {key!r}")
 
         dependencies = tuple(
-            value.key if isinstance(value, TaskDefinition) else value
-            for value in depends_on
+            value.key if isinstance(value, TaskDefinition) else value for value in depends_on
         )
         task = TaskDefinition(
             key=key,
