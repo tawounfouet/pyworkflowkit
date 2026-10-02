@@ -67,8 +67,12 @@ TaskExecutionResult(
 A failure may also carry its primary foreign identity through
 `FailureEvidence.external_run`.
 
-WorkflowRuntime persists both sources into the MetadataStore and de-duplicates the same
-semantic reference within one attempt.
+Cancellation adapters may return the foreign identity through
+`TaskCancellationResult.external_runs`, including when the cancellation result is
+`UNCONFIRMED`.
+
+WorkflowRuntime persists all three sources into the MetadataStore and de-duplicates the
+same semantic reference within one attempt.
 
 ## UNKNOWN_OUTCOME path
 
@@ -101,7 +105,9 @@ LOT-09 qualifies:
 3. UNKNOWN_OUTCOME creates no blind retry;
 4. retry creates a new TaskAttempt and keeps each external run reference on the attempt
    that created it;
-5. duplicate exposure of the same reference through TaskExecutionResult and
+5. unconfirmed cancellation preserves the foreign execution identity for later
+   reconciliation;
+6. duplicate exposure of the same reference through TaskExecutionResult and
    FailureEvidence does not duplicate persisted evidence.
 
 ## Compatibility
