@@ -24,7 +24,7 @@ REMOVED
 | `domain.graph` | MOVE + INTERNALIZE | planning | 03 | IMPLEMENTED |
 | `application.planning` | MOVE + ADAPT | planning | 03 | IMPLEMENTED |
 | `domain.runtime` | SPLIT | runtime | 04/06 | IMPLEMENTED |
-| `domain.enums` | SPLIT | states/policies | 04/07/08 | IN_PROGRESS |
+| `domain.enums` | SPLIT | states/policies | 04/07/08 | IMPLEMENTED |
 | `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
 | `application.runtime` | MOVE + ADAPT | runtime | 06 | IMPLEMENTED |
 | `application.runner` | INTERNALIZE | runtime internals | 06 | IMPLEMENTED |
@@ -266,3 +266,36 @@ while the WorkflowRun remains UNKNOWN_OUTCOME.
 
 A retry preserves TaskRunId and allocates a fresh TaskAttemptId. The TaskRun stays RUNNING
 until the task succeeds or retry is exhausted/non-retryable.
+
+
+## LOT-08 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| TimeoutPolicy executable deadline | pyworkflowkit.policies | IMPLEMENTED |
+| TaskExecutionRequest.deadline_at | pyworkflowkit.executors | IMPLEMENTED |
+| CancellationCapability | pyworkflowkit.executors | IMPLEMENTED |
+| CancellationStatus | pyworkflowkit.executors | IMPLEMENTED |
+| TaskCancellationRequest | pyworkflowkit.executors | IMPLEMENTED |
+| TaskCancellationResult | pyworkflowkit.executors | IMPLEMENTED |
+| CancellableExecutor capability Protocol | pyworkflowkit.executors | IMPLEMENTED |
+| WorkflowRuntime.cancel | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.cancel_task | pyworkflowkit.runtime | IMPLEMENTED |
+| CancellationResult | pyworkflowkit.runtime | IMPLEMENTED |
+| confirmed timeout state mapping | runtime/state machines | IMPLEMENTED |
+| uncertain timeout reconciliation mapping | runtime/state machines | IMPLEMENTED |
+| cancellation request/confirmation distinction | runtime/state machines | IMPLEMENTED |
+| unsupported cancellation result | runtime/executor capability | IMPLEMENTED |
+| already-terminal idempotence | runtime cancellation API | IMPLEMENTED |
+
+InlineExecutor explicitly declares that it does not enforce execution deadlines and does
+not support active cancellation. WorkflowRuntime therefore rejects TimeoutPolicy for
+InlineExecutor instead of pretending that synchronous same-thread execution can be
+interrupted safely.
+
+Executors that support deadlines receive an absolute timezone-aware deadline through
+TaskExecutionRequest.deadline_at. A known stopped timeout maps to TIMED_OUT; an uncertain
+timeout remains UNKNOWN_OUTCOME / REQUIRES_RECONCILIATION.
+
+Cancellation commands return structured status rather than bool. REQUESTED, CONFIRMED,
+UNSUPPORTED, UNCONFIRMED and ALREADY_TERMINAL are semantically distinct.
