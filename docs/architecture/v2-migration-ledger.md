@@ -19,8 +19,8 @@ REMOVED
 | V1 path / concept | V2 action | Canonical V2 owner | LOT | V2 status |
 |---|---|---|---:|---|
 | `pyworkflowkit.__init__` | ADAPT later | root facade | 00/22 | IN_PROGRESS |
-| `domain.definitions` | MOVE + ADAPT | authoring | 02 | PLANNED |
-| `declarative` | SPLIT | authoring | 02 | PLANNED |
+| `domain.definitions` | MOVE + ADAPT | authoring | 02 | IMPLEMENTED |
+| `declarative` | SPLIT | authoring | 02 | IMPLEMENTED |
 | `domain.graph` | MOVE + INTERNALIZE | planning | 03 | PLANNED |
 | `application.planning` | MOVE + ADAPT | planning | 03 | PLANNED |
 | `domain.runtime` | SPLIT | runtime | 04/06 | PLANNED |
@@ -102,3 +102,27 @@ CLI/DX qualification assets
 These contracts are qualified V2 values but are not yet all wired into the durable
 1.1 runtime implementation. LOT-04, LOT-06, LOT-07, LOT-09 and LOT-15 progressively
 replace the remaining legacy runtime/persistence/wire usage.
+
+
+## LOT-02 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `WorkflowDefinition` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `TaskDefinition` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `WorkflowDefinitionBuilder` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `RegisteredWorkload` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `WorkloadDescriptor` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `WorkloadPortability` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `InputDeclaration` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `OutputDeclaration` | `pyworkflowkit.authoring` | IMPLEMENTED |
+| V2 `task` decorator | `pyworkflowkit.authoring` | IMPLEMENTED |
+| V2 `workflow` decorator | `pyworkflowkit.authoring` | IMPLEMENTED |
+| `TimeoutPolicy` skeleton | `pyworkflowkit.policies` | IMPLEMENTED |
+| `TriggerRule` | `pyworkflowkit.policies` | IMPLEMENTED |
+| definition fingerprint | `WorkflowDefinition.fingerprint()` | IMPLEMENTED |
+| definition inspection | `WorkflowDefinition.explain()` | IMPLEMENTED |
+
+The frozen 1.1 root continues to expose the legacy definition/declarative classes.
+Canonical V2 code must use the qualified `pyworkflowkit.authoring` surface until the
+root migration/freeze is completed.
