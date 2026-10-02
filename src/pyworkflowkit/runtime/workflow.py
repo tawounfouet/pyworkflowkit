@@ -552,8 +552,7 @@ class WorkflowRuntime:
             )
 
         if (
-            self._executor.descriptor.cancellation_capability
-            is CancellationCapability.UNSUPPORTED
+            self._executor.descriptor.cancellation_capability is CancellationCapability.UNSUPPORTED
             or not isinstance(self._executor, CancellableExecutor)
         ):
             attempt = self._metadata.get_task_attempt(attempt.attempt_id)
