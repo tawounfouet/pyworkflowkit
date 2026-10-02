@@ -237,7 +237,6 @@ def test_retry_jitter_source_protocol_is_runtime_checkable() -> None:
     assert isinstance(source, RetryJitterSource)
 
 
-
 def test_system_jitter_source_validates_bounds_and_zero() -> None:
     source = SystemRetryJitterSource()
 
