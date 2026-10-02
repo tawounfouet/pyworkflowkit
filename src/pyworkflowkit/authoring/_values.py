@@ -8,7 +8,9 @@ from types import MappingProxyType
 from typing import TypeAlias
 
 JsonScalar: TypeAlias = str | int | float | bool | None
-FrozenJsonValue: TypeAlias = JsonScalar | tuple["FrozenJsonValue", ...] | Mapping[str, "FrozenJsonValue"]
+FrozenJsonValue: TypeAlias = (
+    JsonScalar | tuple["FrozenJsonValue", ...] | Mapping[str, "FrozenJsonValue"]
+)
 
 
 def require_non_empty_text(value: str, *, field_name: str) -> str:
