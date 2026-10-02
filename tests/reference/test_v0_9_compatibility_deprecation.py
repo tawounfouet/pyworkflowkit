@@ -75,7 +75,7 @@ def test_rq02_all_versioned_contracts_remain_v1() -> None:
     assert REFERENCE_INTEROPERABILITY_CONTRACT_VERSION == "1"
     assert OBSERVABILITY_INTEROPERABILITY_CONTRACT_VERSION == "1"
     assert RELEASE_CANDIDATE_CONTRACT_VERSION == "1"
-    assert MIGRATION_HEAD_REVISION == "0003_retry_eligible_at"
+    assert MIGRATION_HEAD_REVISION == "0004_v2_runtime_metadata"
 
 
 def test_rq02_ecosystem_sdk_v1_covers_0_8_through_1_x() -> None:
