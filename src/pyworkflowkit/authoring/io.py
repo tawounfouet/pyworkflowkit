@@ -60,11 +60,13 @@ class OutputDeclaration:
         }
 
 
-def _metadata_payload(metadata: Mapping[str, FrozenJsonValue]) -> dict[str, object]:
+def _metadata_payload(metadata: Mapping[str, object]) -> dict[str, object]:
+    from typing import cast
+
     from pyworkflowkit.authoring._values import thaw_json_value
 
     return {
-        key: thaw_json_value(metadata[key])
+        key: thaw_json_value(cast(FrozenJsonValue, metadata[key]))
         for key in sorted(metadata)
     }
 
