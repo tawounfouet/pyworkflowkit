@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pyworkflowkit
 import pyworkflowkit.authoring as authoring
-
 from pyworkflowkit.authoring import (
     RegisteredWorkload,
     TaskDefinition,
@@ -18,8 +17,6 @@ from pyworkflowkit.authoring.contracts import (
 )
 from pyworkflowkit.domain.definitions import (
     TaskDefinition as LegacyTaskDefinition,
-)
-from pyworkflowkit.domain.definitions import (
     WorkflowDefinition as LegacyWorkflowDefinition,
 )
 
