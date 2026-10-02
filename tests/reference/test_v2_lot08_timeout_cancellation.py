@@ -2,9 +2,9 @@
 
 from pyworkflowkit.executors import (
     V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS,
+    CancellableExecutor,
     CancellationCapability,
     CancellationStatus,
-    CancellableExecutor,
     InlineExecutor,
     TaskCancellationRequest,
     TaskCancellationResult,
