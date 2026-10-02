@@ -68,9 +68,7 @@ V2_INTERNAL_NAMESPACE_PREFIXES: tuple[str, ...] = (
     "pyworkflowkit.planning._graph",
 )
 
-V2_LEGACY_FACADES: tuple[str, ...] = (
-    "pyworkflowkit.ecosystem",
-)
+V2_LEGACY_FACADES: tuple[str, ...] = ("pyworkflowkit.ecosystem",)
 
 V2_OPTIONAL_SIBLING_IMPORT_OWNERS: Mapping[str, tuple[str, ...]] = MappingProxyType(
     {
