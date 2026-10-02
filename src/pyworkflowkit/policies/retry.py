@@ -313,7 +313,11 @@ class RetryEvaluator:
             delay = min(delay, float(policy.max_delay_seconds))
 
         if policy.jitter is RetryJitter.FULL:
-            delay = self._jitter_source.full_jitter(delay)
+            upper_bound = delay
+            delay = self._jitter_source.full_jitter(upper_bound)
+            _validate_non_negative_number(delay, field_name="jitter delay")
+            if delay > upper_bound:
+                raise ValueError("jitter delay must not exceed its upper bound")
 
         return delay
 
