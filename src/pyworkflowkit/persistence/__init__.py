@@ -1,18 +1,38 @@
-"""V2 persistence namespace baseline.
+"""Canonical PyWorkflowKit V2 persistence surface.
 
-The 1.1 stores remain the implementation baseline while LOT-05, LOT-10 and
-LOT-17 evolve the V2 persistence contract and physical schemas.
+Legacy 1.1 stores remain available through explicit Legacy* aliases during migration.
 """
 
-from pyworkflowkit.adapters.metadata.memory import MemoryMetadataStore, MemoryUnitOfWork
-from pyworkflowkit.adapters.metadata.sqlite import SQLiteMetadataStore, SQLiteSettings
-from pyworkflowkit.ports.metadata_store import MetadataStore, UnitOfWork
+from pyworkflowkit.adapters.metadata.memory import (
+    MemoryMetadataStore as LegacyMemoryMetadataStore,
+)
+from pyworkflowkit.adapters.metadata.memory import MemoryUnitOfWork as LegacyMemoryUnitOfWork
+from pyworkflowkit.adapters.metadata.sqlite import (
+    SQLiteMetadataStore as LegacySQLiteMetadataStore,
+)
+from pyworkflowkit.adapters.metadata.sqlite import SQLiteSettings as LegacySQLiteSettings
+from pyworkflowkit.persistence.contracts import (
+    ManifestReference,
+    MetadataStore,
+    MetadataStoreMetadata,
+    StateEntityType,
+    StateTransitionRecord,
+)
+from pyworkflowkit.persistence.memory import InMemoryMetadataStore
+from pyworkflowkit.ports.metadata_store import MetadataStore as LegacyMetadataStore
+from pyworkflowkit.ports.metadata_store import UnitOfWork as LegacyUnitOfWork
 
 __all__ = [
-    "MemoryMetadataStore",
-    "MemoryUnitOfWork",
+    "InMemoryMetadataStore",
+    "LegacyMemoryMetadataStore",
+    "LegacyMemoryUnitOfWork",
+    "LegacyMetadataStore",
+    "LegacySQLiteMetadataStore",
+    "LegacySQLiteSettings",
+    "LegacyUnitOfWork",
+    "ManifestReference",
     "MetadataStore",
-    "SQLiteMetadataStore",
-    "SQLiteSettings",
-    "UnitOfWork",
+    "MetadataStoreMetadata",
+    "StateEntityType",
+    "StateTransitionRecord",
 ]
