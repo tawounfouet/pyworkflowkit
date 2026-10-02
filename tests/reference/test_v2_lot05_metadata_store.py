@@ -42,6 +42,8 @@ def test_qualified_v2_persistence_surface_is_explicit() -> None:
         "ManifestReference",
         "MetadataStore",
         "MetadataStoreMetadata",
+        "SQLiteMetadataStore",
+        "SQLiteSettings",
         "StateEntityType",
         "StateTransitionRecord",
         "V2_METADATA_STORE_CONTRACT_VERSION",
