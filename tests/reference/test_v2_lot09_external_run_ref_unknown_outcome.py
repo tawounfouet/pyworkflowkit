@@ -6,7 +6,13 @@ from pyworkflowkit.diagnostics import (
     OutcomeUncertainty,
     Retryability,
 )
-from pyworkflowkit.executors import CancellationStatus, TaskCancellationResult, TaskExecutionResult
+from pyworkflowkit.executors import (
+    V2_EXECUTOR_CONTRACT_VERSION,
+    CancellationStatus,
+    TaskCancellationResult,
+    TaskExecutionResult,
+    v2_executor_contract_snapshot,
+)
 from pyworkflowkit.persistence import V2_METADATA_STORE_METHODS
 from pyworkflowkit.runtime import CorrelationId, ExternalRunRef, TaskAttemptId
 from pyworkflowkit.runtime.contracts import (
@@ -30,6 +36,14 @@ def test_runtime_contract_marks_lot09_active() -> None:
     assert snapshot["external_run_evidence"] == "attempt_scoped"
     assert snapshot["unknown_outcome_blind_retry"] is False
     assert snapshot["cancellation_external_run_evidence"] is True
+
+
+def test_executor_contract_marks_external_evidence_active() -> None:
+    snapshot = v2_executor_contract_snapshot()
+
+    assert snapshot["contract_version"] == V2_EXECUTOR_CONTRACT_VERSION
+    assert snapshot["task_execution_result_external_runs"] is True
+    assert snapshot["task_cancellation_result_external_runs"] is True
 
 
 def test_metadata_contract_exposes_attempt_scoped_external_refs() -> None:
