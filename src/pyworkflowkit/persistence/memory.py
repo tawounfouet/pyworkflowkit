@@ -22,14 +22,8 @@ from pyworkflowkit.persistence.contracts import (
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
-from pyworkflowkit.states import (
-    TASK_ATTEMPT_TERMINAL_STATUSES,
-    TASK_RUN_TERMINAL_STATUSES,
-    WORKFLOW_TERMINAL_STATUSES,
-    TaskAttemptStatus,
-    TaskRunStatus,
-    WorkflowRunStatus,
-)
+from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
+from pyworkflowkit.states.enums import WORKFLOW_TERMINAL_STATUSES
 
 METADATA_STORE_CONTRACT_VERSION = "1"
 IN_MEMORY_SCHEMA_VERSION = "1"
