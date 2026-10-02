@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from pyworkflowkit.diagnostics import FailureEvidence
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.states.enums import (
@@ -15,6 +15,9 @@ from pyworkflowkit.states.enums import (
     TaskRunStatus,
     WorkflowRunStatus,
 )
+
+if TYPE_CHECKING:
+    from pyworkflowkit.diagnostics import FailureEvidence
 
 
 def _require_text(value: str, *, field_name: str) -> None:
@@ -64,8 +67,6 @@ class WorkflowRun:
             raise TypeError("correlation must be a CorrelationContext")
         if not isinstance(self._status, WorkflowRunStatus):
             raise TypeError("_status must be a WorkflowRunStatus")
-        if self.failure is not None and not isinstance(self.failure, FailureEvidence):
-            raise TypeError("failure must be FailureEvidence or None")
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
@@ -132,8 +133,6 @@ class TaskRun:
             raise TypeError("skip_reason must be SkipReason or None")
         if self.block_reason is not None and not isinstance(self.block_reason, BlockReason):
             raise TypeError("block_reason must be BlockReason or None")
-        if self.failure is not None and not isinstance(self.failure, FailureEvidence):
-            raise TypeError("failure must be FailureEvidence or None")
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
@@ -212,8 +211,6 @@ class TaskAttempt:
             raise ValueError("attempt_number must be greater than or equal to 1")
         if not isinstance(self._status, TaskAttemptStatus):
             raise TypeError("_status must be a TaskAttemptStatus")
-        if self.failure is not None and not isinstance(self.failure, FailureEvidence):
-            raise TypeError("failure must be FailureEvidence or None")
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")
