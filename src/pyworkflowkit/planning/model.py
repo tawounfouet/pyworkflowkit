@@ -9,8 +9,7 @@ from dataclasses import dataclass
 from pyworkflowkit.authoring import TaskDefinition
 from pyworkflowkit.diagnostics import Diagnostic
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.domain.values import RetryPolicy
-from pyworkflowkit.policies import TimeoutPolicy, TriggerRule
+from pyworkflowkit.policies import RetryPolicy, TimeoutPolicy, TriggerRule
 
 
 @dataclass(frozen=True, slots=True)

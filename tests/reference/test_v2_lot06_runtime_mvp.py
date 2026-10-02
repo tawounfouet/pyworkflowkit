@@ -49,7 +49,7 @@ def test_runtime_mvp_contract_snapshot_records_deferred_semantics() -> None:
     assert snapshot["contract_version"] == V2_RUNTIME_MVP_CONTRACT_VERSION
     assert snapshot["surface"] == list(V2_RUNTIME_MVP_SURFACE)
     assert snapshot["run_inputs"] == list(V2_RUNTIME_MVP_RUN_INPUTS)
-    assert snapshot["retry_execution"] is False
+    assert snapshot["retry_execution"] is True
     assert snapshot["timeout_execution"] is False
     assert snapshot["durable_outputs"] is False
     assert snapshot["basic_events"] == "metadata_state_transitions"

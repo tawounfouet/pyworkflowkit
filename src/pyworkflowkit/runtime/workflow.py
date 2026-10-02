@@ -24,6 +24,7 @@ from pyworkflowkit.executors import (
 )
 from pyworkflowkit.persistence import MetadataStore
 from pyworkflowkit.planning import ExecutionPlan, TaskPlanEntry, WorkflowPlanner
+from pyworkflowkit.policies.retry import RetryDecision, RetryEvaluator
 from pyworkflowkit.runtime._attempts import next_task_attempt
 from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
@@ -32,8 +33,10 @@ from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
 from pyworkflowkit.runtime.results import TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
     Clock,
+    RetryWaiter,
     RuntimeIdentityFactory,
     SystemClock,
+    SystemRetryWaiter,
     UuidRuntimeIdentityFactory,
 )
 from pyworkflowkit.states import (
@@ -59,6 +62,8 @@ class WorkflowRuntime:
         planner: WorkflowPlanner | None = None,
         clock: Clock | None = None,
         identity_factory: RuntimeIdentityFactory | None = None,
+        retry_evaluator: RetryEvaluator | None = None,
+        retry_waiter: RetryWaiter | None = None,
     ) -> None:
         if not isinstance(executor, Executor):
             raise TypeError("executor must satisfy the V2 Executor Protocol")
@@ -69,6 +74,12 @@ class WorkflowRuntime:
         self._planner = planner or WorkflowPlanner()
         self._clock = clock or SystemClock()
         self._identity_factory = identity_factory or UuidRuntimeIdentityFactory()
+        self._retry_evaluator = retry_evaluator or RetryEvaluator()
+        self._retry_waiter = retry_waiter or SystemRetryWaiter()
+        if not isinstance(self._retry_evaluator, RetryEvaluator):
+            raise TypeError("retry_evaluator must be a RetryEvaluator")
+        if not isinstance(self._retry_waiter, RetryWaiter):
+            raise TypeError("retry_waiter must satisfy RetryWaiter")
         self._workflow_states = WorkflowRunStateMachine()
         self._task_states = TaskRunStateMachine()
         self._attempt_states = TaskAttemptStateMachine()
@@ -156,75 +167,150 @@ class WorkflowRuntime:
             self._transition_task(current, TaskRunStatus.READY)
             self._transition_task(current, TaskRunStatus.RUNNING)
 
-            attempt = next_task_attempt(
-                current,
-                self._metadata.list_task_attempts(current.task_run_id),
-                attempt_id=self._identity_factory.new_task_attempt_id(),
-                created_at=self._now(),
-            )
-            self._metadata.append_task_attempt(attempt)
-            self._transition_attempt(attempt, TaskAttemptStatus.STARTING)
-            self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
+            while True:
+                attempt = next_task_attempt(
+                    current,
+                    self._metadata.list_task_attempts(current.task_run_id),
+                    attempt_id=self._identity_factory.new_task_attempt_id(),
+                    created_at=self._now(),
+                )
+                self._metadata.append_task_attempt(attempt)
+                self._transition_attempt(attempt, TaskAttemptStatus.STARTING)
+                self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
 
-            context = TaskExecutionContext(
-                workflow_run_id=run_id,
-                task_run_id=current.task_run_id,
-                attempt_id=attempt.attempt_id,
-                attempt_number=attempt.attempt_number,
-                correlation=_bind_task_correlation(
-                    bound_correlation,
-                    task_run=current,
+                context = TaskExecutionContext(
+                    workflow_run_id=run_id,
+                    task_run_id=current.task_run_id,
                     attempt_id=attempt.attempt_id,
-                ),
-                dependency_outputs={
-                    key: outputs[key] for key in entry.dependencies if key in outputs
-                },
-                workload_parameters=_workload_parameters(entry),
-            )
-            request = TaskExecutionRequest(
-                task_key=entry.key,
-                workload=entry.task.workload,
-                executor_key=entry.executor_requirement.executor_key,
-                context=context,
-            )
-            result = self._execute(request)
-            diagnostics.extend(result.diagnostics)
+                    attempt_number=attempt.attempt_number,
+                    correlation=_bind_task_correlation(
+                        bound_correlation,
+                        task_run=current,
+                        attempt_id=attempt.attempt_id,
+                    ),
+                    dependency_outputs={
+                        key: outputs[key] for key in entry.dependencies if key in outputs
+                    },
+                    workload_parameters=_workload_parameters(entry),
+                )
+                request = TaskExecutionRequest(
+                    task_key=entry.key,
+                    workload=entry.task.workload,
+                    executor_key=entry.executor_requirement.executor_key,
+                    context=context,
+                )
+                result = self._execute(request)
+                diagnostics.extend(result.diagnostics)
 
-            if result.succeeded:
-                self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
-                self._transition_task(current, TaskRunStatus.SUCCEEDED)
-                outputs[entry.key] = result.output
-                continue
+                if result.succeeded:
+                    self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
+                    self._transition_task(current, TaskRunStatus.SUCCEEDED)
+                    outputs[entry.key] = result.output
+                    break
 
-            failure = result.failure
-            if failure is None:  # pragma: no cover - TaskExecutionResult invariant guard
-                raise RuntimeInvariantError(
-                    reason="failed TaskExecutionResult is missing FailureEvidence"
+                failure = result.failure
+                if failure is None:  # pragma: no cover - TaskExecutionResult invariant guard
+                    raise RuntimeInvariantError(
+                        reason="failed TaskExecutionResult is missing FailureEvidence"
+                    )
+
+                evaluation = self._retry_evaluator.evaluate(
+                    policy=entry.retry_policy,
+                    failure=failure,
+                    attempt_number=attempt.attempt_number,
+                    elapsed_seconds=self._task_elapsed_seconds(current),
+                )
+                diagnostics.append(
+                    _retry_diagnostic(
+                        evaluation=evaluation,
+                        run=run,
+                        task_run=current,
+                        attempt_id=attempt.attempt_id,
+                    )
                 )
 
-            self._transition_attempt(
-                attempt,
-                TaskAttemptStatus.FAILED,
-                failure=failure,
-            )
-            self._transition_task(
-                current,
-                TaskRunStatus.FAILED,
-                failure=failure,
-            )
-            diagnostics.append(
-                _diagnostic(
-                    "PWK-RUNTIME-TASK-FAILED",
-                    "task execution failed",
-                    run=run,
-                    task_run=current,
-                    attempt_id=attempt.attempt_id,
-                    severity=DiagnosticSeverity.ERROR,
-                    details=(("task_key", entry.key), ("error_code", failure.error_code)),
+                if evaluation.decision in {
+                    RetryDecision.RECONCILE,
+                    RetryDecision.ESCALATE,
+                }:
+                    uncertain_attempt_status = (
+                        TaskAttemptStatus.REQUIRES_RECONCILIATION
+                        if evaluation.decision is RetryDecision.RECONCILE
+                        else TaskAttemptStatus.UNKNOWN_OUTCOME
+                    )
+                    self._transition_attempt(
+                        attempt,
+                        uncertain_attempt_status,
+                        failure=failure,
+                    )
+                    self._transition_task(
+                        current,
+                        TaskRunStatus.UNKNOWN_OUTCOME,
+                        failure=failure,
+                    )
+                    self._transition_workflow(
+                        run,
+                        WorkflowRunStatus.UNKNOWN_OUTCOME,
+                        failure=failure,
+                    )
+                    return self._build_result(
+                        run_id=run_id,
+                        outputs=outputs,
+                        diagnostics=tuple(diagnostics),
+                    )
+
+                self._transition_attempt(
+                    attempt,
+                    TaskAttemptStatus.FAILED,
+                    failure=failure,
                 )
-            )
-            failed_entry = entry
-            break
+
+                if evaluation.decision is RetryDecision.RETRY:
+                    diagnostics.append(
+                        _diagnostic(
+                            "PWK-RETRY-SCHEDULED",
+                            "new TaskAttempt scheduled by RetryPolicy",
+                            run=run,
+                            task_run=current,
+                            attempt_id=attempt.attempt_id,
+                            details=(
+                                ("attempt_number", str(attempt.attempt_number)),
+                                ("next_attempt_number", str(attempt.attempt_number + 1)),
+                                ("delay_seconds", _format_seconds(evaluation.delay_seconds)),
+                                ("reason", evaluation.reason),
+                            ),
+                        )
+                    )
+                    if evaluation.delay_seconds:
+                        self._retry_waiter.wait(evaluation.delay_seconds)
+                    continue
+
+                self._transition_task(
+                    current,
+                    TaskRunStatus.FAILED,
+                    failure=failure,
+                )
+                diagnostics.append(
+                    _diagnostic(
+                        "PWK-RUNTIME-TASK-FAILED",
+                        "task execution failed",
+                        run=run,
+                        task_run=current,
+                        attempt_id=attempt.attempt_id,
+                        severity=DiagnosticSeverity.ERROR,
+                        details=(
+                            ("task_key", entry.key),
+                            ("error_code", failure.error_code),
+                            ("retry_decision", evaluation.decision.value),
+                            ("retry_reason", evaluation.reason),
+                        ),
+                    )
+                )
+                failed_entry = entry
+                break
+
+            if failed_entry is not None:
+                break
 
         if failed_entry is not None:
             if plan.failure_policy is not FailurePolicy.FAIL_FAST:
@@ -273,11 +359,14 @@ class WorkflowRuntime:
                         f"{requirement.workload_kind!r}"
                     )
                 )
-            if entry.retry_policy.max_attempts != 1:
+            if (
+                entry.retry_policy.max_attempts > 1
+                and self._executor.descriptor.performs_implicit_workload_retry
+            ):
                 raise RuntimeInvariantError(
                     reason=(
-                        f"task {entry.key!r} requests retry max_attempts="
-                        f"{entry.retry_policy.max_attempts}; retry execution starts in LOT-07"
+                        f"task {entry.key!r} requests workflow retry while executor "
+                        f"{executor_id!r} declares implicit workload retry"
                     )
                 )
             if entry.timeout_policy.execution_timeout is not None:
@@ -444,6 +533,11 @@ class WorkflowRuntime:
             failure=run.failure,
         )
 
+    def _task_elapsed_seconds(self, task_run: TaskRun) -> float:
+        if task_run.started_at is None:
+            raise RuntimeInvariantError(reason="RUNNING TaskRun is missing started_at")
+        return max(0.0, (self._now() - task_run.started_at).total_seconds())
+
     def _now(self) -> datetime:
         value = self._clock.now()
         if not isinstance(value, datetime):
@@ -495,6 +589,54 @@ def _workload_parameters(entry: TaskPlanEntry) -> Mapping[str, str]:
     if isinstance(workload, RegisteredWorkload):
         return dict(workload.parameters)
     return {}
+
+
+def _format_seconds(value: float) -> str:
+    return format(value, ".12g")
+
+
+def _retry_diagnostic(
+    *,
+    evaluation: object,
+    run: WorkflowRun,
+    task_run: TaskRun,
+    attempt_id: TaskAttemptId,
+) -> Diagnostic:
+    from pyworkflowkit.policies.retry import RetryEvaluation
+
+    if not isinstance(evaluation, RetryEvaluation):
+        raise TypeError("evaluation must be RetryEvaluation")
+    severity = (
+        DiagnosticSeverity.WARNING
+        if evaluation.decision in {RetryDecision.RECONCILE, RetryDecision.DO_NOT_RETRY}
+        else DiagnosticSeverity.INFO
+    )
+    details = [
+        ("decision", evaluation.decision.value),
+        ("reason", evaluation.reason),
+        ("attempt_number", str(evaluation.attempt_number)),
+        ("max_attempts", str(evaluation.max_attempts)),
+        ("delay_seconds", _format_seconds(evaluation.delay_seconds)),
+        ("failure_category", evaluation.failure_category.value),
+        ("retryability", evaluation.retryability.value),
+        ("uncertainty", evaluation.uncertainty.value),
+    ]
+    if evaluation.budget_remaining_seconds is not None:
+        details.append(
+            (
+                "budget_remaining_seconds",
+                _format_seconds(evaluation.budget_remaining_seconds),
+            )
+        )
+    return _diagnostic(
+        "PWK-RETRY-DECISION",
+        "RetryPolicy evaluated structured FailureEvidence",
+        run=run,
+        task_run=task_run,
+        attempt_id=attempt_id,
+        severity=severity,
+        details=tuple(details),
+    )
 
 
 def _diagnostic(

@@ -24,8 +24,10 @@ from pyworkflowkit.runtime.identity import (
 from pyworkflowkit.runtime.references import ExternalRunRef, WorkflowExecutionReference
 from pyworkflowkit.runtime.services import (
     Clock,
+    RetryWaiter,
     RuntimeIdentityFactory,
     SystemClock,
+    SystemRetryWaiter,
     UuidRuntimeIdentityFactory,
 )
 
@@ -55,8 +57,10 @@ __all__ = [
     "CorrelationId",
     "ExternalRunRef",
     "RuntimeEvent",
+    "RetryWaiter",
     "RuntimeIdentityFactory",
     "SystemClock",
+    "SystemRetryWaiter",
     "TaskAttempt",
     "TaskAttemptId",
     "TaskOutcome",

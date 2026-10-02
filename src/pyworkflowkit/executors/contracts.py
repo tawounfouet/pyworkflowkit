@@ -36,6 +36,7 @@ class ExecutorDescriptor:
     execution_modes: tuple[str, ...] = ()
     portability_constraints: tuple[str, ...] = ()
     supported_workload_kinds: tuple[str, ...] = ()
+    performs_implicit_workload_retry: bool = False
 
     def __post_init__(self) -> None:
         _require_text(self.executor_id, field_name="executor_id")
@@ -51,6 +52,8 @@ class ExecutorDescriptor:
             for value in values:
                 _require_text(value, field_name=name)
             object.__setattr__(self, name, tuple(sorted(set(values))))
+        if not isinstance(self.performs_implicit_workload_retry, bool):
+            raise TypeError("performs_implicit_workload_retry must be a bool")
 
 
 @dataclass(frozen=True, slots=True)

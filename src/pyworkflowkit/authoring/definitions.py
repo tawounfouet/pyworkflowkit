@@ -22,7 +22,7 @@ from pyworkflowkit.authoring.workloads import (
     workload_portability,
 )
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.domain.values import RetryPolicy
+from pyworkflowkit.policies.retry import RetryPolicy
 from pyworkflowkit.policies.timeout import TimeoutPolicy
 from pyworkflowkit.policies.trigger import TriggerRule
 
@@ -85,9 +85,14 @@ class TaskDefinition:
             "retry_policy": {
                 "max_attempts": self.retry_policy.max_attempts,
                 "backoff_strategy": self.retry_policy.backoff_strategy.value,
-                "delay_seconds": self.retry_policy.delay_seconds,
+                "initial_delay_seconds": self.retry_policy.initial_delay_seconds,
                 "max_delay_seconds": self.retry_policy.max_delay_seconds,
-                "retryable_error_categories": sorted(self.retry_policy.retryable_error_categories),
+                "jitter": self.retry_policy.jitter.value,
+                "retryable_failure_categories": sorted(
+                    category.value for category in self.retry_policy.retryable_failure_categories
+                ),
+                "total_budget_seconds": self.retry_policy.total_budget_seconds,
+                "reconciliation_required": self.retry_policy.reconciliation_required,
             },
             "timeout_policy": {
                 "execution_timeout": self.timeout_policy.execution_timeout,
