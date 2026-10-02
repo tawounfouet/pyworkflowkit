@@ -36,13 +36,11 @@ def evaluate_readiness(
         allowed = any(status is TaskRunStatus.SUCCEEDED for status in upstream)
     elif rule is TriggerRule.ANY_FAILED:
         allowed = any(
-            status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT}
-            for status in upstream
+            status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT} for status in upstream
         )
     elif rule is TriggerRule.NONE_FAILED:
         allowed = not any(
-            status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT}
-            for status in upstream
+            status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT} for status in upstream
         )
     else:  # pragma: no cover - enum exhaustiveness guard
         raise RuntimeError(f"unsupported TriggerRule {rule!r}")
