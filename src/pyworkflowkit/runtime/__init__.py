@@ -1,14 +1,15 @@
-"""V2 semantic runtime namespace.
+"""Canonical and transitional PyWorkflowKit V2 runtime surface.
 
-LOT-01 introduces canonical execution identities and portable boundary values.
-The durable WorkflowRun/TaskRun/TaskAttempt entities remain the qualified 1.1
-implementation until LOT-04 migrates their state contracts.
+LOT-04 promotes the canonical V2 WorkflowRun/TaskRun/TaskAttempt entities.
+WorkflowRuntime and RuntimeEvent remain transitional 1.1 implementations until
+LOT-06 and LOT-12 respectively.
 """
 
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.config import RuntimeSettings
-from pyworkflowkit.domain.runtime import RuntimeEvent, TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.domain.runtime import RuntimeEvent
 from pyworkflowkit.runtime.context import CorrelationContext
+from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import (
     CorrelationId,
     TaskAttemptId,

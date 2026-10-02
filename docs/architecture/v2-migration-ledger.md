@@ -23,12 +23,12 @@ REMOVED
 | `declarative` | SPLIT | authoring | 02 | IMPLEMENTED |
 | `domain.graph` | MOVE + INTERNALIZE | planning | 03 | IMPLEMENTED |
 | `application.planning` | MOVE + ADAPT | planning | 03 | IMPLEMENTED |
-| `domain.runtime` | SPLIT | runtime | 04/06 | PLANNED |
-| `domain.enums` | SPLIT | states/policies | 04/07/08 | PLANNED |
+| `domain.runtime` | SPLIT | runtime | 04/06 | IN_PROGRESS |
+| `domain.enums` | SPLIT | states/policies | 04/07/08 | IN_PROGRESS |
 | `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
 | `application.runtime` | MOVE + ADAPT | runtime | 06 | PLANNED |
 | `application.runner` | INTERNALIZE | runtime internals | 06 | PLANNED |
-| `application.state_machine` | MOVE | states | 04 | PLANNED |
+| `application.state_machine` | MOVE | states | 04 | IMPLEMENTED |
 | `application.retry` | SPLIT | policies/runtime internals | 07 | PLANNED |
 | `ports.executor` | REWRITE | executors | 06 | PLANNED |
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | PLANNED |
@@ -149,3 +149,28 @@ root migration/freeze is completed.
 The qualified V2 planning namespace now replaces the LOT-00 compatibility re-export.
 The frozen 1.1 package root remains unchanged. Runtime integration with V2 ExecutionPlan
 is owned by LOT-06.
+
+
+## LOT-04 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `WorkflowRun` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `TaskRun` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `TaskAttempt` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `WorkflowRunStatus` | `pyworkflowkit.states` | IMPLEMENTED |
+| `TaskRunStatus` | `pyworkflowkit.states` | IMPLEMENTED |
+| `TaskAttemptStatus` | `pyworkflowkit.states` | IMPLEMENTED |
+| `SkipReason` | `pyworkflowkit.states` | IMPLEMENTED |
+| `BlockReason` | `pyworkflowkit.states` | IMPLEMENTED |
+| `WorkflowRunStateMachine` | `pyworkflowkit.states` | IMPLEMENTED |
+| `TaskRunStateMachine` | `pyworkflowkit.states` | IMPLEMENTED |
+| `TaskAttemptStateMachine` | `pyworkflowkit.states` | IMPLEMENTED |
+| terminal-state protection | state machines | IMPLEMENTED |
+| UNKNOWN_OUTCOME semantics | state machines | IMPLEMENTED |
+| cancellation-requested/unconfirmed states | state machines | IMPLEMENTED |
+| attempt sequencing | `runtime._attempts` | IMPLEMENTED |
+| retry identity invariant | `runtime._attempts` | IMPLEMENTED |
+
+The qualified V2 runtime namespace now owns the V2 run entities. The legacy 1.1
+WorkflowRuntime and RuntimeEvent remain transitional until LOT-06 and LOT-12.
