@@ -17,6 +17,9 @@ from pyworkflowkit.persistence.contracts import (
     MetadataStoreMetadata,
     StateEntityType,
     StateTransitionRecord,
+    V2_METADATA_STORE_CONTRACT_VERSION,
+    V2_METADATA_STORE_METHODS,
+    v2_metadata_store_contract_snapshot,
 )
 from pyworkflowkit.persistence.memory import InMemoryMetadataStore
 from pyworkflowkit.ports.metadata_store import MetadataStore as LegacyMetadataStore
@@ -35,4 +38,7 @@ __all__ = [
     "MetadataStoreMetadata",
     "StateEntityType",
     "StateTransitionRecord",
+    "V2_METADATA_STORE_CONTRACT_VERSION",
+    "V2_METADATA_STORE_METHODS",
+    "v2_metadata_store_contract_snapshot",
 ]

@@ -18,6 +18,7 @@ from pyworkflowkit.persistence.contracts import (
     MetadataStoreMetadata,
     StateEntityType,
     StateTransitionRecord,
+    V2_METADATA_STORE_CONTRACT_VERSION,
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
@@ -25,7 +26,6 @@ from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
 from pyworkflowkit.states.enums import WORKFLOW_TERMINAL_STATUSES
 
-METADATA_STORE_CONTRACT_VERSION = "1"
 IN_MEMORY_SCHEMA_VERSION = "1"
 
 
@@ -52,7 +52,7 @@ class InMemoryMetadataStore:
 
     def metadata(self) -> MetadataStoreMetadata:
         return MetadataStoreMetadata(
-            contract_version=METADATA_STORE_CONTRACT_VERSION,
+            contract_version=V2_METADATA_STORE_CONTRACT_VERSION,
             schema_version=IN_MEMORY_SCHEMA_VERSION,
             durable=False,
             supports_concurrent_writers=True,
@@ -609,6 +609,5 @@ if not isinstance(InMemoryMetadataStore(), MetadataStore):
 
 __all__ = [
     "IN_MEMORY_SCHEMA_VERSION",
-    "METADATA_STORE_CONTRACT_VERSION",
     "InMemoryMetadataStore",
 ]

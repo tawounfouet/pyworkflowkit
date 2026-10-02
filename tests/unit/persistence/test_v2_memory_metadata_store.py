@@ -117,3 +117,12 @@ def test_state_history_global_sequence_is_deterministic() -> None:
         StateEntityType.TASK_RUN,
         StateEntityType.TASK_ATTEMPT,
     )
+
+
+def test_new_entity_must_enter_persistence_in_pending_state() -> None:
+    store = InMemoryMetadataStore()
+    run = _workflow()
+    run._apply_status(WorkflowRunStatus.RUNNING, started_at=NOW)
+
+    with pytest.raises(MetadataInvariantError, match="must begin in PENDING"):
+        store.create_workflow_run(run)

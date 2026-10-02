@@ -13,6 +13,30 @@ from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRun
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
 
+V2_METADATA_STORE_CONTRACT_VERSION = "1"
+
+V2_METADATA_STORE_METHODS: tuple[str, ...] = (
+    "metadata",
+    "create_workflow_run",
+    "get_workflow_run",
+    "update_workflow_run",
+    "list_workflow_runs",
+    "list_unfinished_workflow_runs",
+    "create_task_run",
+    "get_task_run",
+    "update_task_run",
+    "list_task_runs",
+    "append_task_attempt",
+    "get_task_attempt",
+    "update_task_attempt",
+    "list_task_attempts",
+    "append_external_run_ref",
+    "list_external_run_refs",
+    "list_state_transitions",
+    "set_manifest_reference",
+    "get_manifest_reference",
+)
+
 
 class StateEntityType(StrEnum):
     WORKFLOW_RUN = "workflow_run"
@@ -204,10 +228,21 @@ class MetadataStore(Protocol):
         """Load a manifest reference or raise MetadataNotFoundError."""
 
 
+def v2_metadata_store_contract_snapshot() -> dict[str, object]:
+    return {
+        "contract_version": V2_METADATA_STORE_CONTRACT_VERSION,
+        "methods": list(V2_METADATA_STORE_METHODS),
+        "state_entity_types": [value.value for value in StateEntityType],
+    }
+
+
 __all__ = [
     "ManifestReference",
     "MetadataStore",
     "MetadataStoreMetadata",
     "StateEntityType",
     "StateTransitionRecord",
+    "V2_METADATA_STORE_CONTRACT_VERSION",
+    "V2_METADATA_STORE_METHODS",
+    "v2_metadata_store_contract_snapshot",
 ]
