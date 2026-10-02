@@ -163,14 +163,18 @@ def test_failure_evidence_timestamp_is_timezone_aware() -> None:
     def explode() -> None:
         raise RuntimeError("boom")
 
-    failure = InlineExecutor().execute(
-        TaskExecutionRequest(
-            task_key="explode",
-            workload=explode,
-            executor_key="inline",
-            context=_context(),
+    failure = (
+        InlineExecutor()
+        .execute(
+            TaskExecutionRequest(
+                task_key="explode",
+                workload=explode,
+                executor_key="inline",
+                context=_context(),
+            )
         )
-    ).failure
+        .failure
+    )
 
     assert failure is not None
     assert isinstance(failure.occurred_at, datetime)
