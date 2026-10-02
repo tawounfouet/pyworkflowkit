@@ -12,7 +12,7 @@ from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.executors import InlineExecutor, TaskExecutionContext
 from pyworkflowkit.persistence import InMemoryMetadataStore, StateEntityType
 from pyworkflowkit.planning import WorkflowPlanner
-from pyworkflowkit.policies import RetryPolicy, TimeoutPolicy, TriggerRule
+from pyworkflowkit.policies import TimeoutPolicy, TriggerRule
 from pyworkflowkit.runtime import (
     CorrelationId,
     RuntimeIdentityFactory,
