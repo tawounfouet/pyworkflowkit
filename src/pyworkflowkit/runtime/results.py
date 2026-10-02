@@ -58,8 +58,13 @@ class WorkflowResult:
             raise TypeError("run_id must be a WorkflowRunId")
         if not isinstance(self.status, WorkflowRunStatus):
             raise TypeError("status must be a WorkflowRunStatus")
-        if self.status not in WORKFLOW_TERMINAL_STATUSES:
-            raise ValueError("WorkflowResult requires a terminal WorkflowRun status")
+        if (
+            self.status not in WORKFLOW_TERMINAL_STATUSES
+            and self.status is not WorkflowRunStatus.UNKNOWN_OUTCOME
+        ):
+            raise ValueError(
+                "WorkflowResult requires a terminal or UNKNOWN_OUTCOME WorkflowRun status"
+            )
         outcomes = tuple(self.task_outcomes)
         keys = tuple(item.task_key for item in outcomes)
         if len(keys) != len(set(keys)):
