@@ -10,6 +10,9 @@ from pyworkflowkit.adapters.metadata.memory import (
 from pyworkflowkit.persistence import (
     InMemoryMetadataStore,
     MetadataStore,
+    V2_METADATA_STORE_CONTRACT_VERSION,
+    V2_METADATA_STORE_METHODS,
+    v2_metadata_store_contract_snapshot,
 )
 from pyworkflowkit.ports.metadata_store import MetadataStore as LegacyMetadataStore
 
@@ -41,4 +44,19 @@ def test_qualified_v2_persistence_surface_is_explicit() -> None:
         "MetadataStoreMetadata",
         "StateEntityType",
         "StateTransitionRecord",
+        "V2_METADATA_STORE_CONTRACT_VERSION",
+        "V2_METADATA_STORE_METHODS",
+        "v2_metadata_store_contract_snapshot",
     )
+
+
+def test_v2_metadata_store_contract_snapshot_is_machine_readable() -> None:
+    snapshot = v2_metadata_store_contract_snapshot()
+
+    assert snapshot["contract_version"] == V2_METADATA_STORE_CONTRACT_VERSION
+    assert snapshot["methods"] == list(V2_METADATA_STORE_METHODS)
+    assert snapshot["state_entity_types"] == [
+        "workflow_run",
+        "task_run",
+        "task_attempt",
+    ]
