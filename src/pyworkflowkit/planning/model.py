@@ -143,9 +143,7 @@ class ExecutionPlan:
 
         order = tuple(self.topological_order)
         if order != keys:
-            raise ValueError(
-                "ExecutionPlan task order must match topological_order exactly"
-            )
+            raise ValueError("ExecutionPlan task order must match topological_order exactly")
 
         groups = tuple(tuple(group) for group in self.groups)
         flattened = tuple(task_key for group in groups for task_key in group)
@@ -156,9 +154,7 @@ class ExecutionPlan:
         for group_index, group in enumerate(groups):
             for task_key in group:
                 if by_key[task_key].group_index != group_index:
-                    raise ValueError(
-                        f"task {task_key!r} has inconsistent group_index"
-                    )
+                    raise ValueError(f"task {task_key!r} has inconsistent group_index")
 
         capabilities = tuple(sorted(set(self.required_capabilities)))
         integrations = tuple(sorted(set(self.required_integrations)))
@@ -217,11 +213,7 @@ class ExecutionPlan:
 
     def explain(self) -> str:
         lines = [
-            (
-                "ExecutionPlan("
-                f"workflow={self.workflow_name!r}, version={self.workflow_version!r}"
-                ")"
-            ),
+            (f"ExecutionPlan(workflow={self.workflow_name!r}, version={self.workflow_version!r})"),
             f"definition_fingerprint={self.definition_fingerprint}",
             f"plan_fingerprint={self.fingerprint()}",
             f"portable={str(self.portable).lower()}",
