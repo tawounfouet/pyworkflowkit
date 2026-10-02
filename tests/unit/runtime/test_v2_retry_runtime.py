@@ -11,6 +11,7 @@ from pyworkflowkit.diagnostics import (
     OutcomeUncertainty,
     Retryability,
 )
+from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.executors import (
     ExecutorDescriptor,
     InlineExecutor,
@@ -18,7 +19,6 @@ from pyworkflowkit.executors import (
     TaskExecutionRequest,
     TaskExecutionResult,
 )
-from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.persistence import InMemoryMetadataStore
 from pyworkflowkit.policies import (
     BackoffStrategy,
