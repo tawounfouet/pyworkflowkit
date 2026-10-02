@@ -36,7 +36,6 @@ from pyworkflowkit.persistence._sqlalchemy.mapping import (
 from pyworkflowkit.persistence.contracts import (
     V2_METADATA_STORE_CONTRACT_VERSION,
     ManifestReference,
-    MetadataStore,
     MetadataStoreMetadata,
     StateEntityType,
     StateTransitionRecord,
@@ -784,10 +783,6 @@ def _require_transition_timestamp(
         raise MetadataInvariantError(
             reason="status-changing update requires transitioned_at"
         )
-
-
-if not isinstance(SQLiteMetadataStore, type):
-    raise TypeError("SQLiteMetadataStore must be a concrete type")
 
 
 __all__ = [
