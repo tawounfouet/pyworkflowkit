@@ -88,11 +88,7 @@ def test_terminal_task_run_states_are_absorbing(
         created_at=NOW,
         _status=status,
         ended_at=NOW,
-        skip_reason=(
-            SkipReason.CONDITION_FALSE
-            if status is TaskRunStatus.SKIPPED
-            else None
-        ),
+        skip_reason=(SkipReason.CONDITION_FALSE if status is TaskRunStatus.SKIPPED else None),
     )
 
     with pytest.raises(TerminalStateError):
