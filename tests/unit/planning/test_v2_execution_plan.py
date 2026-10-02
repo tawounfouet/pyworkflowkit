@@ -6,7 +6,7 @@ from dataclasses import FrozenInstanceError, fields
 
 import pytest
 
-from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, WorkflowDefinition
+from pyworkflowkit.authoring import RegisteredWorkload, WorkflowDefinition
 from pyworkflowkit.planning import ExecutionPlan, WorkflowPlanner
 
 
