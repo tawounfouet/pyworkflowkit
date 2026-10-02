@@ -22,7 +22,7 @@ from pyworkflowkit.executors import (
 )
 from pyworkflowkit.persistence import InMemoryMetadataStore
 from pyworkflowkit.policies import RetryPolicy
-from pyworkflowkit.runtime import ExternalRunRef, WorkflowRuntime
+from pyworkflowkit.runtime import ExternalRunRef, WorkflowResult, WorkflowRuntime
 from pyworkflowkit.states import (
     TaskAttemptStatus,
     TaskRunStatus,
@@ -188,7 +188,6 @@ def test_task_execution_result_validates_external_run_refs() -> None:
         raise AssertionError("invalid external run evidence must be rejected")
 
 
-
 class UnconfirmedCancellationExecutor:
     """Cancellation adapter that exposes the remote run it could not stop."""
 
@@ -231,7 +230,7 @@ def test_unconfirmed_cancellation_persists_external_identity_for_reconciliation(
     store = InMemoryMetadataStore()
     executor = UnconfirmedCancellationExecutor()
     runtime = WorkflowRuntime(executor=executor, metadata=store)
-    results = []
+    results: list[WorkflowResult] = []
 
     thread = Thread(target=lambda: results.append(runtime.run(_workflow())))
     thread.start()
