@@ -23,15 +23,15 @@ REMOVED
 | `declarative` | SPLIT | authoring | 02 | IMPLEMENTED |
 | `domain.graph` | MOVE + INTERNALIZE | planning | 03 | IMPLEMENTED |
 | `application.planning` | MOVE + ADAPT | planning | 03 | IMPLEMENTED |
-| `domain.runtime` | SPLIT | runtime | 04/06 | IN_PROGRESS |
+| `domain.runtime` | SPLIT | runtime | 04/06 | IMPLEMENTED |
 | `domain.enums` | SPLIT | states/policies | 04/07/08 | IN_PROGRESS |
 | `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
-| `application.runtime` | MOVE + ADAPT | runtime | 06 | PLANNED |
-| `application.runner` | INTERNALIZE | runtime internals | 06 | PLANNED |
+| `application.runtime` | MOVE + ADAPT | runtime | 06 | IMPLEMENTED |
+| `application.runner` | INTERNALIZE | runtime internals | 06 | IMPLEMENTED |
 | `application.state_machine` | MOVE | states | 04 | IMPLEMENTED |
 | `application.retry` | SPLIT | policies/runtime internals | 07 | PLANNED |
-| `ports.executor` | REWRITE | executors | 06 | PLANNED |
-| `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | PLANNED |
+| `ports.executor` | REWRITE | executors | 06 | IMPLEMENTED |
+| `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | IMPLEMENTED |
 | other executor adapters | MOVE + ADAPT | executors | 13/14 | PLANNED |
 | `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
 | metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
@@ -200,3 +200,35 @@ expected-status concurrency and append-only execution history.
 The in-memory implementation is process-local and non-durable. It supports concurrent
 threads using one store instance, but does not claim process safety, crash recovery or
 multi-operation atomic batches. SQLite and PostgreSQL remain LOT-10/LOT-17.
+
+
+## LOT-06 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `Executor` Protocol | `pyworkflowkit.executors` | IMPLEMENTED |
+| `ExecutorDescriptor` | `pyworkflowkit.executors` | IMPLEMENTED |
+| `TaskExecutionContext` | `pyworkflowkit.executors` | IMPLEMENTED |
+| `TaskExecutionRequest` | `pyworkflowkit.executors` | IMPLEMENTED |
+| `TaskExecutionResult` | `pyworkflowkit.executors` | IMPLEMENTED |
+| `InlineExecutor` | `pyworkflowkit.executors` | IMPLEMENTED |
+| `WorkflowRuntime` V2 | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `TaskOutcome` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `WorkflowResult` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| WorkflowDefinition input | WorkflowRuntime.run | IMPLEMENTED |
+| ExecutionPlan input | WorkflowRuntime.run | IMPLEMENTED |
+| readiness evaluation | runtime internals | IMPLEMENTED |
+| fail-fast propagation | runtime internals | IMPLEMENTED |
+| trigger-rule skip | runtime internals | IMPLEMENTED |
+| one-attempt execution | runtime internals | IMPLEMENTED |
+| basic event evidence | MetadataStore state history | IMPLEMENTED |
+
+The canonical V2 runtime does not call the legacy 1.1 Runner. The old application/runtime,
+Runner and LocalExecutor remain intact only for the frozen 1.1 public root and migration
+evidence.
+
+LOT-06 intentionally fails closed when a task requests retry execution or timeout execution:
+retry behavior starts in LOT-07 and timeout/cancellation semantics in LOT-08.
+
+Task outputs are caller-visible process-local values in the MVP result but are not yet
+declared durable. Portable/durable output policy is owned by LOT-12.
