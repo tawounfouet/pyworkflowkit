@@ -18,9 +18,9 @@ from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.domain.enums import FailurePolicy
 from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
 from pyworkflowkit.executors import (
+    CancellableExecutor,
     CancellationCapability,
     CancellationStatus,
-    CancellableExecutor,
     Executor,
     TaskCancellationRequest,
     TaskExecutionContext,
@@ -222,9 +222,10 @@ class WorkflowRuntime:
                     if current.status is not TaskRunStatus.CANCELLED:
                         self._transition_task(current, TaskRunStatus.CANCELLED)
                     self._cancel_not_started_tasks(run_id)
-                    if run.status is WorkflowRunStatus.RUNNING:
-                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
-                    elif run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                    if run.status in {
+                        WorkflowRunStatus.RUNNING,
+                        WorkflowRunStatus.CANCELLATION_REQUESTED,
+                    }:
                         self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
                     return self._build_result(
                         run_id=run_id,
