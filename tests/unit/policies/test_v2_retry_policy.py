@@ -15,10 +15,12 @@ from pyworkflowkit.diagnostics import (
 from pyworkflowkit.policies import (
     BackoffStrategy,
     RetryDecision,
+    RetryEvaluation,
     RetryEvaluator,
     RetryJitter,
     RetryJitterSource,
     RetryPolicy,
+    SystemRetryJitterSource,
 )
 from pyworkflowkit.runtime import CorrelationId
 
@@ -233,3 +235,138 @@ def test_retry_jitter_source_protocol_is_runtime_checkable() -> None:
     source = HalfJitter()
 
     assert isinstance(source, RetryJitterSource)
+
+
+
+def test_system_jitter_source_validates_bounds_and_zero() -> None:
+    source = SystemRetryJitterSource()
+
+    assert source.full_jitter(0.0) == 0.0
+    value = source.full_jitter(1.0)
+    assert 0.0 <= value <= 1.0
+
+    with pytest.raises(TypeError):
+        source.full_jitter(True)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="finite"):
+        source.full_jitter(float("inf"))
+    with pytest.raises(ValueError, match="greater than or equal"):
+        source.full_jitter(-1.0)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    (
+        ("decision", "retry", TypeError),
+        ("reason", "", ValueError),
+        ("delay_seconds", -1.0, ValueError),
+        ("attempt_number", True, TypeError),
+        ("attempt_number", 0, ValueError),
+        ("max_attempts", True, TypeError),
+        ("max_attempts", 0, ValueError),
+        ("failure_category", "transient", TypeError),
+        ("retryability", "retryable", TypeError),
+        ("uncertainty", "known", TypeError),
+        ("budget_remaining_seconds", -1.0, ValueError),
+    ),
+)
+def test_retry_evaluation_rejects_invalid_boundary_values(
+    field: str,
+    value: object,
+    error: type[Exception],
+) -> None:
+    values: dict[str, object] = {
+        "decision": RetryDecision.RETRY,
+        "reason": "retryable",
+        "delay_seconds": 0.0,
+        "attempt_number": 1,
+        "max_attempts": 2,
+        "failure_category": FailureCategory.TRANSIENT,
+        "retryability": Retryability.RETRYABLE,
+        "uncertainty": OutcomeUncertainty.KNOWN,
+        "budget_remaining_seconds": None,
+    }
+    values[field] = value
+
+    with pytest.raises(error):
+        RetryEvaluation(**values)  # type: ignore[arg-type]
+
+
+def test_retry_evaluator_rejects_invalid_dependencies_and_inputs() -> None:
+    with pytest.raises(TypeError, match="jitter_source"):
+        RetryEvaluator(jitter_source=object())  # type: ignore[arg-type]
+
+    evaluator = RetryEvaluator()
+
+    with pytest.raises(TypeError, match="policy"):
+        evaluator.evaluate(
+            policy=object(),  # type: ignore[arg-type]
+            failure=_failure(),
+            attempt_number=1,
+            elapsed_seconds=0.0,
+        )
+    with pytest.raises(TypeError, match="failure"):
+        evaluator.evaluate(
+            policy=RetryPolicy(),
+            failure=object(),  # type: ignore[arg-type]
+            attempt_number=1,
+            elapsed_seconds=0.0,
+        )
+    with pytest.raises(TypeError, match="attempt_number"):
+        evaluator.evaluate(
+            policy=RetryPolicy(),
+            failure=_failure(),
+            attempt_number=True,
+            elapsed_seconds=0.0,
+        )
+    with pytest.raises(ValueError, match="attempt_number"):
+        evaluator.evaluate(
+            policy=RetryPolicy(),
+            failure=_failure(),
+            attempt_number=0,
+            elapsed_seconds=0.0,
+        )
+    with pytest.raises(ValueError, match="elapsed_seconds"):
+        evaluator.evaluate(
+            policy=RetryPolicy(),
+            failure=_failure(),
+            attempt_number=1,
+            elapsed_seconds=-1.0,
+        )
+
+
+class OvershootingJitter:
+    def full_jitter(self, upper_bound_seconds: float) -> float:
+        return upper_bound_seconds + 1.0
+
+
+class NegativeJitter:
+    def full_jitter(self, upper_bound_seconds: float) -> float:
+        return -1.0
+
+
+@pytest.mark.parametrize(
+    ("source", "message"),
+    (
+        (OvershootingJitter(), "upper bound"),
+        (NegativeJitter(), "greater than or equal"),
+    ),
+)
+def test_retry_evaluator_rejects_invalid_injected_jitter(
+    source: RetryJitterSource,
+    message: str,
+) -> None:
+    evaluator = RetryEvaluator(jitter_source=source)
+    policy = RetryPolicy(
+        max_attempts=2,
+        backoff_strategy=BackoffStrategy.FIXED,
+        initial_delay_seconds=1.0,
+        jitter=RetryJitter.FULL,
+    )
+
+    with pytest.raises(ValueError, match=message):
+        evaluator.evaluate(
+            policy=policy,
+            failure=_failure(),
+            attempt_number=1,
+            elapsed_seconds=0.0,
+        )
