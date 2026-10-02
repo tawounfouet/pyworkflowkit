@@ -8,12 +8,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, WorkflowDefinition
-from pyworkflowkit.domain.values import RetryPolicy
 from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.executors import InlineExecutor, TaskExecutionContext
 from pyworkflowkit.persistence import InMemoryMetadataStore, StateEntityType
 from pyworkflowkit.planning import WorkflowPlanner
-from pyworkflowkit.policies import TimeoutPolicy, TriggerRule
+from pyworkflowkit.policies import RetryPolicy, TimeoutPolicy, TriggerRule
 from pyworkflowkit.runtime import (
     CorrelationId,
     RuntimeIdentityFactory,
@@ -225,25 +224,6 @@ def test_trigger_rule_can_skip_task_without_failing_workflow() -> None:
     task_b = next(task for task in store.list_task_runs(result.run_id) if task.task_key == "b")
     assert task_b.skip_reason is SkipReason.TRIGGER_RULE_UNSATISFIED
     assert store.list_task_attempts(task_b.task_run_id) == ()
-
-
-def test_runtime_rejects_retry_policy_until_lot07_before_creating_run() -> None:
-    store = InMemoryMetadataStore()
-    workflow = WorkflowDefinition(
-        name="retry-deferred",
-        tasks=(
-            TaskDefinition(
-                key="a",
-                workload=lambda: None,
-                retry_policy=RetryPolicy(max_attempts=2),
-            ),
-        ),
-    )
-
-    with pytest.raises(RuntimeInvariantError, match="LOT-07"):
-        _runtime(store).run(workflow)
-
-    assert store.list_workflow_runs() == ()
 
 
 def test_runtime_rejects_timeout_policy_until_lot08_before_creating_run() -> None:
