@@ -55,20 +55,20 @@ class MetadataStoreMetadata:
     supports_atomic_batch: bool
 
     def __post_init__(self) -> None:
-        for name, value in (
+        for name, text_value in (
             ("contract_version", self.contract_version),
             ("schema_version", self.schema_version),
         ):
-            if not isinstance(value, str):
+            if not isinstance(text_value, str):
                 raise TypeError(f"{name} must be a string")
-            if not value.strip():
+            if not text_value.strip():
                 raise ValueError(f"{name} must not be empty")
-        for name, value in (
+        for name, flag_value in (
             ("durable", self.durable),
             ("supports_concurrent_writers", self.supports_concurrent_writers),
             ("supports_atomic_batch", self.supports_atomic_batch),
         ):
-            if not isinstance(value, bool):
+            if not isinstance(flag_value, bool):
                 raise TypeError(f"{name} must be a bool")
 
 
