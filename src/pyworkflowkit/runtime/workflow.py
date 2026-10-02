@@ -217,6 +217,10 @@ class WorkflowRuntime:
                 current = self._metadata.get_task_run(current.task_run_id)
                 run = self._metadata.get_workflow_run(run_id)
                 diagnostics.extend(result.diagnostics)
+                self._persist_external_run_refs(
+                    attempt_id=attempt.attempt_id,
+                    result=result,
+                )
 
                 if attempt.status is TaskAttemptStatus.CANCELLED:
                     if current.status is not TaskRunStatus.CANCELLED:
@@ -596,6 +600,34 @@ class WorkflowRuntime:
             attempt_id=attempt.attempt_id,
             reason=executor_result.reason,
         )
+
+    def _persist_external_run_refs(
+        self,
+        *,
+        attempt_id: TaskAttemptId,
+        result: TaskExecutionResult,
+    ) -> None:
+        refs = list(result.external_runs)
+        if result.failure is not None and result.failure.external_run is not None:
+            refs.append(result.failure.external_run)
+
+        existing = {
+            (ref.provider, ref.kind, ref.external_run_id)
+            for ref in self._metadata.list_external_run_refs(attempt_id)
+        }
+        for external_ref in refs:
+            key = (
+                external_ref.provider,
+                external_ref.kind,
+                external_ref.external_run_id,
+            )
+            if key in existing:
+                continue
+            self._metadata.append_external_run_ref(
+                attempt_id=attempt_id,
+                external_ref=external_ref,
+            )
+            existing.add(key)
 
     def _remember_active_request(self, request: TaskExecutionRequest) -> None:
         with self._active_requests_lock:
