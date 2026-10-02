@@ -56,9 +56,7 @@ class RetryPolicy:
     initial_delay_seconds: float = 0.0
     max_delay_seconds: float | None = None
     jitter: RetryJitter = RetryJitter.NONE
-    retryable_failure_categories: frozenset[FailureCategory] = field(
-        default_factory=frozenset
-    )
+    retryable_failure_categories: frozenset[FailureCategory] = field(default_factory=frozenset)
     total_budget_seconds: float | None = None
     reconciliation_required: bool = True
 
@@ -91,9 +89,7 @@ class RetryPolicy:
 
         categories = frozenset(self.retryable_failure_categories)
         if not all(isinstance(item, FailureCategory) for item in categories):
-            raise TypeError(
-                "retryable_failure_categories must contain only FailureCategory values"
-            )
+            raise TypeError("retryable_failure_categories must contain only FailureCategory values")
         object.__setattr__(self, "retryable_failure_categories", categories)
 
 
