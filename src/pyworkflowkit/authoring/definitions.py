@@ -226,7 +226,7 @@ def _validate_named_declarations(
     for value in values:
         if not isinstance(value, expected_type):
             raise TypeError(f"{kind}s must contain only {expected_type.__name__} values")
-        name = value.name
+        name = getattr(value, "name")
         if name in names:
             raise ValueError(f"task declares duplicate {kind} {name!r}")
         names.add(name)
@@ -256,9 +256,11 @@ def _validate_acyclic(tasks: tuple[TaskDefinition, ...]) -> None:
         )
 
 
-def _metadata_payload(metadata: Mapping[str, FrozenJsonValue]) -> dict[str, object]:
+def _metadata_payload(metadata: Mapping[str, object]) -> dict[str, object]:
+    from typing import cast
+
     return {
-        key: thaw_json_value(metadata[key])
+        key: thaw_json_value(cast(FrozenJsonValue, metadata[key]))
         for key in sorted(metadata)
     }
 
