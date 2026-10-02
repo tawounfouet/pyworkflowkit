@@ -1,13 +1,10 @@
-"""V2 runtime-policy namespace baseline.
-
-RetryDecision becomes first-class in LOT-01. RetryPolicy still reuses the
-qualified 1.1 implementation until LOT-07, while TimeoutMode remains a
-migration-only predecessor of LOT-08 TimeoutPolicy.
-"""
+"""Canonical and transitional PyWorkflowKit V2 runtime policies."""
 
 from pyworkflowkit.domain.enums import BackoffStrategy, FailurePolicy, TimeoutMode
 from pyworkflowkit.domain.values import RetryPolicy
 from pyworkflowkit.policies.retry import RetryDecision
+from pyworkflowkit.policies.timeout import TimeoutPolicy
+from pyworkflowkit.policies.trigger import TriggerRule
 
 __all__ = [
     "BackoffStrategy",
@@ -15,4 +12,6 @@ __all__ = [
     "RetryDecision",
     "RetryPolicy",
     "TimeoutMode",
+    "TimeoutPolicy",
+    "TriggerRule",
 ]
