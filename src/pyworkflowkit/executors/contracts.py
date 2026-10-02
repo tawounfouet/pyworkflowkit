@@ -13,6 +13,9 @@ from pyworkflowkit.diagnostics.model import Diagnostic
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 
+V2_EXECUTOR_CONTRACT_VERSION = "1"
+V2_EXECUTOR_PROTOCOL_METHODS: tuple[str, ...] = ("descriptor", "execute")
+
 
 def _require_text(value: str, *, field_name: str) -> str:
     if not isinstance(value, str):
@@ -141,10 +144,20 @@ class Executor(Protocol):
         """Execute exactly one TaskAttempt."""
 
 
+def v2_executor_contract_snapshot() -> dict[str, object]:
+    return {
+        "contract_version": V2_EXECUTOR_CONTRACT_VERSION,
+        "protocol_members": list(V2_EXECUTOR_PROTOCOL_METHODS),
+    }
+
+
 __all__ = [
     "Executor",
     "ExecutorDescriptor",
     "TaskExecutionContext",
     "TaskExecutionRequest",
     "TaskExecutionResult",
+    "V2_EXECUTOR_CONTRACT_VERSION",
+    "V2_EXECUTOR_PROTOCOL_METHODS",
+    "v2_executor_contract_snapshot",
 ]
