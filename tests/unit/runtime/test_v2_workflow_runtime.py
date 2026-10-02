@@ -115,8 +115,7 @@ def test_local_dag_executes_end_to_end_and_passes_dependency_outputs() -> None:
     persisted = store.get_workflow_run(result.run_id)
     assert persisted.status is WorkflowRunStatus.SUCCEEDED
     assert all(
-        task.status is TaskRunStatus.SUCCEEDED
-        for task in store.list_task_runs(result.run_id)
+        task.status is TaskRunStatus.SUCCEEDED for task in store.list_task_runs(result.run_id)
     )
     assert all(
         attempts[0].status is TaskAttemptStatus.SUCCEEDED
@@ -223,9 +222,7 @@ def test_trigger_rule_can_skip_task_without_failing_workflow() -> None:
     assert result.task("a").status is TaskRunStatus.SUCCEEDED
     assert result.task("b").status is TaskRunStatus.SKIPPED
 
-    task_b = next(
-        task for task in store.list_task_runs(result.run_id) if task.task_key == "b"
-    )
+    task_b = next(task for task in store.list_task_runs(result.run_id) if task.task_key == "b")
     assert task_b.skip_reason is SkipReason.TRIGGER_RULE_UNSATISFIED
     assert store.list_task_attempts(task_b.task_run_id) == ()
 
