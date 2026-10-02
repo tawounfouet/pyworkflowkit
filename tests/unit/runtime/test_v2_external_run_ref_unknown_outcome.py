@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from threading import Event, Thread
+
 from pyworkflowkit.authoring import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.diagnostics import (
     FailureCategory,
@@ -10,7 +12,11 @@ from pyworkflowkit.diagnostics import (
     Retryability,
 )
 from pyworkflowkit.executors import (
+    CancellationCapability,
+    CancellationStatus,
     ExecutorDescriptor,
+    TaskCancellationRequest,
+    TaskCancellationResult,
     TaskExecutionRequest,
     TaskExecutionResult,
 )
@@ -180,3 +186,74 @@ def test_task_execution_result_validates_external_run_refs() -> None:
         assert "external_runs" in str(exc)
     else:  # pragma: no cover - defensive assertion
         raise AssertionError("invalid external run evidence must be rejected")
+
+
+
+class UnconfirmedCancellationExecutor:
+    """Cancellation adapter that exposes the remote run it could not stop."""
+
+    def __init__(self) -> None:
+        self.started = Event()
+        self.release = Event()
+
+    @property
+    def descriptor(self) -> ExecutorDescriptor:
+        return ExecutorDescriptor(
+            executor_id="inline",
+            display_name="LOT-09 cancellation evidence executor",
+            executor_version="1",
+            supported_workload_kinds=("python_callable",),
+            cancellation_capability=CancellationCapability.BEST_EFFORT,
+        )
+
+    def execute(self, request: TaskExecutionRequest) -> TaskExecutionResult:
+        self.started.set()
+        self.release.wait(timeout=5)
+        return TaskExecutionResult(output="eventually-finished")
+
+    def cancel(self, request: TaskCancellationRequest) -> TaskCancellationResult:
+        return TaskCancellationResult(
+            status=CancellationStatus.UNCONFIRMED,
+            attempt_id=request.attempt_id,
+            reason="remote_stop_not_confirmed",
+            external_runs=(
+                ExternalRunRef(
+                    provider="remote-test",
+                    kind="job",
+                    external_run_id="JOB-CANCEL-1",
+                    status_locator="memory://remote/JOB-CANCEL-1",
+                ),
+            ),
+        )
+
+
+def test_unconfirmed_cancellation_persists_external_identity_for_reconciliation() -> None:
+    store = InMemoryMetadataStore()
+    executor = UnconfirmedCancellationExecutor()
+    runtime = WorkflowRuntime(executor=executor, metadata=store)
+    results = []
+
+    thread = Thread(target=lambda: results.append(runtime.run(_workflow())))
+    thread.start()
+    assert executor.started.wait(timeout=5)
+
+    run_id = store.list_workflow_runs()[0].run_id
+    cancellation = runtime.cancel(run_id)
+
+    assert cancellation.status is CancellationStatus.UNCONFIRMED
+    task_run = store.list_task_runs(run_id)[0]
+    attempt = store.list_task_attempts(task_run.task_run_id)[0]
+    refs = store.list_external_run_refs(attempt.attempt_id)
+
+    assert store.get_workflow_run(run_id).status is WorkflowRunStatus.UNKNOWN_OUTCOME
+    assert store.get_task_run(task_run.task_run_id).status is TaskRunStatus.UNKNOWN_OUTCOME
+    assert store.get_task_attempt(attempt.attempt_id).status is (
+        TaskAttemptStatus.CANCELLATION_UNCONFIRMED
+    )
+    assert len(refs) == 1
+    assert refs[0].external_run_id == "JOB-CANCEL-1"
+
+    executor.release.set()
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+    assert results[0].status is WorkflowRunStatus.SUCCEEDED
