@@ -6,6 +6,7 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, cast
 
 from pyworkflowkit.authoring._values import (
     FrozenJsonValue,
@@ -146,7 +147,7 @@ class WorkflowDefinition:
         version: str = "1",
         failure_policy: FailurePolicy = FailurePolicy.FAIL_FAST,
         metadata: Mapping[str, object] | None = None,
-    ) -> "WorkflowDefinitionBuilder":
+    ) -> WorkflowDefinitionBuilder:
         """Create a mutable authoring helper for one immutable definition."""
 
         from pyworkflowkit.authoring.builders import WorkflowDefinitionBuilder
@@ -226,7 +227,7 @@ def _validate_named_declarations(
     for value in values:
         if not isinstance(value, expected_type):
             raise TypeError(f"{kind}s must contain only {expected_type.__name__} values")
-        name = getattr(value, "name")
+        name = cast(InputDeclaration | OutputDeclaration, value).name
         if name in names:
             raise ValueError(f"task declares duplicate {kind} {name!r}")
         names.add(name)
@@ -244,7 +245,11 @@ def _validate_acyclic(tasks: tuple[TaskDefinition, ...]) -> None:
             if key not in dependencies[downstream]:
                 continue
             dependencies[downstream].remove(key)
-            if not dependencies[downstream] and downstream not in visited and downstream not in ready:
+            if (
+                not dependencies[downstream]
+                and downstream not in visited
+                and downstream not in ready
+            ):
                 ready.append(downstream)
                 ready.sort()
 
@@ -280,8 +285,6 @@ def _canonicalize(value: object) -> object:
         f"got {type(value).__name__}"
     )
 
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pyworkflowkit.authoring.builders import WorkflowDefinitionBuilder
