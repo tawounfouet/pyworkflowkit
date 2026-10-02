@@ -211,6 +211,7 @@ class TaskCancellationResult:
     attempt_id: TaskAttemptId
     reason: str
     diagnostics: tuple[Diagnostic, ...] = ()
+    external_runs: tuple[ExternalRunRef, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.status, CancellationStatus):
@@ -221,7 +222,11 @@ class TaskCancellationResult:
         diagnostics = tuple(self.diagnostics)
         if not all(isinstance(item, Diagnostic) for item in diagnostics):
             raise TypeError("diagnostics must contain only Diagnostic values")
+        external_runs = tuple(self.external_runs)
+        if not all(isinstance(item, ExternalRunRef) for item in external_runs):
+            raise TypeError("external_runs must contain only ExternalRunRef values")
         object.__setattr__(self, "diagnostics", diagnostics)
+        object.__setattr__(self, "external_runs", external_runs)
 
 
 @runtime_checkable
