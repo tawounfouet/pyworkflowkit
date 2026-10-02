@@ -19,7 +19,7 @@ def v2_runtime_mvp_contract_snapshot() -> dict[str, object]:
         "contract_version": V2_RUNTIME_MVP_CONTRACT_VERSION,
         "surface": list(V2_RUNTIME_MVP_SURFACE),
         "run_inputs": list(V2_RUNTIME_MVP_RUN_INPUTS),
-        "retry_execution": False,
+        "retry_execution": True,
         "timeout_execution": False,
         "durable_outputs": False,
         "basic_events": "metadata_state_transitions",
