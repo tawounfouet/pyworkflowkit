@@ -16,7 +16,7 @@ REMOVED
 
 ## Component ledger
 
-| V1 path / concept | V2 action | Canonical V2 owner | LOT | LOT-00 status |
+| V1 path / concept | V2 action | Canonical V2 owner | LOT | V2 status |
 |---|---|---|---:|---|
 | `pyworkflowkit.__init__` | ADAPT later | root facade | 00/22 | IN_PROGRESS |
 | `domain.definitions` | MOVE + ADAPT | authoring | 02 | PLANNED |
@@ -25,7 +25,7 @@ REMOVED
 | `application.planning` | MOVE + ADAPT | planning | 03 | PLANNED |
 | `domain.runtime` | SPLIT | runtime | 04/06 | PLANNED |
 | `domain.enums` | SPLIT | states/policies | 04/07/08 | PLANNED |
-| `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | PLANNED |
+| `domain.values` | SPLIT | policies/runtime/lineage | 01/07/12 | IN_PROGRESS |
 | `application.runtime` | MOVE + ADAPT | runtime | 06 | PLANNED |
 | `application.runner` | INTERNALIZE | runtime internals | 06 | PLANNED |
 | `application.state_machine` | MOVE | states | 04 | PLANNED |
@@ -77,3 +77,28 @@ retry/recovery/reconciliation behavior
 plugin discovery infrastructure
 CLI/DX qualification assets
 ```
+
+
+## LOT-01 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| `WorkflowRunId` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `TaskRunId` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `TaskAttemptId` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `CorrelationId` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `CorrelationContext` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `WorkflowExecutionReference` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| V2 `ExternalRunRef` | `pyworkflowkit.runtime` | IMPLEMENTED |
+| `FailureCategory` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `Retryability` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `OutcomeUncertainty` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `FailureEvidence` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `DiagnosticSeverity` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `Diagnostic` | `pyworkflowkit.diagnostics` | IMPLEMENTED |
+| `RetryDecision` skeleton | `pyworkflowkit.policies` | IMPLEMENTED |
+| boundary wire descriptors | `pyworkflowkit.serialization` | IMPLEMENTED |
+
+These contracts are qualified V2 values but are not yet all wired into the durable
+1.1 runtime implementation. LOT-04, LOT-06, LOT-07, LOT-09 and LOT-15 progressively
+replace the remaining legacy runtime/persistence/wire usage.
