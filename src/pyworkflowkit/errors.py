@@ -601,6 +601,35 @@ class DuplicateMetadataError(MetadataStoreError):
         super().__init__(f"{entity_type} '{entity_id}' already exists.")
 
 
+class MetadataConflictError(MetadataStoreError):
+    """Raised when conditional persistence observes stale state."""
+
+    def __init__(
+        self,
+        *,
+        entity_type: str,
+        entity_id: str,
+        expected: str,
+        actual: str,
+    ) -> None:
+        self.entity_type = entity_type
+        self.entity_id = entity_id
+        self.expected = expected
+        self.actual = actual
+        super().__init__(
+            f"{entity_type} '{entity_id}' persistence conflict: "
+            f"expected {expected}, observed {actual}."
+        )
+
+
+class MetadataInvariantError(MetadataStoreError):
+    """Raised when persisted metadata would violate structural invariants."""
+
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Metadata invariant violated: {reason}.")
+
+
 class InvalidEventSequenceError(MetadataStoreError):
     """Raised when an event does not advance the run-local sequence."""
 
@@ -783,6 +812,8 @@ __all__ = [
     "ManifestNotReadyError",
     "ManifestSerializationError",
     "MigrationCompatibilityError",
+    "MetadataConflictError",
+    "MetadataInvariantError",
     "MetadataNotFoundError",
     "MetadataStoreError",
     "DuplicateMetadataError",
