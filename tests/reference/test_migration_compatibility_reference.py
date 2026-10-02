@@ -19,7 +19,7 @@ EXPECTED_MIGRATION_GIT_BLOBS = {
     "0001_runtime_metadata.py": "bb0cdfdc9ead5a34ac96cf4a6ce8e18a20aa22e6",
     "0002_task_output_checkpoints.py": "9978fac4fa49ef459cb8fd468119b1f8554e8170",
     "0003_retry_eligible_at.py": "6b11ec24d588a448c2547b3c129218d3d51f36c2",
-    "0004_v2_runtime_metadata.py": "2c86ee2c3e29b9793725916f93a93de8752d66cc",
+    "0004_v2_runtime_metadata.py": "4d7a9561913178bc7097465816477f5977eb82a1",
 }
 
 
