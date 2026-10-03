@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+import sys
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, Generic, cast, overload
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:  # pragma: no cover
+    from typing_extensions import TypeVar
 
 from pyworkflowkit.authoring._values import (
     FrozenJsonValue,
@@ -15,20 +21,30 @@ from pyworkflowkit.authoring._values import (
     thaw_json_value,
 )
 from pyworkflowkit.authoring.io import InputDeclaration, OutputDeclaration
+from pyworkflowkit.authoring.validation import (
+    CircularDependencyError,
+    add_authoring_dependency,
+    register_authoring_task,
+)
 from pyworkflowkit.authoring.workloads import (
     Workload,
     WorkloadDescriptor,
+    WorkloadPortability,
     workload_fingerprint_payload,
     workload_portability,
 )
 from pyworkflowkit.domain.enums import FailurePolicy
+from pyworkflowkit.domain.ids import TaskId
 from pyworkflowkit.policies.retry import RetryPolicy
 from pyworkflowkit.policies.timeout import TimeoutPolicy
 from pyworkflowkit.policies.trigger import TriggerRule
 
+T_Input = TypeVar("T_Input", default=Any)
+T_Output = TypeVar("T_Output", default=Any)
 
-@dataclass(frozen=True, slots=True)
-class TaskDefinition:
+
+@dataclass(frozen=True, slots=True, weakref_slot=True)
+class TaskDefinition(Generic[T_Input, T_Output]):
     """Immutable declaration of exactly one workload boundary."""
 
     key: str
@@ -70,6 +86,65 @@ class TaskDefinition:
         object.__setattr__(self, "inputs", inputs)
         object.__setattr__(self, "outputs", outputs)
         object.__setattr__(self, "metadata", freeze_metadata(self.metadata))
+        register_authoring_task(self)
+
+    def __rshift__(
+        self,
+        other: TaskDefinition[Any, Any] | Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskDefinition[Any, Any] | TaskSequence:
+        """Declare that `other` depends on `self` (self >> other)."""
+        if isinstance(other, TaskDefinition):
+            add_authoring_dependency(self, other)
+            return other
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for item in other:
+                add_authoring_dependency(self, item)
+            return TaskSequence(other)
+        return NotImplemented
+
+    def __rrshift__(
+        self,
+        other: Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskDefinition[T_Input, T_Output]:
+        """Support fan-in: [task_a, task_b] >> self."""
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for item in other:
+                add_authoring_dependency(item, self)
+            return self
+        return NotImplemented
+
+    def __lshift__(
+        self,
+        other: TaskDefinition[Any, Any] | Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskDefinition[T_Input, T_Output]:
+        """Declare that `self` depends on `other` (self << other)."""
+        if isinstance(other, TaskDefinition):
+            add_authoring_dependency(other, self)
+            return self
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for item in other:
+                add_authoring_dependency(item, self)
+            return self
+        return NotImplemented
+
+    def __rlshift__(
+        self,
+        other: Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskSequence:
+        """Support fan-out reverse: [task_a, task_b] << self."""
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for item in other:
+                add_authoring_dependency(self, item)
+            return TaskSequence(other)
+        return NotImplemented
 
     @property
     def portable(self) -> bool:
@@ -108,6 +183,69 @@ class TaskDefinition:
             ],
             "metadata": _metadata_payload(self.metadata),
         }
+
+
+class TaskSequence(Sequence[TaskDefinition[Any, Any]]):
+    """Immutable sequence of TaskDefinition instances supporting flow operators."""
+
+    __slots__ = ("_tasks",)
+
+    def __init__(self, tasks: Iterable[TaskDefinition[Any, Any]]) -> None:
+        self._tasks: tuple[TaskDefinition[Any, Any], ...] = tuple(tasks)
+
+    def __len__(self) -> int:
+        return len(self._tasks)
+
+    @overload
+    def __getitem__(self, index: int) -> TaskDefinition[Any, Any]: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> TaskSequence: ...
+
+    def __getitem__(self, index: int | slice) -> TaskDefinition[Any, Any] | TaskSequence:
+        if isinstance(index, slice):
+            return TaskSequence(self._tasks[index])
+        return self._tasks[index]
+
+    def __iter__(self) -> Iterator[TaskDefinition[Any, Any]]:
+        return iter(self._tasks)
+
+    def __rshift__(
+        self,
+        other: TaskDefinition[Any, Any] | Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskDefinition[Any, Any] | TaskSequence:
+        if isinstance(other, TaskDefinition):
+            for task in self._tasks:
+                add_authoring_dependency(task, other)
+            return other
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for task in self._tasks:
+                for item in other:
+                    add_authoring_dependency(task, item)
+            return TaskSequence(other)
+        return NotImplemented
+
+    def __lshift__(
+        self,
+        other: TaskDefinition[Any, Any] | Sequence[TaskDefinition[Any, Any]],
+    ) -> TaskSequence:
+        if isinstance(other, TaskDefinition):
+            for task in self._tasks:
+                add_authoring_dependency(other, task)
+            return self
+        if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
+            for item in other:
+                for task in self._tasks:
+                    add_authoring_dependency(item, task)
+            return self
+        return NotImplemented
+
+    def __repr__(self) -> str:
+        return f"TaskSequence({[t.key for t in self._tasks]!r})"
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +297,56 @@ class WorkflowDefinition:
             name=name,
             version=version,
             failure_policy=failure_policy,
+            metadata=metadata or {},
+        )
+
+    @property
+    def workload_kind(self) -> str:
+        """Stable workload category as a composite workflow descriptor."""
+        return "workflow"
+
+    @property
+    def portability(self) -> WorkloadPortability:
+        """Whether the sub-workflow descriptor is portable."""
+        return (
+            WorkloadPortability.PORTABLE
+            if all(t.portable for t in self.tasks)
+            else WorkloadPortability.LOCAL_ONLY
+        )
+
+    def fingerprint_payload(self) -> Mapping[str, object]:
+        """Return deterministic workload identity for composite sub-workflows."""
+        return {
+            "kind": self.workload_kind,
+            "name": self.name,
+            "version": self.version,
+            "fingerprint": self.fingerprint(),
+            "portability": self.portability.value,
+        }
+
+    def as_task(
+        self,
+        key: str,
+        *,
+        depends_on: Sequence[TaskDefinition[Any, Any] | str] = (),
+        retry_policy: RetryPolicy | None = None,
+        timeout_policy: TimeoutPolicy | None = None,
+        trigger_rule: TriggerRule = TriggerRule.ALL_SUCCESS,
+        inputs: Sequence[InputDeclaration] = (),
+        outputs: Sequence[OutputDeclaration] = (),
+        metadata: Mapping[str, object] | None = None,
+    ) -> TaskDefinition[Any, Any]:
+        """Convert this workflow into a composite task usable in parent workflows."""
+        dependencies = tuple(d.key if isinstance(d, TaskDefinition) else str(d) for d in depends_on)
+        return TaskDefinition(
+            key=key,
+            workload=self,
+            dependencies=dependencies,
+            retry_policy=retry_policy or RetryPolicy(),
+            timeout_policy=timeout_policy or TimeoutPolicy(),
+            trigger_rule=trigger_rule,
+            inputs=tuple(inputs),
+            outputs=tuple(outputs),
             metadata=metadata or {},
         )
 
@@ -255,8 +443,9 @@ def _validate_acyclic(tasks: tuple[TaskDefinition, ...]) -> None:
 
     if len(visited) != len(tasks):
         cyclic = sorted(key for key, upstream in dependencies.items() if upstream)
-        raise ValueError(
-            "workflow dependency topology contains a cycle involving: " + ", ".join(cyclic)
+        raise CircularDependencyError(
+            cyclic,
+            task_ids=[TaskId(k) for k in cyclic],
         )
 
 
@@ -283,4 +472,4 @@ if TYPE_CHECKING:
     from pyworkflowkit.authoring.builders import WorkflowDefinitionBuilder
 
 
-__all__ = ["TaskDefinition", "WorkflowDefinition"]
+__all__ = ["TaskDefinition", "TaskSequence", "WorkflowDefinition"]
