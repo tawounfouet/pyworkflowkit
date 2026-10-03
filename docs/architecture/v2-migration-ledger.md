@@ -44,7 +44,7 @@ REMOVED
 | `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
 | `plugins` | KEEP + ADAPT | plugins.v2 | 16 | IMPLEMENTED |
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
-| `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
+| `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | IMPLEMENTED |
 | PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | IMPLEMENTED |
 | PyTransformKit integration | NEW | integrations.pytransformkit | 19 | IMPLEMENTED |
 | cross-framework retry/recovery conformance | ADD | integrations + runtime + persistence | 20 | IMPLEMENTED |
@@ -763,10 +763,19 @@ version handling, full Customer 360 beta/lineage qualification, and the 2.0.0b2 
 | Customer 360 lineage traversal | installed-artifact beta gate | IMPLEMENTED |
 | Customer 360 security negative | installed-artifact beta gate | IMPLEMENTED |
 | wheel/sdist beta execution | release qualification | IMPLEMENTED |
+| incompatible PyIngestKit workload/result contracts | integrations.pyingestkit + beta gate | IMPLEMENTED |
+| incompatible PyTransformKit workload/result contracts | integrations.pytransformkit + beta gate | IMPLEMENTED |
+| ecosystem retained only as compatibility/legacy facade | _architecture + architecture tests | IMPLEMENTED |
 
 LOT-21 keeps the frozen 1.x compatibility facade in place and adds migration behavior only
 under pyworkflowkit._compat. Canonical V2 modules remain forbidden from importing that
-namespace.
+namespace. The historical `pyworkflowkit.ecosystem` surface remains available for
+compatibility, but V2 architecture metadata classifies it as a legacy compatibility
+facade rather than a canonical V2 namespace.
+
+Both sibling adapters now reject unsupported integration contract versions at descriptor
+construction and boundary-result validation. LOT-21 therefore closes incompatible
+sibling handling without importing or inspecting sibling package internals.
 
 Runtime migration does not synthesize definition/plan fingerprints, CorrelationContext,
 TaskAttempt creation timestamps, retryability, failure categories, reconciliation truth,
