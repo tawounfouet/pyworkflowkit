@@ -45,7 +45,7 @@ REMOVED
 | `plugins` | KEEP + ADAPT | plugins.v2 | 16 | IMPLEMENTED |
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
 | `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
-| PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | PLANNED |
+| PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | IMPLEMENTED |
 | PyTransformKit integration | NEW | integrations.pytransformkit | 19 | PLANNED |
 | `compatibility.py` | MOVE/SHIM | _compat | 21 | PLANNED |
 
@@ -634,3 +634,34 @@ PostgreSQL and remain the authoritative schema.
 The historical 1.1 PostgresMetadataStore remains under
 pyworkflowkit.adapters.metadata.postgres. The canonical V2 PostgreSQLMetadataStore lives
 under pyworkflowkit.persistence and consumes the V2 MetadataStore contract.
+
+
+## LOT-18 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| PyIngestKitWorkload | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| PyIngestKitExecutionJob | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| PyIngestKitExecutionResult | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| PyIngestKitExecutionStatus | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| PyIngestKitWorkloadHandler | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| pyingestkit_v2_task | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| pyingestkit_v2_workload_binding | pyworkflowkit.integrations.pyingestkit | IMPLEMENTED |
+| PyIngestKit planning requirement | WorkflowPlanner | IMPLEMENTED |
+| single retry-owner invariant | PyIngestKit integration | IMPLEMENTED |
+| UNKNOWN_OUTCOME reconciliation mapping | PyIngestKit integration | IMPLEMENTED |
+| credential-reference-only posture | PyIngestKit integration | IMPLEMENTED |
+| LOT-18 runtime qualification | tests/unit/integrations | IMPLEMENTED |
+| LOT-18 reference acceptance | tests/reference | IMPLEMENTED |
+
+LOT-18 keeps one complete PyIngestKit job as one atomic workflow workload. The V2
+descriptor is registry-backed and portable, so existing V2 executors resolve it without a
+new executor abstraction while the planner records pyingestkit as an explicit integration
+requirement.
+
+Confirmed failures map to structured known FailureEvidence. Uncertain sibling outcomes
+map to UNKNOWN_OUTCOME + RETRYABLE_AFTER_RECONCILIATION and never create a blind retry
+attempt.
+
+The historical 1.1 PyIngestKit adapter remains available unchanged. LOT-19 owns the
+PyTransformKit sibling boundary and the first complete Customer 360 cross-framework graph.
