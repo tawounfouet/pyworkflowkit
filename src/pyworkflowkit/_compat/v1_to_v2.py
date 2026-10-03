@@ -251,7 +251,7 @@ class V1RuntimeMetadataSnapshot:
 
         if not isinstance(payload, str):
             raise TypeError("payload must be a string")
-        data = json.loads(payload)
+        data = json.loads(payload, object_pairs_hook=_reject_duplicate_pairs)
         if not isinstance(data, dict):
             raise ValueError("V1 runtime metadata payload must be an object")
         expected = {
@@ -509,6 +509,63 @@ def migrate_task_attempt(
             error_metadata=value.error_metadata,
         ),
     )
+
+
+def migrate_task_attempt_sequence(
+    values: tuple[V1TaskAttempt, ...],
+    *,
+    created_at_by_attempt_id: Mapping[str, datetime],
+) -> tuple[TaskAttemptMigration, ...]:
+    """Migrate one ordered legacy retry history without inventing attempt timestamps."""
+
+    if not isinstance(values, tuple):
+        raise TypeError("values must be a tuple")
+    if not values:
+        return ()
+
+    task_run_ids = {str(item.task_run_id) for item in values}
+    if len(task_run_ids) != 1:
+        raise V1MigrationUnsupportedError(
+            MigrationIssue(
+                code="PWK-MIG-V1-ATTEMPT-SEQUENCE-OWNER",
+                disposition=MigrationDisposition.UNSUPPORTED,
+                field="task_run_id",
+                summary="retry-history migration requires attempts from one TaskRun",
+            )
+        )
+
+    ordered = tuple(sorted(values, key=lambda item: item.attempt_number))
+    expected_numbers = tuple(range(1, len(ordered) + 1))
+    actual_numbers = tuple(item.attempt_number for item in ordered)
+    if actual_numbers != expected_numbers:
+        raise V1MigrationUnsupportedError(
+            MigrationIssue(
+                code="PWK-MIG-V1-ATTEMPT-SEQUENCE",
+                disposition=MigrationDisposition.UNSUPPORTED,
+                field="attempt_number",
+                summary=(
+                    "legacy retry history must contain a contiguous attempt-number "
+                    "sequence starting at 1"
+                ),
+            )
+        )
+
+    migrated: list[TaskAttemptMigration] = []
+    for item in ordered:
+        attempt_id = str(item.attempt_id)
+        created_at = created_at_by_attempt_id.get(attempt_id)
+        if created_at is None:
+            raise _missing_evidence(
+                "created_at",
+                f"missing creation timestamp for legacy TaskAttempt {attempt_id!r}",
+            )
+        migrated.append(
+            migrate_task_attempt(
+                item,
+                context=TaskAttemptMigrationContext(created_at=created_at),
+            )
+        )
+    return tuple(migrated)
 
 
 def migrate_external_run_ref(
@@ -773,6 +830,17 @@ def _datetime_or_none(value: object, field_name: str) -> datetime | None:
     return parsed
 
 
+def _reject_duplicate_pairs(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
 def _require_object(value: object, field_name: str) -> dict[str, object]:
     if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
         raise ValueError(f"{field_name} must be an object with string keys")
@@ -820,6 +888,7 @@ def migration_contract_snapshot() -> dict[str, object]:
         "workflow_run_requires_external_fingerprints": True,
         "workflow_run_requires_external_correlation": True,
         "task_attempt_requires_external_created_at": True,
+        "retry_history_requires_contiguous_attempt_numbers": True,
         "external_run_kind_requires_explicit_input": True,
         "legacy_failure_fields_preserved_as_evidence": True,
         "legacy_retry_eligible_at_preserved_as_evidence": True,
@@ -887,6 +956,7 @@ __all__ = [
     "import_v1_runtime_metadata",
     "migrate_external_run_ref",
     "migrate_task_attempt",
+    "migrate_task_attempt_sequence",
     "migrate_task_definition",
     "migrate_task_run",
     "migrate_workflow_definition",
