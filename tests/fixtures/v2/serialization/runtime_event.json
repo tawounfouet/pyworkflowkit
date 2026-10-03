@@ -1,0 +1,1 @@
+{"contract":"pyworkflowkit.runtime_event","contract_version":"1","payload":{"attempt_id":null,"attempt_number":null,"event_id":"W-golden:event-1","event_type":"WORKFLOW_STARTED","from_status":"PENDING","occurred_at":"2026-10-03T09:00:00Z","payload":{},"sequence":1,"task_key":null,"task_run_id":null,"to_status":"RUNNING","workflow_run_id":"W-golden"}}
