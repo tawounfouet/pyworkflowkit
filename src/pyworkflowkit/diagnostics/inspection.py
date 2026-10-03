@@ -125,9 +125,7 @@ class RuntimeInspector:
             )
 
         nonterminal = [
-            task_run
-            for task_run in task_runs
-            if task_run.status not in TASK_RUN_TERMINAL_STATUSES
+            task_run for task_run in task_runs if task_run.status not in TASK_RUN_TERMINAL_STATUSES
         ]
         deadlocked = bool(nonterminal) and not ready
         reason = (
