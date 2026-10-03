@@ -461,6 +461,16 @@ class SubprocessExecutor:
                 )
 
             returncode = process.returncode
+            if returncode is None:
+                return failure_result(
+                    request,
+                    error_code="PWK-SUBPROCESS-MISSING-RETURNCODE",
+                    category=FailureCategory.INTERNAL,
+                    retryability=Retryability.NON_RETRYABLE,
+                    uncertainty=OutcomeUncertainty.KNOWN,
+                    source_component="subprocess_executor",
+                    summary="subprocess completed without a return code",
+                )
             if returncode != 0:
                 return failure_result(
                     request,
