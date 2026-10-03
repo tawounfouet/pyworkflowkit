@@ -39,7 +39,7 @@ REMOVED
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
 | Alembic 0004 V2 runtime metadata | ADD | persistence migrations | 10 | IMPLEMENTED |
 | Alembic 0005 V2 task outputs | ADD | persistence migrations | 12 | IMPLEMENTED |
-| `contracts.serialization` | MOVE + REBUILD | serialization | 15 | PLANNED |
+| `contracts.serialization` | MOVE + REBUILD | serialization | 15 | IMPLEMENTED |
 | lineage modules | MOVE + ADAPT | lineage | 12 | IMPLEMENTED |
 | `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
 | `plugins` | KEEP + ADAPT | plugins | 16 | PLANNED |
@@ -535,3 +535,45 @@ explicit and do not claim operating-system sandboxing.
 
 LOT-14 does not add concurrent DAG scheduling, distributed workers, containers, broker
 execution or remote worker protocols.
+
+
+
+## LOT-15 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| StrictSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| SchemaCodec | pyworkflowkit.serialization | IMPLEMENTED |
+| BoundaryCodec | pyworkflowkit.serialization | IMPLEMENTED |
+| WireEnvelope | pyworkflowkit.serialization | IMPLEMENTED |
+| WireMigrationRegistry | pyworkflowkit.serialization | IMPLEMENTED |
+| canonical JSON UTF-8 | pyworkflowkit.serialization | IMPLEMENTED |
+| bounded payload decoding | BoundaryCodec | IMPLEMENTED |
+| CorrelationContextSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| WorkflowExecutionReferenceSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| ExternalRunRefSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| FailureEvidenceSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| DiagnosticSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| RuntimeEventSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| TaskOutputCheckpointSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| RunManifestSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| explicit domain/schema mappers | serialization.mapping | IMPLEMENTED |
+| explicit directed migration hooks | serialization.migration | IMPLEMENTED |
+| unknown future-version fail-closed behavior | BoundaryCodec | IMPLEMENTED |
+| no implicit downgrade | WireMigrationRegistry | IMPLEMENTED |
+| golden wire fixtures | tests/fixtures/v2/serialization | IMPLEMENTED |
+| roundtrip acceptance | tests/unit/serialization | IMPLEMENTED |
+| domain/Pydantic separation guard | tests/architecture | IMPLEMENTED |
+
+LOT-15 finalizes the V2 serialization namespace. Canonical domain dataclasses remain
+framework-independent and all Pydantic concerns stay at the serialization boundary.
+
+The public wire format is deterministic UTF-8 JSON inside an explicit contract/version
+envelope. Unknown contracts, unsupported versions, invalid UTF-8, unknown fields,
+non-portable values and oversized payloads fail closed.
+
+Legacy 1.1 schemas remain in pyworkflowkit.contracts.serialization for compatibility.
+The canonical V2 facade no longer re-exports those legacy implementations.
+
+LOT-16 owns plugin migration against the finalized V2 executor/persistence/serialization
+contracts.
