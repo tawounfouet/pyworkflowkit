@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 import sys
 import threading
 import time
@@ -25,9 +24,8 @@ from pyworkflowkit.executors import (
     TaskExecutionContext,
     TaskExecutionRequest,
     TaskExecutionResult,
+    _common,
 )
-from pyworkflowkit.executors import _common
-from pyworkflowkit.executors import asyncio as async_module
 from pyworkflowkit.executors import process as process_module
 from pyworkflowkit.runtime import (
     CorrelationContext,
