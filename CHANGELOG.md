@@ -8,15 +8,33 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Added
 
+- Post-2.0 release-closure and maintenance roadmap recording the exact stable V2 baseline,
+  qualification evidence, version policy, product boundaries, and unresolved publication
+  decisions.
+
 ### Changed
+
+- README roadmap now identifies `2.0.0` as the current stable release and post-2.0
+  maintenance/evolution planning as the active phase.
+- The `2.0.0` qualification report now records the final qualified main SHA, stable tag
+  qualification, GitHub Release publication, and artifact digests.
 
 ### Deprecated
 
 ### Removed
 
+- One-shot `finalize-v2.0.0.yml` release workflow after successful publication of
+  `v2.0.0`.
+
 ### Fixed
 
+- Removed stale README status that still described the 0.9 stabilization line as current
+  development.
+
 ### Security
+
+- No runtime security behavior changes. LOT-24 is documentation and release-engineering
+  closure only.
 
 ## 2.0.0 - 2026-10-03
 
