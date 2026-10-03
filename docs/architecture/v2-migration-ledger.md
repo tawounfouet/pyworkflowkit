@@ -34,8 +34,8 @@ REMOVED
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | IMPLEMENTED |
 | other executor adapters | MOVE + ADAPT | executors | 13/14 | IMPLEMENTED |
 | `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
-| metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
-| SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IN_PROGRESS |
+| metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IMPLEMENTED |
+| SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IMPLEMENTED |
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
 | Alembic 0004 V2 runtime metadata | ADD | persistence migrations | 10 | IMPLEMENTED |
 | Alembic 0005 V2 task outputs | ADD | persistence migrations | 12 | IMPLEMENTED |
@@ -608,3 +608,29 @@ plugins consume canonical V2 RuntimeEvent values.
 
 Discovery remains metadata-first and activation remains explicit. V1 entry-point groups
 and V2 entry-point groups are disjoint, and no implicit V1-to-V2 bridge is provided.
+
+
+## LOT-17 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| PostgreSQLMetadataStore | pyworkflowkit.persistence | IMPLEMENTED |
+| PostgreSQLSettings | pyworkflowkit.persistence | IMPLEMENTED |
+| create_postgresql_engine | pyworkflowkit.persistence | IMPLEMENTED |
+| PostgreSQL URL validation | persistence.postgresql | IMPLEMENTED |
+| READ COMMITTED session contract | persistence.postgresql | IMPLEMENTED |
+| UTC session timezone | persistence.postgresql | IMPLEMENTED |
+| UTF-8 client encoding | persistence.postgresql | IMPLEMENTED |
+| bounded pool + pre-ping | persistence.postgresql | IMPLEMENTED |
+| reusable V2 MetadataStore conformance | tests/contract | IMPLEMENTED |
+| multi-store stale CAS rejection | tests/contract | IMPLEMENTED |
+| Python 3.11/3.12/3.13 PostgreSQL qualification | release qualification | IMPLEMENTED |
+| migration head reuse through 0005 | migrations | IMPLEMENTED |
+
+LOT-17 completes the canonical V2 durable relational backend pair without introducing a
+fake migration revision. The existing 0004/0005 V2 tables are already portable to
+PostgreSQL and remain the authoritative schema.
+
+The historical 1.1 PostgresMetadataStore remains under
+pyworkflowkit.adapters.metadata.postgres. The canonical V2 PostgreSQLMetadataStore lives
+under pyworkflowkit.persistence and consumes the V2 MetadataStore contract.
