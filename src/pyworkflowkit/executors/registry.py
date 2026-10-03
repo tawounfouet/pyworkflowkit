@@ -41,10 +41,7 @@ class ExecutorRegistry:
 
     def descriptors(self) -> tuple[ExecutorDescriptor, ...]:
         with self._lock:
-            return tuple(
-                self._executors[key].descriptor
-                for key in sorted(self._executors)
-            )
+            return tuple(self._executors[key].descriptor for key in sorted(self._executors))
 
     @property
     def executor_ids(self) -> tuple[str, ...]:
