@@ -39,9 +39,9 @@ from pyworkflowkit.domain.ids import WorkflowRunId as V1WorkflowRunId
 from pyworkflowkit.domain.runtime import TaskAttempt as V1TaskAttempt
 from pyworkflowkit.domain.runtime import TaskRun as V1TaskRun
 from pyworkflowkit.domain.runtime import WorkflowRun as V1WorkflowRun
-from pyworkflowkit.domain.values import WorkflowParameter
 from pyworkflowkit.domain.values import ExternalRunRef as V1ExternalRunRef
 from pyworkflowkit.domain.values import RetryPolicy as V1RetryPolicy
+from pyworkflowkit.domain.values import WorkflowParameter
 from pyworkflowkit.runtime import CorrelationContext, CorrelationId
 from pyworkflowkit.states import (
     TaskAttemptStatus,
