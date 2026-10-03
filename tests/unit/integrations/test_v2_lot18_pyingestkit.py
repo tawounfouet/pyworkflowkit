@@ -295,6 +295,15 @@ def test_lot18_execution_result_rejects_incompatible_contract_version() -> None:
         )
 
 
+
+def test_lot21_workload_rejects_incompatible_integration_contract_version() -> None:
+    with pytest.raises(ValueError, match="unsupported PyIngestKit V2"):
+        PyIngestKitWorkload(
+            job_ref="jobs.customer360",
+            contract_version="999",
+        )
+
+
 def test_lot18_execution_result_validates_failure_shape() -> None:
     with pytest.raises(ValueError, match="requires error_code"):
         PyIngestKitExecutionResult(
