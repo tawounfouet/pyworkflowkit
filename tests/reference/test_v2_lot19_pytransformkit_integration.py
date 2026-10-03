@@ -67,9 +67,7 @@ def test_lot19_planner_records_pytransformkit_requirement() -> None:
         plan_ref="customer360.plan",
         engine="polars",
     )
-    plan = WorkflowPlanner().compile(
-        WorkflowDefinition(name="lot19-reference", tasks=(transform,))
-    )
+    plan = WorkflowPlanner().compile(WorkflowDefinition(name="lot19-reference", tasks=(transform,)))
 
     assert plan.required_integrations == ("pytransformkit",)
     assert plan.task("transform_customer_360").required_integrations == ("pytransformkit",)
