@@ -5,6 +5,8 @@ Consumers that still need the frozen 1.x root during migration must opt in throu
 qualified compatibility module rather than relying on ambiguous package-root aliases.
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.config import RuntimeSettings
 from pyworkflowkit.declarative import TaskHandle, WorkflowBuilder, task, workflow
@@ -20,6 +22,11 @@ from pyworkflowkit.domain.values import (
 )
 from pyworkflowkit.errors import PyWorkflowKitError
 from pyworkflowkit.ports.executor import RunContext
+
+try:
+    __version__ = version("pyworkflowkit")
+except PackageNotFoundError:  # pragma: no cover - source-tree fallback
+    __version__ = "0.0.0+unknown"
 
 __all__ = [
     "ArtifactId",
@@ -44,4 +51,5 @@ __all__ = [
     "WorkflowRuntime",
     "task",
     "workflow",
+    "__version__",
 ]
