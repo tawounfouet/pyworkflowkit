@@ -62,14 +62,10 @@ def test_lot19_planner_records_pytransformkit_requirement() -> None:
         key="transform_customer_360",
         plan_ref="customer360.plan",
     )
-    plan = WorkflowPlanner().compile(
-        WorkflowDefinition(name="lot19-reference", tasks=(upstream,))
-    )
+    plan = WorkflowPlanner().compile(WorkflowDefinition(name="lot19-reference", tasks=(upstream,)))
 
     assert plan.required_integrations == ("pytransformkit",)
-    assert plan.task("transform_customer_360").required_integrations == (
-        "pytransformkit",
-    )
+    assert plan.task("transform_customer_360").required_integrations == ("pytransformkit",)
 
 
 def test_lot19_snapshot_freezes_fail_closed_boundary() -> None:
