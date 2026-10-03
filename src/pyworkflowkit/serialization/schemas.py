@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -247,10 +247,15 @@ def _parse_wire_datetime(value: str, *, field_name: str) -> datetime:
     return parsed
 
 
-def _validate_enum_value(value: str, enum_type: type[Any], *, field_name: str) -> str:
+def _validate_enum_value(
+    value: str,
+    enum_type: type[StrEnum],
+    *,
+    field_name: str,
+) -> str:
     if not isinstance(value, str):
         raise TypeError(f"{field_name} must be a string")
-    allowed = {str(item.value) for item in enum_type}
+    allowed = {str(item.value) for item in enum_type.__members__.values()}
     if value not in allowed:
         raise ValueError(f"{field_name} must be one of {sorted(allowed)!r}")
     return value
