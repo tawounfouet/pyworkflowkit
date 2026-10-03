@@ -32,7 +32,7 @@ REMOVED
 | `application.retry` | SPLIT | policies/runtime internals | 07 | IMPLEMENTED |
 | `ports.executor` | REWRITE | executors | 06 | IMPLEMENTED |
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | IMPLEMENTED |
-| other executor adapters | MOVE + ADAPT | executors | 13/14 | IN_PROGRESS |
+| other executor adapters | MOVE + ADAPT | executors | 13/14 | IMPLEMENTED |
 | `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
 | metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
 | SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IN_PROGRESS |
@@ -487,3 +487,51 @@ qualified V2 surface and the frozen 1.1 package root remains unchanged.
 LOT-14 owns ProcessExecutor, AsyncExecutor and SubprocessExecutor migration. Those adapters
 must preserve explicit process/async/subprocess capability and serialization boundaries
 rather than being copied mechanically from 1.1.
+
+
+
+## LOT-14 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| ProcessExecutor | pyworkflowkit.executors | IMPLEMENTED |
+| AsyncExecutor | pyworkflowkit.executors | IMPLEMENTED |
+| SubprocessExecutor | pyworkflowkit.executors | IMPLEMENTED |
+| SubprocessCommand portable workload | pyworkflowkit.executors | IMPLEMENTED |
+| SubprocessResult | pyworkflowkit.executors | IMPLEMENTED |
+| SubprocessSecurityPolicy | pyworkflowkit.executors | IMPLEMENTED |
+| process pickle preflight | ProcessExecutor | IMPLEMENTED |
+| process context transport snapshot | ProcessExecutor | IMPLEMENTED |
+| process result serialization validation | ProcessExecutor | IMPLEMENTED |
+| hard process timeout | ProcessExecutor | IMPLEMENTED |
+| confirmed process cancellation | ProcessExecutor | IMPLEMENTED |
+| dedicated asyncio event loop | AsyncExecutor | IMPLEMENTED |
+| native execute_async bridge | AsyncExecutor | IMPLEMENTED |
+| awaitable-only handler contract | AsyncExecutor | IMPLEMENTED |
+| cooperative cancellation request | AsyncExecutor | IMPLEMENTED |
+| uncertain async timeout evidence | AsyncExecutor | IMPLEMENTED |
+| shell-free argv execution | SubprocessExecutor | IMPLEMENTED |
+| planner-native subprocess workload routing | SubprocessCommand | IMPLEMENTED |
+| subprocess environment/cwd/I/O policy | SubprocessSecurityPolicy | IMPLEMENTED |
+| captured subprocess result | SubprocessResult | IMPLEMENTED |
+| structured non-zero exit evidence | SubprocessExecutor | IMPLEMENTED |
+| hard subprocess timeout | SubprocessExecutor | IMPLEMENTED |
+| confirmed subprocess cancellation | SubprocessExecutor | IMPLEMENTED |
+| executor contract v4 | pyworkflowkit.executors.contracts | IMPLEMENTED |
+| mixed advanced-executor workflow acceptance | tests/integration | IMPLEMENTED |
+
+LOT-14 completes the canonical local advanced executor family planned for the first V2
+implementation line.
+
+Process execution fails closed at both input and output serialization boundaries. Process
+isolation remains trusted-Python isolation rather than a security sandbox.
+
+Async cancellation is cooperative and therefore returns REQUESTED rather than fabricated
+confirmation. Soft async deadlines preserve UNKNOWN_OUTCOME/no-blind-retry semantics.
+
+Subprocess execution promotes SubprocessCommand into a portable workload descriptor and
+fixes shell=False as part of the qualified contract. Security policy guardrails remain
+explicit and do not claim operating-system sandboxing.
+
+LOT-14 does not add concurrent DAG scheduling, distributed workers, containers, broker
+execution or remote worker protocols.
