@@ -78,6 +78,7 @@ def test_lot12_event_vocabulary_is_frozen() -> None:
         "WORKFLOW_UNKNOWN_OUTCOME",
         "TASK_READY",
         "TASK_STARTED",
+        "TASK_RESUMED",
         "TASK_RETRYING",
         "TASK_SUCCEEDED",
         "TASK_FAILED",
