@@ -1,0 +1,1 @@
+{"contract":"pykit.correlation_context","contract_version":"1","payload":{"causation_id":"cause-1","correlation_id":"C-42","span_id":"span-1","trace_id":"trace-1","workflow_run_id":"W-42"}}

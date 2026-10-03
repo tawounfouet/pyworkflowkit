@@ -65,6 +65,15 @@ def v2_boundary_wire_contract_snapshot() -> dict[str, object]:
 
     return {
         "contract_family_version": "1",
+        "codec_contract_version": "1",
+        "canonical_json": True,
+        "strict_decoding": True,
+        "non_executable_deserialization": True,
+        "duplicate_json_keys": "reject",
+        "non_finite_numbers": "reject",
+        "default_max_payload_bytes": 1_048_576,
+        "default_max_nesting_depth": 32,
+        "envelope_fields": ["contract", "contract_version", "payload"],
         "contracts": {
             name: {
                 "contract": descriptor.contract,
