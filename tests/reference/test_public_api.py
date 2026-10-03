@@ -1,6 +1,6 @@
 """M18 public API acceptance coverage."""
 
-from pyworkflowkit import (
+from pyworkflowkit._compat.v1_root import (
     BackoffStrategy,
     RetryPolicy,
     TaskDefinition,
