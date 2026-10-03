@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pickle  # nosec B403 - trusted intra-runtime process transport only
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import get_all_start_methods, get_context
@@ -156,10 +157,8 @@ def _worker_main(
                 )
             )
 
-        try:
+        with suppress(BrokenPipeError, OSError):
             send_connection.send(result)
-        except (BrokenPipeError, OSError):
-            pass
     finally:
         send_connection.close()
 
