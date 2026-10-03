@@ -33,7 +33,11 @@ class ExecutionLineageProjector:
         workflow: WorkflowDefinition | ExecutionPlan,
         workflow_run_id: WorkflowRunId,
     ) -> ExecutionLineage:
-        plan = self._planner.compile(workflow) if isinstance(workflow, WorkflowDefinition) else workflow
+        plan = (
+            self._planner.compile(workflow)
+            if isinstance(workflow, WorkflowDefinition)
+            else workflow
+        )
         if not isinstance(plan, ExecutionPlan):
             raise TypeError("workflow must be WorkflowDefinition or ExecutionPlan")
 
