@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 import pyworkflowkit.planning as planning
 from pyworkflowkit.application.planning import ExecutionPlan as LegacyExecutionPlan
 from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, WorkflowDefinition
@@ -41,8 +42,9 @@ def test_lot03_execution_plan_replaces_legacy_qualified_shape_only() -> None:
     assert not hasattr(plan, "workflow_id")
 
 
-def test_frozen_1_1_root_does_not_change_during_lot03() -> None:
-    assert "ExecutionPlan" not in pyworkflowkit.__all__
+def test_lot22_promotes_planning_to_root_without_mutating_v1_facade() -> None:
+    assert pyworkflowkit.ExecutionPlan is ExecutionPlan
+    assert "ExecutionPlan" not in v1_root.__all__
 
 
 def test_graph_internals_are_not_public_planning_exports() -> None:
