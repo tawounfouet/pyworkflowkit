@@ -150,9 +150,7 @@ def _happy_path() -> dict[str, object]:
     result = runtime.run(definition)
     assert result.status is WorkflowRunStatus.SUCCEEDED
     assert transform_job.calls == 2
-    assert result.task("publish_mart").output["locator"] == (
-        "warehouse/customer360/beta.parquet"
-    )
+    assert result.task("publish_mart").output["locator"] == ("warehouse/customer360/beta.parquet")
 
     lineage = runtime.lineage(definition, result.run_id)
     assert tuple(item.task_key for item in lineage.tasks) == (
@@ -169,11 +167,7 @@ def _happy_path() -> dict[str, object]:
     assert len(by_key["publish_mart"].external_runs) == 1
     assert all(item.output_digest is not None for item in lineage.tasks)
 
-    all_refs = [
-        ref
-        for task in lineage.tasks
-        for ref in task.external_runs
-    ]
+    all_refs = [ref for task in lineage.tasks for ref in task.external_runs]
     assert {ref.provider for ref in all_refs} == {"pyingestkit", "pytransformkit"}
     assert all("secretref://" not in repr(ref.metadata) for ref in all_refs)
 
@@ -269,7 +263,6 @@ def _incompatible_contracts() -> dict[str, bool]:
 
     assert all(checks.values())
     return checks
-
 
 def main() -> None:
     payload = {
