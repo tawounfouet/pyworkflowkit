@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import functools
 import os
 import threading
 import time
@@ -35,6 +34,22 @@ def _context(attempt_id: str = "TA-process") -> TaskExecutionContext:
             correlation_id=CorrelationId.parse("C-process"),
         ),
     )
+
+
+def _sleep_short() -> None:
+    time.sleep(0.5)
+
+
+def _sleep_long() -> None:
+    time.sleep(2.0)
+
+
+def _return_unserializable() -> object:
+    return open(__file__)
+
+
+def _raise_worker_error() -> None:
+    raise RuntimeError("worker-boom")
 
 
 def _request(
@@ -77,7 +92,7 @@ def test_process_executor_rejects_unpicklable_handler_before_spawn() -> None:
 
 
 def test_process_executor_reports_nonportable_result_without_transport_crash() -> None:
-    handler = functools.partial(open, __file__)
+    handler = _return_unserializable
     executor = ProcessExecutor(max_workers=1)
     try:
         result = executor.execute(_request(handler))
@@ -90,7 +105,7 @@ def test_process_executor_reports_nonportable_result_without_transport_crash() -
 
 
 def test_process_executor_hard_timeout_is_known() -> None:
-    handler = functools.partial(time.sleep, 0.5)
+    handler = _sleep_short
     executor = ProcessExecutor(max_workers=1)
     try:
         result = executor.execute(
@@ -110,7 +125,7 @@ def test_process_executor_hard_timeout_is_known() -> None:
 
 def test_process_executor_hard_cancellation_is_confirmed() -> None:
     request = _request(
-        functools.partial(time.sleep, 2.0),
+        _sleep_long,
         attempt_id="TA-cancel-process",
     )
     executor = ProcessExecutor(max_workers=1)
