@@ -1,0 +1,1 @@
+{"contract":"pyworkflowkit.task_output_checkpoint","contract_version":"1","payload":{"digest":"sha256:4062edaf750fb8074e7e83e0c9028c94e32468a8b6f1614774328ef045150f93","output":{"ok":true},"recorded_at":"2026-10-03T09:00:00Z","task_run_id":"TR-golden"}}
