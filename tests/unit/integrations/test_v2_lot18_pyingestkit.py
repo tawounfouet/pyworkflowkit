@@ -12,12 +12,12 @@ from pyworkflowkit.diagnostics import (
 )
 from pyworkflowkit.executors import InlineExecutor
 from pyworkflowkit.integrations.pyingestkit import (
+    V2_PYINGESTKIT_INTEGRATION_CONTRACT_VERSION,
     PyIngestKitExecutionResult,
     PyIngestKitExecutionStatus,
     PyIngestKitRetryOwner,
     PyIngestKitWorkload,
     PyIngestKitWorkloadHandler,
-    V2_PYINGESTKIT_INTEGRATION_CONTRACT_VERSION,
     pyingestkit_v2_task,
     pyingestkit_v2_workload_binding,
     v2_pyingestkit_integration_snapshot,
