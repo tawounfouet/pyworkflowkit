@@ -23,8 +23,8 @@ from pyworkflowkit.persistence.contracts import (
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import (
     RuntimeEvent,
-    RuntimeEventType,
     TaskOutputCheckpoint,
+    runtime_event_type_for_transition,
 )
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
@@ -508,64 +508,59 @@ class InMemoryMetadataStore:
         self,
         record: StateTransitionRecord,
     ) -> RuntimeEvent | None:
-        if record.entity_type is StateEntityType.WORKFLOW_RUN:
-            run_id = WorkflowRunId.parse(record.entity_id)
-            if run_id not in self._state.workflow_runs:
-                return None
-            return RuntimeEvent(
-                sequence=record.sequence,
-                event_type=RuntimeEventType.WORKFLOW_STATE_CHANGED,
-                workflow_run_id=run_id,
-                occurred_at=record.occurred_at,
-                from_status=record.from_status,
-                to_status=record.to_status,
-                payload={
-                    "entity_type": record.entity_type.value,
-                    "entity_id": record.entity_id,
-                },
-            )
+        task_run_id: TaskRunId | None = None
+        attempt_id: TaskAttemptId | None = None
+        task_key: str | None = None
+        attempt_number: int | None = None
 
-        if record.entity_type is StateEntityType.TASK_RUN:
+        if record.entity_type is StateEntityType.WORKFLOW_RUN:
+            workflow_run_id = WorkflowRunId.parse(record.entity_id)
+            if workflow_run_id not in self._state.workflow_runs:
+                return None
+        elif record.entity_type is StateEntityType.TASK_RUN:
             task_run_id = TaskRunId.parse(record.entity_id)
             task_run = self._state.task_runs.get(task_run_id)
             if task_run is None:
                 return None
-            return RuntimeEvent(
-                sequence=record.sequence,
-                event_type=RuntimeEventType.TASK_STATE_CHANGED,
-                workflow_run_id=task_run.workflow_run_id,
-                task_run_id=task_run_id,
-                occurred_at=record.occurred_at,
-                from_status=record.from_status,
-                to_status=record.to_status,
-                payload={
-                    "entity_type": record.entity_type.value,
-                    "entity_id": record.entity_id,
-                    "task_key": task_run.task_key,
-                },
-            )
+            workflow_run_id = task_run.workflow_run_id
+            task_key = task_run.task_key
+        else:
+            attempt_id = TaskAttemptId.parse(record.entity_id)
+            attempt = self._state.task_attempts.get(attempt_id)
+            if attempt is None:
+                return None
+            task_run = self._state.task_runs.get(attempt.task_run_id)
+            if task_run is None:
+                return None
+            workflow_run_id = task_run.workflow_run_id
+            task_run_id = task_run.task_run_id
+            task_key = task_run.task_key
+            attempt_number = attempt.attempt_number
 
-        attempt_id = TaskAttemptId.parse(record.entity_id)
-        attempt = self._state.task_attempts.get(attempt_id)
-        if attempt is None:
+        event_type = runtime_event_type_for_transition(
+            entity_type=record.entity_type.value,
+            from_status=record.from_status,
+            to_status=record.to_status,
+            attempt_number=attempt_number,
+        )
+        if event_type is None:
             return None
-        task_run = self._state.task_runs.get(attempt.task_run_id)
-        if task_run is None:
-            return None
+
         return RuntimeEvent(
             sequence=record.sequence,
-            event_type=RuntimeEventType.ATTEMPT_STATE_CHANGED,
-            workflow_run_id=task_run.workflow_run_id,
-            task_run_id=task_run.task_run_id,
+            event_id=f"{workflow_run_id}:event-{record.sequence}",
+            event_type=event_type,
+            workflow_run_id=workflow_run_id,
+            task_run_id=task_run_id,
             attempt_id=attempt_id,
+            task_key=task_key,
+            attempt_number=attempt_number,
             occurred_at=record.occurred_at,
             from_status=record.from_status,
             to_status=record.to_status,
             payload={
                 "entity_type": record.entity_type.value,
                 "entity_id": record.entity_id,
-                "task_key": task_run.task_key,
-                "attempt_number": attempt.attempt_number,
             },
         )
 
