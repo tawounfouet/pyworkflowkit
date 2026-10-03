@@ -597,17 +597,11 @@ def test_subprocess_security_cwd_and_stdin_fail_closed(tmp_path: Path) -> None:
         allowed_cwd_roots=(str(allowed_root),),
         max_stdin_bytes=2,
     )
-    policy.validate(
-        SubprocessCommand(argv=(sys.executable,), cwd=str(allowed_root))
-    )
+    policy.validate(SubprocessCommand(argv=(sys.executable,), cwd=str(allowed_root)))
     with pytest.raises(ValueError, match="outside allowed"):
-        policy.validate(
-            SubprocessCommand(argv=(sys.executable,), cwd=str(outside))
-        )
+        policy.validate(SubprocessCommand(argv=(sys.executable,), cwd=str(outside)))
     with pytest.raises(ValueError, match="stdin"):
-        policy.validate(
-            SubprocessCommand(argv=(sys.executable,), stdin="abc")
-        )
+        policy.validate(SubprocessCommand(argv=(sys.executable,), stdin="abc"))
 
 
 @pytest.mark.parametrize("value", [True, 1.5, "2"])
