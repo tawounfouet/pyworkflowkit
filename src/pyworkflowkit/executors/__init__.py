@@ -19,11 +19,20 @@ from pyworkflowkit.executors.contracts import (
     TaskExecutionResult,
     v2_executor_contract_snapshot,
 )
+from pyworkflowkit.executors.asyncio import AsyncExecutor
 from pyworkflowkit.executors.inline import InlineExecutor
+from pyworkflowkit.executors.process import ProcessExecutor
 from pyworkflowkit.executors.registry import ExecutorRegistry
+from pyworkflowkit.executors.subprocess import (
+    SubprocessCommand,
+    SubprocessExecutor,
+    SubprocessResult,
+    SubprocessSecurityPolicy,
+)
 from pyworkflowkit.executors.thread import ThreadExecutor
 
 __all__ = [
+    "AsyncExecutor",
     "CancellationCapability",
     "CancellationStatus",
     "CancellableExecutor",
@@ -31,6 +40,11 @@ __all__ = [
     "ExecutorDescriptor",
     "ExecutorRegistry",
     "InlineExecutor",
+    "ProcessExecutor",
+    "SubprocessCommand",
+    "SubprocessExecutor",
+    "SubprocessResult",
+    "SubprocessSecurityPolicy",
     "TaskCancellationRequest",
     "TaskCancellationResult",
     "TaskExecutionContext",
