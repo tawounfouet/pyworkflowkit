@@ -47,8 +47,8 @@ from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import (
     JsonValue,
     RuntimeEvent,
-    RuntimeEventType,
     TaskOutputCheckpoint,
+    runtime_event_type_for_transition,
 )
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
@@ -548,20 +548,18 @@ class SQLiteMetadataStore:
                 entity_type = StateEntityType(row.entity_type)
                 task_run_id: TaskRunId | None = None
                 attempt_id: TaskAttemptId | None = None
-                attempt_number: int | None = None
                 task_key: str | None = None
+                attempt_number: int | None = None
 
                 if entity_type is StateEntityType.WORKFLOW_RUN:
                     if row.entity_id != str(workflow_run_id):
                         continue
-                    event_type = RuntimeEventType.WORKFLOW_STATE_CHANGED
                 elif entity_type is StateEntityType.TASK_RUN:
                     task_row = session.get(models.TaskRunRow, row.entity_id)
                     if task_row is None or task_row.workflow_run_id != str(workflow_run_id):
                         continue
                     task_run_id = TaskRunId.parse(task_row.task_run_id)
                     task_key = task_row.task_key
-                    event_type = RuntimeEventType.TASK_STATE_CHANGED
                 else:
                     attempt_row = session.get(models.TaskAttemptRow, row.entity_id)
                     if attempt_row is None:
@@ -571,30 +569,35 @@ class SQLiteMetadataStore:
                         continue
                     task_run_id = TaskRunId.parse(task_row.task_run_id)
                     attempt_id = TaskAttemptId.parse(attempt_row.attempt_id)
-                    attempt_number = attempt_row.attempt_number
                     task_key = task_row.task_key
-                    event_type = RuntimeEventType.ATTEMPT_STATE_CHANGED
+                    attempt_number = attempt_row.attempt_number
 
-                payload: dict[str, JsonValue] = {
-                    "entity_type": entity_type.value,
-                    "entity_id": row.entity_id,
-                }
-                if task_key is not None:
-                    payload["task_key"] = task_key
-                if attempt_number is not None:
-                    payload["attempt_number"] = attempt_number
+                event_type = runtime_event_type_for_transition(
+                    entity_type=entity_type.value,
+                    from_status=row.from_status,
+                    to_status=row.to_status,
+                    attempt_number=attempt_number,
+                )
+                if event_type is None:
+                    continue
 
                 events.append(
                     RuntimeEvent(
                         sequence=row.sequence,
+                        event_id=f"{workflow_run_id}:event-{row.sequence}",
                         event_type=event_type,
                         workflow_run_id=workflow_run_id,
                         task_run_id=task_run_id,
                         attempt_id=attempt_id,
+                        task_key=task_key,
+                        attempt_number=attempt_number,
                         occurred_at=row.occurred_at,
                         from_status=row.from_status,
                         to_status=row.to_status,
-                        payload=payload,
+                        payload={
+                            "entity_type": entity_type.value,
+                            "entity_id": row.entity_id,
+                        },
                     )
                 )
             return tuple(events)
