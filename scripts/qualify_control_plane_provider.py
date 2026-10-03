@@ -12,7 +12,7 @@ from pathlib import Path
 CONFORMANCE_PROGRAM = r"""
 import json
 
-from pyworkflowkit import WorkflowRuntime
+from pyworkflowkit._compat.v1_root import WorkflowRuntime
 from pyworkflowkit.control_plane import (
     CONTROL_PLANE_PROVIDER_CONTRACT_VERSION,
     ControlPlaneCapabilityError,
