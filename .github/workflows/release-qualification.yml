@@ -166,6 +166,12 @@ jobs:
           PY
           test "$(pyworkflow version)" = "$EXPECTED_VERSION"
 
+      - name: Customer 360 V2 beta from installed artifact
+        shell: bash
+        run: |
+          cd /tmp
+          python "$GITHUB_WORKSPACE/scripts/qualify_v2_customer360_beta.py"
+
 
   public-api-freeze:
     name: 1.0 public API freeze
