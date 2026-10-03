@@ -1,6 +1,6 @@
 """Tests for the lazy declarative API."""
 
-from pyworkflowkit import RetryPolicy, TaskId, TimeoutMode
+from pyworkflowkit._compat.v1_root import RetryPolicy, TaskId, TimeoutMode
 from pyworkflowkit.declarative import TaskHandle, WorkflowBuilder, task, workflow
 
 
