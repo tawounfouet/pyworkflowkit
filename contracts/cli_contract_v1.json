@@ -1,0 +1,168 @@
+{
+  "contract_version": "1",
+  "commands": [
+    "doctor",
+    "events",
+    "inspect",
+    "manifest",
+    "plan",
+    "plugins",
+    "run",
+    "validate",
+    "version"
+  ],
+  "json_commands": [
+    "doctor",
+    "events",
+    "inspect",
+    "manifest",
+    "plan",
+    "plugins",
+    "run",
+    "validate"
+  ],
+  "exit_codes": {
+    "success": 0,
+    "validation": 2,
+    "run_failure": 3,
+    "doctor_failure": 4
+  },
+  "error_required_keys": [
+    "error",
+    "exit_code"
+  ],
+  "json_required_keys": {
+    "doctor": [
+      "healthy",
+      "plugin_api_version",
+      "plugins"
+    ],
+    "events": [
+      "events",
+      "run_id"
+    ],
+    "inspect": [
+      "created_at",
+      "finished_at",
+      "run_id",
+      "started_at",
+      "status",
+      "workflow_id",
+      "workflow_version"
+    ],
+    "manifest": [
+      "created_at",
+      "events",
+      "finished_at",
+      "parameters",
+      "run_id",
+      "schema_version",
+      "started_at",
+      "status",
+      "tasks",
+      "workflow_id",
+      "workflow_version"
+    ],
+    "plan": [
+      "groups",
+      "workflow_id",
+      "workflow_version"
+    ],
+    "plugins": [
+      "count",
+      "plugins"
+    ],
+    "run": [
+      "created_at",
+      "finished_at",
+      "run_id",
+      "started_at",
+      "status",
+      "workflow_id",
+      "workflow_version"
+    ],
+    "validate": [
+      "task_count",
+      "valid",
+      "workflow_id",
+      "workflow_version"
+    ]
+  },
+  "json_nested_required_keys": {
+    "doctor.plugins[]": [
+      "error",
+      "name",
+      "status",
+      "type"
+    ],
+    "events.events[]": [
+      "attempt_number",
+      "event_id",
+      "event_sequence",
+      "event_type",
+      "occurred_at",
+      "payload",
+      "task_id",
+      "task_run_id"
+    ],
+    "manifest.events[]": [
+      "attempt_number",
+      "event_id",
+      "event_sequence",
+      "event_type",
+      "occurred_at",
+      "payload",
+      "task_id",
+      "task_run_id"
+    ],
+    "manifest.tasks[]": [
+      "artifacts",
+      "attempts",
+      "created_at",
+      "external_refs",
+      "finished_at",
+      "skip_reason",
+      "started_at",
+      "status",
+      "task_id",
+      "task_run_id"
+    ],
+    "manifest.tasks[].artifacts[]": [
+      "artifact_id",
+      "checksum",
+      "media_type",
+      "metadata",
+      "name",
+      "size_bytes",
+      "uri"
+    ],
+    "manifest.tasks[].attempts[]": [
+      "attempt_id",
+      "attempt_number",
+      "error_category",
+      "error_type",
+      "finished_at",
+      "started_at",
+      "status"
+    ],
+    "manifest.tasks[].external_refs[]": [
+      "external_ref_id",
+      "external_run_id",
+      "metadata",
+      "provider",
+      "uri"
+    ],
+    "plan.groups[]": [
+      "index",
+      "tasks"
+    ],
+    "plugins.plugins[]": [
+      "distribution",
+      "group",
+      "name",
+      "status",
+      "type",
+      "value"
+    ]
+  }
+}
