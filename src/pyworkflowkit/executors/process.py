@@ -287,14 +287,12 @@ class ProcessExecutor:
         handler_error = _ensure_picklable(handler)
         snapshot_error = _ensure_picklable(snapshot)
         if handler_error is not None or snapshot_error is not None:
-            details = tuple(
-                item
-                for item in (
-                    ("handler", handler_error) if handler_error is not None else None,
-                    ("context", snapshot_error) if snapshot_error is not None else None,
-                )
-                if item is not None
-            )
+            detail_items: list[tuple[str, str]] = []
+            if handler_error is not None:
+                detail_items.append(("handler", handler_error))
+            if snapshot_error is not None:
+                detail_items.append(("context", snapshot_error))
+            details = tuple(detail_items)
             return failure_result(
                 request,
                 error_code="PWK-PROCESS-SERIALIZATION",
@@ -342,7 +340,12 @@ class ProcessExecutor:
             )
 
         try:
-            if receive_connection.poll(remaining):
+            ready = (
+                receive_connection.poll()
+                if remaining is None
+                else receive_connection.poll(remaining)
+            )
+            if ready:
                 try:
                     result = receive_connection.recv()
                 except EOFError:
