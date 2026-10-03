@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyworkflowkit.runtime.evidence import JsonValue, RuntimeEvent
+from pyworkflowkit.runtime.evidence import JsonValue
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
@@ -44,7 +44,6 @@ class RunManifest:
     started_at: str | None
     ended_at: str | None
     tasks: tuple[ManifestTaskRun, ...]
-    events: tuple[RuntimeEvent, ...]
 
 
 @dataclass(frozen=True, slots=True)
