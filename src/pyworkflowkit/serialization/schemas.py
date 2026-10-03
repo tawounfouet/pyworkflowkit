@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -13,6 +12,11 @@ from pyworkflowkit.diagnostics.failure import (
     Retryability,
 )
 from pyworkflowkit.diagnostics.model import DiagnosticSeverity
+
+_FAILURE_CATEGORIES = frozenset(item.value for item in FailureCategory)
+_RETRYABILITY_VALUES = frozenset(item.value for item in Retryability)
+_UNCERTAINTY_VALUES = frozenset(item.value for item in OutcomeUncertainty)
+_DIAGNOSTIC_SEVERITIES = frozenset(item.value for item in DiagnosticSeverity)
 
 
 class StrictBoundarySchema(BaseModel):
@@ -171,17 +175,17 @@ class FailureEvidenceSchema(StrictBoundarySchema):
     @field_validator("category")
     @classmethod
     def validate_category(cls, value: str) -> str:
-        return _validate_enum_value(value, FailureCategory, field_name="category")
+        return _validate_enum_value(value, _FAILURE_CATEGORIES, field_name="category")
 
     @field_validator("retryability")
     @classmethod
     def validate_retryability(cls, value: str) -> str:
-        return _validate_enum_value(value, Retryability, field_name="retryability")
+        return _validate_enum_value(value, _RETRYABILITY_VALUES, field_name="retryability")
 
     @field_validator("uncertainty")
     @classmethod
     def validate_uncertainty(cls, value: str) -> str:
-        return _validate_enum_value(value, OutcomeUncertainty, field_name="uncertainty")
+        return _validate_enum_value(value, _UNCERTAINTY_VALUES, field_name="uncertainty")
 
     @field_validator("occurred_at")
     @classmethod
@@ -225,7 +229,7 @@ class DiagnosticSchema(StrictBoundarySchema):
     @field_validator("severity")
     @classmethod
     def validate_severity(cls, value: str) -> str:
-        return _validate_enum_value(value, DiagnosticSeverity, field_name="severity")
+        return _validate_enum_value(value, _DIAGNOSTIC_SEVERITIES, field_name="severity")
 
 
 def parse_wire_datetime(value: str, *, field_name: str) -> datetime:
@@ -249,13 +253,10 @@ def _parse_wire_datetime(value: str, *, field_name: str) -> datetime:
 
 def _validate_enum_value(
     value: str,
-    enum_type: type[StrEnum],
+    allowed: frozenset[str],
     *,
     field_name: str,
 ) -> str:
-    if not isinstance(value, str):
-        raise TypeError(f"{field_name} must be a string")
-    allowed = {str(item.value) for item in enum_type.__members__.values()}
     if value not in allowed:
         raise ValueError(f"{field_name} must be one of {sorted(allowed)!r}")
     return value
