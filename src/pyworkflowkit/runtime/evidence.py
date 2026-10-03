@@ -102,9 +102,10 @@ class RuntimeEvent:
             raise TypeError("attempt_id must be TaskAttemptId or None")
         if self.occurred_at.tzinfo is None or self.occurred_at.utcoffset() is None:
             raise ValueError("occurred_at must be timezone-aware")
-        if self.from_status is not None:
-            if not isinstance(self.from_status, str) or not self.from_status.strip():
-                raise ValueError("from_status must be non-empty when provided")
+        if self.from_status is not None and (
+            not isinstance(self.from_status, str) or not self.from_status.strip()
+        ):
+            raise ValueError("from_status must be non-empty when provided")
         if not isinstance(self.to_status, str) or not self.to_status.strip():
             raise ValueError("to_status must not be empty")
         normalized = normalize_json_value(dict(self.payload), path="payload")
