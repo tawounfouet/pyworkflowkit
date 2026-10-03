@@ -18,7 +18,7 @@ REMOVED
 
 | V1 path / concept | V2 action | Canonical V2 owner | LOT | V2 status |
 |---|---|---|---:|---|
-| `pyworkflowkit.__init__` | ADAPT later | root facade | 00/22 | IN_PROGRESS |
+| `pyworkflowkit.__init__` | ADAPT | root facade | 00/22 | IMPLEMENTED |
 | `domain.definitions` | MOVE + ADAPT | authoring | 02 | IMPLEMENTED |
 | `declarative` | SPLIT | authoring | 02 | IMPLEMENTED |
 | `domain.graph` | MOVE + INTERNALIZE | planning | 03 | IMPLEMENTED |
@@ -787,3 +787,31 @@ retry/recovery/uncertainty behavior with lineage traversal, security-negative ac
 and execution from installed wheel/sdist artifacts.
 
 LOT-22 owns the 2.0 release-candidate freeze and final release qualification.
+
+
+## LOT-22 release-candidate freeze
+
+LOT-22 performs the deferred package-root cutover and freezes the V2 compatibility
+baseline for `2.0.0rc1`.
+
+| Contract / evidence | Canonical owner | Status |
+|---|---|---|
+| narrow V2 package root | `pyworkflowkit.__init__` | IMPLEMENTED |
+| canonical V2 namespace exports | `contracts.v2_release_candidate` | IMPLEMENTED |
+| state vocabulary freeze | `contracts.v2_release_candidate` | IMPLEMENTED |
+| execution identity categories | `contracts.v2_release_candidate` | IMPLEMENTED |
+| Executor protocol methods | `contracts.v2_release_candidate` | IMPLEMENTED |
+| MetadataStore protocol methods | `contracts.v2_release_candidate` | IMPLEMENTED |
+| wire identity/version freeze | `contracts.v2_release_candidate` | IMPLEMENTED |
+| sibling integration contract versions | `contracts.v2_release_candidate` | IMPLEMENTED |
+| deterministic release evidence manifest | `scripts/qualify_v2_release_candidate.py` | IMPLEMENTED |
+| fixture SHA-256 evidence | release evidence manifest | IMPLEMENTED |
+| RC blocker-only change policy | release candidate contract | IMPLEMENTED |
+
+The 1.1 package root is no longer the active package facade. Historical 1.x behavior
+remains accessible through explicit qualified modules and migration tooling; ambiguous
+generic aliases are not reintroduced at the 2.x root.
+
+LOT-23 may fix blockers and finalize release metadata, but changing the frozen root,
+states, identities, Protocols, wire identities or sibling integration contracts requires
+a new release-candidate baseline.
