@@ -1,0 +1,1 @@
+{"contract":"pyworkflowkit.diagnostic","contract_version":"1","payload":{"code":"D-GOLDEN","correlation_id":null,"decision_context":null,"details":[],"related_policy":null,"severity":"warning","source_component":null,"source_framework":"pyworkflowkit","summary":"golden diagnostic","task_attempt_id":null,"task_run_id":null,"workflow_run_id":null}}
