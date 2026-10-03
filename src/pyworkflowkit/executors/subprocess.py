@@ -84,9 +84,7 @@ class SubprocessCommand:
                 if not isinstance(key, str) or not isinstance(value, str):
                     raise TypeError("env keys and values must be strings")
                 if not key or "=" in key or "\x00" in key:
-                    raise ValueError(
-                        "env keys must be non-empty and contain neither '=' nor NUL"
-                    )
+                    raise ValueError("env keys must be non-empty and contain neither '=' nor NUL")
                 if "\x00" in value:
                     raise ValueError("env values must not contain NUL characters")
                 copied_env[key] = value
