@@ -31,5 +31,5 @@ def test_lot10_sqlite_store_satisfies_v2_metadata_protocol(tmp_path: Path) -> No
         metadata = store.metadata()
 
     assert metadata.durable is True
-    assert metadata.schema_version == "0004_v2_runtime_metadata"
+    assert metadata.schema_version == MIGRATION_HEAD_REVISION
     assert metadata.supports_concurrent_writers is True
