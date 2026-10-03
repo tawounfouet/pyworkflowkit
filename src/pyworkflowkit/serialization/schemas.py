@@ -30,7 +30,7 @@ class WireEnvelopeSchema(StrictBoundarySchema):
 
     contract: str
     contract_version: str
-    payload: dict[str, Any]
+    payload: dict[str, object]
 
     @field_validator("contract", "contract_version")
     @classmethod
