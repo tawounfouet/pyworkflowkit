@@ -74,8 +74,7 @@ class PyTransformKitResourceReference:
             _require_text(self.version, field_name="version")
         if self.contract_version != V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION:
             raise ValueError(
-                "unsupported PyTransformKit resource contract version "
-                f"{self.contract_version!r}"
+                f"unsupported PyTransformKit resource contract version {self.contract_version!r}"
             )
         object.__setattr__(
             self,
@@ -193,8 +192,7 @@ class PyTransformKitWorkload(RegisteredWorkload):
         reserved = sorted(key for key, _ in caller_parameters if key in _RESERVED_PARAMETERS)
         if reserved:
             raise ValueError(
-                "parameters cannot override reserved PyTransformKit keys: "
-                + ", ".join(reserved)
+                "parameters cannot override reserved PyTransformKit keys: " + ", ".join(reserved)
             )
 
         integration_parameters = [
@@ -296,8 +294,7 @@ class PyTransformKitWorkloadHandler:
                     retryability=Retryability.NON_RETRYABLE,
                     uncertainty=OutcomeUncertainty.KNOWN,
                     message_summary=(
-                        "PyTransformKitExecutionJob.run() must return "
-                        "PyTransformKitExecutionResult"
+                        "PyTransformKitExecutionJob.run() must return PyTransformKitExecutionResult"
                     ),
                     details=(("plan_ref", self.workload.plan_ref),),
                 )
