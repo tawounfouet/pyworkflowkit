@@ -345,7 +345,10 @@ def test_terminal_attempt_repairs_task_and_workflow_without_provider_call() -> N
 
     report = _service(store).reconcile(run_id)
 
-    assert report.task_reconciliations[0].disposition is ReconciliationDisposition.RESOLVED_SUCCEEDED
+    assert (
+        report.task_reconciliations[0].disposition
+        is ReconciliationDisposition.RESOLVED_SUCCEEDED
+    )
     assert store.get_task_run(task_run_id).status is TaskRunStatus.SUCCEEDED
     assert store.get_workflow_run(run_id).status is WorkflowRunStatus.SUCCEEDED
 
