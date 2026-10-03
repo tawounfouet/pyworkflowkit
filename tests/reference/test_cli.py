@@ -9,7 +9,7 @@ from types import ModuleType
 
 from typer.testing import CliRunner
 
-from pyworkflowkit import TaskHandle, task, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, task, workflow
 from pyworkflowkit.cli import app
 
 runner = CliRunner()
@@ -110,7 +110,7 @@ def test_cli_imports_explicit_workflow_target_from_current_directory(
     module = tmp_path / "rq04_local_workflow.py"
     module.write_text(
         (
-            "from pyworkflowkit import TaskHandle, task, workflow\n\n"
+            "from pyworkflowkit._compat.v1_root import TaskHandle, task, workflow\n\n"
             "@task\n"
             "def hello() -> str:\n"
             "    return 'hello'\n\n"

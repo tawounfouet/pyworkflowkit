@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 from pyworkflowkit.diagnostics import (
     FailureCategory,
     OutcomeUncertainty,
@@ -34,9 +35,10 @@ def test_v2_retry_contract_snapshot_is_machine_readable() -> None:
     assert "reconciliation_required" in snapshot["policy_fields"]
 
 
-def test_v2_retry_policy_is_distinct_from_frozen_v1_root_policy() -> None:
+def test_v2_retry_policy_is_promoted_and_v1_policy_remains_explicit() -> None:
     assert RetryPolicy is not LegacyRetryPolicy
-    assert pyworkflowkit.RetryPolicy is LegacyRetryPolicy
+    assert pyworkflowkit.RetryPolicy is RetryPolicy
+    assert v1_root.RetryPolicy is LegacyRetryPolicy
 
 
 def test_retry_evaluation_is_structured_not_boolean_only() -> None:

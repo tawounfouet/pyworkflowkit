@@ -7,7 +7,7 @@ import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pyworkflowkit import TaskResult, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import TaskResult, WorkflowRuntime, task, workflow
 from pyworkflowkit.domain.ids import WorkflowId, WorkflowRunId
 from pyworkflowkit.domain.runtime import WorkflowRun
 from pyworkflowkit.integrations import external_workload_task

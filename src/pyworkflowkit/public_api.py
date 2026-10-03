@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from pyworkflowkit._architecture import v2_architecture_snapshot
+from pyworkflowkit._architecture import V2_ROOT_TARGET_ALLOWLIST, v2_architecture_snapshot
 
 PUBLIC_API_CONTRACT_VERSION = "1"
 PUBLIC_API_TARGET_RELEASE = "1.0.0"
@@ -186,21 +186,32 @@ def public_api_contract_snapshot() -> dict[str, object]:
     }
 
 
-# LOT-00 V2 architecture metadata is intentionally not part of the frozen 1.x
-# public_api.__all__ surface. It becomes a public compatibility contract only
-# when the V2 API reaches its dedicated freeze milestone.
-V2_PUBLIC_API_BASELINE_CONTRACT_VERSION = "1"
+# V2 public API freeze. The 1.0 constants above remain historical migration
+# evidence and are not required to match the current 2.0 package root.
+V2_PUBLIC_API_CONTRACT_VERSION = "1"
 V2_PUBLIC_API_TARGET_RELEASE = "2.0.0"
+V2_ROOT_PUBLIC_SURFACE: tuple[str, ...] = V2_ROOT_TARGET_ALLOWLIST
 
 
 def v2_public_api_baseline_snapshot() -> dict[str, object]:
-    """Return the pre-freeze V2 namespace and architecture baseline."""
+    """Return the architecture baseline retained from the V2 migration line."""
 
     snapshot = v2_architecture_snapshot()
     return {
-        "contract_version": V2_PUBLIC_API_BASELINE_CONTRACT_VERSION,
+        "contract_version": V2_PUBLIC_API_CONTRACT_VERSION,
         "target_release": V2_PUBLIC_API_TARGET_RELEASE,
         "architecture": snapshot,
+    }
+
+
+def v2_root_public_api_snapshot() -> dict[str, object]:
+    """Return the frozen PyWorkflowKit 2.0 root export contract."""
+
+    return {
+        "contract_version": V2_PUBLIC_API_CONTRACT_VERSION,
+        "target_release": V2_PUBLIC_API_TARGET_RELEASE,
+        "module": "pyworkflowkit",
+        "exports": list(V2_ROOT_PUBLIC_SURFACE),
     }
 
 

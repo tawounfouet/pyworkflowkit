@@ -233,11 +233,11 @@ jobs:
           python -m build --wheel --outdir /tmp/ecosystem-dist ecosystem-template
           python -m build --wheel --outdir /tmp/executor-dist qualification-integrations/reference-executor
 
-      - name: Install compatibility fixtures with normal dependency resolution
+      - name: Install historical compatibility fixtures without replacing core
         run: |
-          python -m pip install /tmp/ecosystem-dist/*.whl
-          python -m pip install /tmp/executor-dist/*.whl
-          python -m pip check
+          python -m pip install --no-deps /tmp/ecosystem-dist/*.whl
+          python -m pip install --no-deps /tmp/executor-dist/*.whl
+          python -c "from importlib.metadata import version; assert version('pyworkflowkit') == '2.0.0rc1'"
 
       - name: Qualify RQ-02 against installed wheel
         shell: bash
@@ -831,6 +831,78 @@ jobs:
               raise SystemExit("detect-secrets found candidate secrets in src/pyworkflowkit")
           PY
 
+  v2-release-candidate:
+    name: V2 2.0 release candidate
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - metadata
+      - build
+      - artifact-install
+      - public-api-freeze
+      - compatibility-deprecation
+      - static-typing
+      - developer-experience
+      - developer-experience-v2
+      - packaging-distribution
+      - release-candidate
+      - reference-contracts
+      - reference-integrations
+      - control-plane-provider
+      - ecosystem-sdk
+      - transverse-v0-8
+      - sqlite-upgrade
+      - postgres-upgrade
+      - security
+
+    steps:
+      - name: Require complete inherited qualification
+        shell: bash
+        run: |
+          test "${{ needs.metadata.result }}" = "success"
+          test "${{ needs.build.result }}" = "success"
+          test "${{ needs.artifact-install.result }}" = "success"
+          test "${{ needs.public-api-freeze.result }}" = "success"
+          test "${{ needs.compatibility-deprecation.result }}" = "success"
+          test "${{ needs.static-typing.result }}" = "success"
+          test "${{ needs.developer-experience.result }}" = "success"
+          test "${{ needs.developer-experience-v2.result }}" = "success"
+          test "${{ needs.packaging-distribution.result }}" = "success"
+          test "${{ needs.release-candidate.result }}" = "success"
+          test "${{ needs.reference-contracts.result }}" = "success"
+          test "${{ needs.reference-integrations.result }}" = "success"
+          test "${{ needs.control-plane-provider.result }}" = "success"
+          test "${{ needs.ecosystem-sdk.result }}" = "success"
+          test "${{ needs.transverse-v0-8.result }}" = "success"
+          test "${{ needs.sqlite-upgrade.result }}" = "success"
+          test "${{ needs.postgres-upgrade.result }}" = "success"
+          test "${{ needs.security.result }}" = "success"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pyworkflowkit-dist
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install 2.0 release candidate wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+
+      - name: Qualify installed V2 release candidate
+        shell: bash
+        run: |
+          cd /tmp
+          python "$GITHUB_WORKSPACE/scripts/qualify_v2_release_candidate.py"
+
   release-gate:
     name: Release qualification gate
     runs-on: ubuntu-latest
@@ -845,6 +917,7 @@ jobs:
       - developer-experience
       - packaging-distribution
       - release-candidate
+      - v2-release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -867,6 +940,7 @@ jobs:
           test "${{ needs.developer-experience.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
           test "${{ needs.release-candidate.result }}" = "success"
+          test "${{ needs.v2-release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"

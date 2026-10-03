@@ -16,12 +16,12 @@ from pyworkflowkit.contracts.developer_experience import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_v1_1_stable_version_and_classifier() -> None:
+def test_v1_1_stable_promotion_remains_historical_evidence_on_v2_rc() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
 
-    assert project["version"] == "1.1.0"
-    assert "Development Status :: 5 - Production/Stable" in project["classifiers"]
-    assert "Development Status :: 4 - Beta" not in project["classifiers"]
+    assert project["version"] == "2.0.0rc1"
+    assert "Development Status :: 4 - Beta" in project["classifiers"]
+    assert (ROOT / "docs" / "releases" / "1.1.0.md").is_file()
 
 
 def test_v1_1_stable_preserves_dx_contract_lineage() -> None:

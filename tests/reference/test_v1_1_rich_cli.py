@@ -9,7 +9,7 @@ from types import ModuleType
 
 from typer.testing import CliRunner
 
-from pyworkflowkit import TaskHandle, task, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, task, workflow
 from pyworkflowkit.cli import app
 
 runner = CliRunner()

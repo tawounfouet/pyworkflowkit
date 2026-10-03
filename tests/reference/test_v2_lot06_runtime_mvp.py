@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 import pyworkflowkit.executors as executors
 import pyworkflowkit.runtime as runtime
 from pyworkflowkit.application.runtime import WorkflowRuntime as LegacyWorkflowRuntime
@@ -84,7 +85,8 @@ def test_inline_executor_is_the_v2_local_baseline() -> None:
     assert TaskExecutionResult is not None
 
 
-def test_frozen_1_1_root_remains_unchanged() -> None:
-    assert pyworkflowkit.WorkflowRuntime is LegacyWorkflowRuntime
-    assert "WorkflowResult" not in pyworkflowkit.__all__
+def test_lot22_promotes_runtime_and_preserves_v1_runtime_facade() -> None:
+    assert pyworkflowkit.WorkflowRuntime is WorkflowRuntime
+    assert v1_root.WorkflowRuntime is LegacyWorkflowRuntime
+    assert "WorkflowResult" not in v1_root.__all__
     assert "InlineExecutor" not in pyworkflowkit.__all__

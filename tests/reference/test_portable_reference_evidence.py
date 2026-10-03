@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pyworkflowkit import TaskResult, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import TaskResult, WorkflowRuntime, task, workflow
 from pyworkflowkit.adapters.metadata.sqlite import SQLiteMetadataStore
 from pyworkflowkit.application.manifest import RunManifestSerializer
 from pyworkflowkit.application.mapping import DomainSchemaMapper

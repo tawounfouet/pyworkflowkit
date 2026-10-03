@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import json
 
-from pyworkflowkit import RunContext, TaskHandle, TaskId, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import (
+    RunContext,
+    TaskHandle,
+    TaskId,
+    WorkflowRuntime,
+    task,
+    workflow,
+)
 
 
 @task

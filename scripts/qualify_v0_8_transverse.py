@@ -19,7 +19,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from pyworkflowkit import (
+from pyworkflowkit._compat.v1_root import (
     TaskDefinition,
     TaskId,
     TaskResult,

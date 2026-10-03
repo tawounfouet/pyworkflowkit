@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 from pyworkflowkit.adapters.executors.asyncio import AsyncExecutor
 from pyworkflowkit.adapters.executors.local import LocalExecutor
 from pyworkflowkit.adapters.executors.process import ProcessExecutor
@@ -89,11 +89,11 @@ def test_v0_5_executor_family_capability_matrix_is_frozen() -> None:
 
 
 def test_v0_5_package_root_public_api_remains_intentionally_small() -> None:
-    assert set(pyworkflowkit.__all__) == EXPECTED_PUBLIC_API
-    assert "ThreadExecutor" not in pyworkflowkit.__all__
-    assert "ProcessExecutor" not in pyworkflowkit.__all__
-    assert "AsyncExecutor" not in pyworkflowkit.__all__
-    assert "SubprocessExecutor" not in pyworkflowkit.__all__
+    assert set(v1_root.__all__) == EXPECTED_PUBLIC_API
+    assert "ThreadExecutor" not in v1_root.__all__
+    assert "ProcessExecutor" not in v1_root.__all__
+    assert "AsyncExecutor" not in v1_root.__all__
+    assert "SubprocessExecutor" not in v1_root.__all__
 
 
 def test_v0_5_portable_contract_versions_remain_compatible() -> None:

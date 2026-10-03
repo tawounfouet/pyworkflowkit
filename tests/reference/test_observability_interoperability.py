@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from pyworkflowkit import RetryPolicy, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import RetryPolicy, WorkflowRuntime, task, workflow
 from pyworkflowkit.application.observability_plugins import ObservabilityDispatcher
 from pyworkflowkit.domain.enums import RuntimeEventType, WorkflowRunStatus
 from pyworkflowkit.domain.ids import RuntimeEventId, WorkflowRunId

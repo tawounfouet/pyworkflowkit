@@ -1,6 +1,6 @@
 """Import-safe decorated workflow used by the RQ-04 CLI journey."""
 
-from pyworkflowkit import RunContext, TaskHandle, TaskId, task, workflow
+from pyworkflowkit._compat.v1_root import RunContext, TaskHandle, TaskId, task, workflow
 
 
 @task

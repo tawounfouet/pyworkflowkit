@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from pyworkflowkit import RuntimeSettings
+from pyworkflowkit._compat.v1_root import RuntimeSettings
 
 settings = RuntimeSettings.load(
     overrides={

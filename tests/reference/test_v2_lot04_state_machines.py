@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 import pyworkflowkit.runtime as runtime
 import pyworkflowkit.states as states
 from pyworkflowkit.domain.runtime import TaskAttempt as LegacyTaskAttempt
@@ -38,10 +39,13 @@ def test_runtime_namespace_now_owns_v2_run_entities() -> None:
     assert runtime.WorkflowRun is WorkflowRun
 
 
-def test_frozen_1_1_root_remains_unchanged() -> None:
-    assert "WorkflowRun" not in pyworkflowkit.__all__
-    assert "TaskRun" not in pyworkflowkit.__all__
-    assert "TaskAttempt" not in pyworkflowkit.__all__
+def test_lot22_promotes_v2_run_entities_and_preserves_v1_facade() -> None:
+    assert pyworkflowkit.WorkflowRun is WorkflowRun
+    assert pyworkflowkit.TaskRun is TaskRun
+    assert pyworkflowkit.TaskAttempt is TaskAttempt
+    assert "WorkflowRun" not in v1_root.__all__
+    assert "TaskRun" not in v1_root.__all__
+    assert "TaskAttempt" not in v1_root.__all__
 
 
 def test_uncertainty_and_cancellation_states_are_public() -> None:

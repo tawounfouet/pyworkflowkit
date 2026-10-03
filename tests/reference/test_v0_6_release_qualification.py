@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from importlib.resources import files
 
-import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 from pyworkflowkit.application.manifest import MANIFEST_SCHEMA_VERSION
 from pyworkflowkit.application.reconciliation import ReconciliationDisposition
 from pyworkflowkit.application.recovery import RecoveryLiveness, ResumeEligibility
@@ -127,10 +127,10 @@ def test_v0_6_portable_contract_versions_remain_compatible() -> None:
 
 
 def test_v0_6_package_root_public_api_remains_intentionally_small() -> None:
-    assert set(pyworkflowkit.__all__) == EXPECTED_PUBLIC_API
-    assert "RecoveryInspector" not in pyworkflowkit.__all__
-    assert "ReconciliationService" not in pyworkflowkit.__all__
-    assert "ConcurrentRunner" not in pyworkflowkit.__all__
+    assert set(v1_root.__all__) == EXPECTED_PUBLIC_API
+    assert "RecoveryInspector" not in v1_root.__all__
+    assert "ReconciliationService" not in v1_root.__all__
+    assert "ConcurrentRunner" not in v1_root.__all__
 
 
 def test_v0_6_migration_chain_is_packaged_through_retry_eligibility() -> None:

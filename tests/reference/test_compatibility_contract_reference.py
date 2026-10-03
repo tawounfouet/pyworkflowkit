@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from importlib.resources import files
 
-import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 from pyworkflowkit.application.manifest import MANIFEST_SCHEMA_VERSION
 from pyworkflowkit.cli import (
     DOCTOR_FAILURE_EXIT,
@@ -111,7 +111,7 @@ def _registered_cli_commands() -> set[str]:
 
 
 def test_m41_package_root_api_baseline_is_explicit() -> None:
-    assert set(pyworkflowkit.__all__) == EXPECTED_PUBLIC_API
+    assert set(v1_root.__all__) == EXPECTED_PUBLIC_API
 
 
 def test_m41_runtime_vocabulary_baseline_is_explicit() -> None:

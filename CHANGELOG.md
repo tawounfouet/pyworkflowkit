@@ -18,6 +18,45 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 2.0.0rc1 - 2026-10-03
+
+PyWorkflowKit 2.0 release-candidate freeze.
+
+### Added
+
+- Canonical V2 release-candidate evidence manifest aggregating architecture, public API,
+  authoring, planning, state, runtime, retry/timeout, executor, persistence, wire,
+  plugin, sibling-integration, and migration contracts.
+- Installed-artifact `2.0.0rc1` qualifier.
+- Dedicated LOT-22 architecture and release documentation.
+
+### Changed
+
+- Package version advanced from `1.1.0` to `2.0.0rc1`.
+- Package root promoted from the historical 1.1 facade to the canonical V2 root.
+- Distribution classifier moved to Beta for the release-candidate line.
+- The historical 1.0 package-root snapshot is retained as migration evidence rather
+  than enforced against the live 2.0 root.
+
+### Deprecated
+
+- Nothing new. Historical 1.x facades remain available only through their documented
+  compatibility paths.
+
+### Removed
+
+- Legacy-only symbols are removed from the frozen 2.0 package-root export set.
+
+### Fixed
+
+- Release qualification now has an explicit V2 RC freeze contract instead of relying
+  only on inherited 1.x release-candidate evidence.
+
+### Security
+
+- No new security capability. Existing Bandit, dependency-audit, secret-scan, portable
+  boundary, sibling-isolation, and Customer 360 negative gates remain blocking.
+
 ## 1.1.0 - 2026-09-28
 
 Stable Developer Experience & Learning release promoted from the fully qualified

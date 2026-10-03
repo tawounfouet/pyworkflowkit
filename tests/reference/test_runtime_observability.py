@@ -2,7 +2,7 @@
 
 import logging
 
-from pyworkflowkit import (
+from pyworkflowkit._compat.v1_root import (
     BackoffStrategy,
     RetryPolicy,
     TaskHandle,

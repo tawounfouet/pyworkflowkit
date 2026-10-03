@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from pyworkflowkit import TaskHandle, WorkflowRuntime, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, WorkflowRuntime, workflow
 from pyworkflowkit.ecosystem import RunContext
 from pyworkflowkit.integrations.pyingestkit import (
     PyIngestKitRunResult,
