@@ -36,7 +36,7 @@ from pyworkflowkit.runtime.evidence import (
     plain_json_value,
     runtime_event_type_for_transition,
 )
-from pyworkflowkit.states import TaskRunStateMachine, TaskRunStatus
+from pyworkflowkit.states import BlockReason, TaskRunStateMachine, TaskRunStatus
 
 NOW = datetime(2026, 10, 3, 9, 0, tzinfo=UTC)
 
@@ -378,6 +378,43 @@ def test_runtime_inspector_does_not_report_active_task_as_ready_or_deadlocked() 
     assert inspection.ready_task_keys == ()
     assert inspection.blocked_task_keys == ()
     assert inspection.deadlocked is False
+
+
+def test_runtime_inspector_preserves_explicit_blocked_state() -> None:
+    store = InMemoryMetadataStore()
+    workflow = _workflow()
+    plan = WorkflowPlanner().compile(workflow)
+    run = _run_for_plan(
+        store,
+        definition_fingerprint=plan.definition_fingerprint,
+        plan_fingerprint=plan.fingerprint(),
+    )
+    task = TaskRun(
+        task_run_id=TaskRunId.parse("TR-BLOCKED"),
+        workflow_run_id=run.run_id,
+        task_key="task",
+        created_at=NOW,
+    )
+    store.create_task_run(task)
+
+    persisted = store.get_task_run(task.task_run_id)
+    TaskRunStateMachine().transition(
+        persisted,
+        TaskRunStatus.BLOCKED,
+        at=NOW,
+        block_reason=BlockReason.POLICY,
+    )
+    store.update_task_run(
+        persisted,
+        expected_status=TaskRunStatus.PENDING,
+        transitioned_at=NOW,
+    )
+
+    inspection = RuntimeInspector(metadata=store).inspect(plan, run.run_id)
+
+    assert inspection.ready_task_keys == ()
+    assert inspection.blocked_task_keys == ("task",)
+    assert inspection.deadlocked is True
 
 
 def test_runtime_inspector_rejects_plan_identity_mismatch() -> None:
