@@ -14,7 +14,7 @@ CONFORMANCE_PROGRAM = r"""
 import json
 import sys
 
-from pyworkflowkit import WorkflowRuntime, workflow
+from pyworkflowkit._compat.v1_root import WorkflowRuntime, workflow
 from pyworkflowkit.ecosystem import (
     ECOSYSTEM_SDK_CONTRACT_VERSION,
     PluginCatalog,
@@ -111,7 +111,7 @@ elif scenario == "absent":
 
     @workflow(id="ecosystem.core.after-uninstall", version="1")
     def definition():
-        from pyworkflowkit import task
+        from pyworkflowkit._compat.v1_root import task
 
         @task(id="core")
         def core():
