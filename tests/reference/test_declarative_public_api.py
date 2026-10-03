@@ -1,6 +1,6 @@
 """M19 declarative API acceptance coverage."""
 
-from pyworkflowkit import TaskHandle, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, WorkflowRuntime, task, workflow
 
 
 def test_decorated_workflow_executes_through_public_runtime() -> None:
