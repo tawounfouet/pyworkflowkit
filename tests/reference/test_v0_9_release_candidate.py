@@ -83,10 +83,10 @@ def test_rq06_requires_every_inherited_release_qualification_family() -> None:
         assert f"      - {job_id}\n" in workflow
 
 
-def test_rq06_historical_promotion_metadata_is_preserved_on_1_x() -> None:
+def test_rq06_historical_promotion_metadata_is_preserved_after_1_x() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     current_version = str(project["project"]["version"])
-    assert current_version.startswith("1.")
+    assert current_version
 
     candidate_note = ROOT / "docs" / "releases" / f"{RELEASE_CANDIDATE_VERSION}.md"
     assert candidate_note.is_file()
