@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyworkflowkit import RetryPolicy, TaskHandle, WorkflowRuntime, workflow
+from pyworkflowkit._compat.v1_root import RetryPolicy, TaskHandle, WorkflowRuntime, workflow
 from pyworkflowkit.domain.enums import RuntimeEventType
 from pyworkflowkit.integrations.workload import (
     EXTERNAL_WORKLOAD_CONTRACT_VERSION,
