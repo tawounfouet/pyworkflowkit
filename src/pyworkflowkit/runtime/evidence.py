@@ -32,6 +32,7 @@ class RuntimeEventType(StrEnum):
 
     TASK_READY = "TASK_READY"
     TASK_STARTED = "TASK_STARTED"
+    TASK_RESUMED = "TASK_RESUMED"
     TASK_RETRYING = "TASK_RETRYING"
     TASK_SUCCEEDED = "TASK_SUCCEEDED"
     TASK_FAILED = "TASK_FAILED"
@@ -53,7 +54,6 @@ _WORKFLOW_EVENT_BY_STATUS = {
 
 _TASK_EVENT_BY_STATUS = {
     "READY": RuntimeEventType.TASK_READY,
-    "RUNNING": RuntimeEventType.TASK_STARTED,
     "SUCCEEDED": RuntimeEventType.TASK_SUCCEEDED,
     "FAILED": RuntimeEventType.TASK_FAILED,
     "SKIPPED": RuntimeEventType.TASK_SKIPPED,
@@ -90,6 +90,10 @@ def runtime_event_type_for_transition(
     if entity_type == "task_run":
         if from_status is None:
             return None
+        if to_status == "RUNNING":
+            if from_status == "READY":
+                return RuntimeEventType.TASK_STARTED
+            return RuntimeEventType.TASK_RESUMED
         return _TASK_EVENT_BY_STATUS.get(to_status)
 
     if entity_type == "task_attempt":
