@@ -1,17 +1,14 @@
-"""Local operational CLI for PyWorkflowKit."""
+"""Legacy commands preserved for backwards compatibility with V1.x/2.0 contract."""
 
 from __future__ import annotations
 
 import json
-import sys
 from collections.abc import Callable, Mapping
-from importlib import import_module
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
 
-from pyworkflowkit import __version__
 from pyworkflowkit.application.manifest import RunManifestSerializer
 from pyworkflowkit.application.planning import (
     DAGValidator,
@@ -19,9 +16,9 @@ from pyworkflowkit.application.planning import (
     build_dependency_graph,
 )
 from pyworkflowkit.application.runtime import WorkflowRuntime
-from pyworkflowkit.cli_contract import CLI_EXIT_CODES
+from pyworkflowkit.cli.bootstrap import load_workflow_from_spec
+from pyworkflowkit.cli.exit_codes import ExitCode
 from pyworkflowkit.cli_rendering import (
-    render_doctor,
     render_error,
     render_events,
     render_manifest,
@@ -31,343 +28,19 @@ from pyworkflowkit.cli_rendering import (
     render_validation,
 )
 from pyworkflowkit.config import RuntimeSettings
-from pyworkflowkit.declarative import WorkflowBuilder
-from pyworkflowkit.domain.definitions import WorkflowDefinition
 from pyworkflowkit.domain.enums import WorkflowRunStatus
 from pyworkflowkit.domain.runtime import RuntimeEvent, WorkflowRun
 from pyworkflowkit.errors import PyWorkflowKitError
-from pyworkflowkit.plugins import (
-    PLUGIN_API_VERSION,
-    PluginCatalog,
-    PluginDiscovery,
-    PluginType,
-)
+from pyworkflowkit.plugins import PluginDiscovery
 
-app = typer.Typer(
-    add_completion=False,
-    no_args_is_help=True,
-    help="Execute and inspect local PyWorkflowKit workflows.",
-)
-
-VALIDATION_EXIT = CLI_EXIT_CODES["validation"]
-RUN_FAILURE_EXIT = CLI_EXIT_CODES["run_failure"]
-DOCTOR_FAILURE_EXIT = CLI_EXIT_CODES["doctor_failure"]
-
-
-@app.command("version")
-def version_command() -> None:
-    """Print the installed PyWorkflowKit version."""
-
-    typer.echo(__version__)
-
-
-@app.command()
-def validate(
-    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """Validate one workflow definition and its DAG."""
-
-    try:
-        definition, _ = _load_workflow(target)
-        graph = build_dependency_graph(definition)
-        DAGValidator().validate(definition, graph)
-    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
-        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
-
-    payload = {
-        "valid": True,
-        "workflow_id": str(definition.workflow_id),
-        "workflow_version": definition.version,
-        "task_count": len(definition.tasks),
-    }
-    _emit(payload, json_output=json_output, renderer=render_validation)
-
-
-@app.command()
-def plan(
-    target: str = typer.Argument(..., help="Workflow reference as module:attribute."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
-) -> None:
-    """Render the deterministic execution plan."""
-
-    try:
-        definition, _ = _load_workflow(target)
-        graph = build_dependency_graph(definition)
-        DAGValidator().validate(definition, graph)
-        execution_plan = ExecutionPlanner().build_plan(definition, graph)
-    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
-        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
-
-    groups = [
-        {"index": group.index, "tasks": [str(task_id) for task_id in group.task_ids]}
-        for group in execution_plan.groups
-    ]
-    payload = {
-        "workflow_id": str(execution_plan.workflow_id),
-        "workflow_version": execution_plan.workflow_version,
-        "groups": groups,
-    }
-    _emit(payload, json_output=json_output, renderer=render_plan)
-
-
-@app.command("run")
-def run_command(
-    target: Annotated[
-        str, typer.Argument(help="Decorated workflow reference as module:attribute.")
-    ],
-    config: Annotated[
-        Path | None, typer.Option("--config", help="TOML runtime configuration.")
-    ] = None,
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """Execute one decorated workflow synchronously."""
-
-    try:
-        definition, builder = _load_workflow(target)
-        if builder is None:
-            raise TypeError("CLI run requires a decorated WorkflowBuilder target")
-        runtime = WorkflowRuntime(_load_settings(config))
-        for handle in builder.task_handles():
-            runtime.register(handle.handler_ref, handle.handler)
-        result = runtime.run(definition)
-    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
-        _fail(str(exc), code=RUN_FAILURE_EXIT, json_output=json_output)
-
-    payload = _run_payload(result)
-    _emit(
-        payload,
-        json_output=json_output,
-        renderer=lambda value: render_run(value, title="Workflow Run"),
-    )
-    if result.status is not WorkflowRunStatus.SUCCEEDED:
-        raise typer.Exit(RUN_FAILURE_EXIT)
-
-
-@app.command()
-def inspect(
-    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
-    config: Annotated[
-        Path | None, typer.Option("--config", help="TOML runtime configuration.")
-    ] = None,
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """Inspect one persisted workflow run."""
-
-    try:
-        runtime = WorkflowRuntime(_load_settings(config))
-        run = runtime.get_run(run_id)
-    except (PyWorkflowKitError, TypeError, ValueError) as exc:
-        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
-
-    payload = _run_payload(run)
-    _emit(
-        payload,
-        json_output=json_output,
-        renderer=lambda value: render_run(value, title="Persisted Workflow Run"),
-    )
-
-
-@app.command()
-def events(
-    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
-    config: Annotated[
-        Path | None, typer.Option("--config", help="TOML runtime configuration.")
-    ] = None,
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """List persisted runtime events."""
-
-    try:
-        runtime = WorkflowRuntime(_load_settings(config))
-        values = runtime.events(run_id)
-    except (PyWorkflowKitError, TypeError, ValueError) as exc:
-        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
-
-    payload = {"run_id": run_id, "events": [_event_payload(event) for event in values]}
-    _emit(payload, json_output=json_output, renderer=render_events)
-
-
-@app.command()
-def manifest(
-    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
-    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
-    config: Annotated[
-        Path | None, typer.Option("--config", help="TOML runtime configuration.")
-    ] = None,
-    json_output: Annotated[bool, typer.Option("--json", help="Emit canonical JSON.")] = False,
-) -> None:
-    """Build the final manifest for a persisted terminal run."""
-
-    try:
-        definition, _ = _load_workflow(target)
-        runtime = WorkflowRuntime(_load_settings(config))
-        value = runtime.manifest(definition, run_id)
-        serializer = RunManifestSerializer()
-    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
-        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
-
-    if json_output:
-        typer.echo(serializer.to_json(value))
-    else:
-        render_manifest(
-            {
-                "run_id": str(value.run_id),
-                "workflow_id": str(value.workflow_id),
-                "workflow_version": value.workflow_version,
-                "status": value.status,
-                "task_count": len(value.tasks),
-                "event_count": len(value.events),
-            }
-        )
-
-
-@app.command("plugins")
-def plugins_command(
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """List installed PyWorkflowKit plugin entry points without loading them."""
-
-    discovered = PluginDiscovery().discover()
-    plugins_payload = [
-        {
-            "name": plugin.name,
-            "type": plugin.plugin_type.value,
-            "group": plugin.group,
-            "value": plugin.value,
-            "distribution": plugin.distribution,
-            "status": "discovered",
-        }
-        for plugin in discovered
-    ]
-    payload: dict[str, object] = {
-        "count": len(plugins_payload),
-        "plugins": plugins_payload,
-    }
-    _emit(payload, json_output=json_output, renderer=render_plugins)
-
-
-@app.command()
-def doctor(
-    enable: Annotated[
-        str | None,
-        typer.Option(
-            "--enable",
-            help="Comma-separated explicit plugin selectors, e.g. executor:custom.",
-        ),
-    ] = None,
-    json_output: Annotated[
-        bool, typer.Option("--json", help="Emit machine-readable JSON.")
-    ] = False,
-) -> None:
-    """Check plugin discovery and explicitly enabled plugin compatibility."""
-
-    discovery = PluginDiscovery()
-    catalog = PluginCatalog()
-
-    try:
-        enabled = _parse_plugin_enablements(enable)
-        if enabled:
-            report = discovery.enable_selected(catalog=catalog, enabled=enabled)
-            result_payload = [
-                {
-                    "name": result.plugin.name,
-                    "type": result.plugin.plugin_type.value,
-                    "status": result.status.value,
-                    "error": result.error,
-                }
-                for result in report.results
-            ]
-            healthy = not report.has_errors
-        else:
-            candidates = discovery.discover()
-            result_payload = [
-                {
-                    "name": plugin.name,
-                    "type": plugin.plugin_type.value,
-                    "status": "discovered",
-                    "error": None,
-                }
-                for plugin in candidates
-            ]
-            healthy = True
-    except (PyWorkflowKitError, ValueError) as exc:
-        _fail(str(exc), code=DOCTOR_FAILURE_EXIT, json_output=json_output)
-
-    payload: dict[str, object] = {
-        "healthy": healthy,
-        "plugin_api_version": PLUGIN_API_VERSION,
-        "plugins": result_payload,
-    }
-    _emit(payload, json_output=json_output, renderer=render_doctor)
-
-    if not healthy:
-        raise typer.Exit(DOCTOR_FAILURE_EXIT)
-
-
-def main() -> None:
-    """Console-script entrypoint."""
-
-    app()
-
-
-def _load_workflow(target: str) -> tuple[WorkflowDefinition, WorkflowBuilder | None]:
-    module_name, separator, attribute_path = target.partition(":")
-    if not separator or not module_name or not attribute_path:
-        raise ValueError("workflow reference must use module:attribute syntax")
-
-    working_directory = str(Path.cwd())
-    if working_directory not in sys.path:
-        sys.path.insert(0, working_directory)
-
-    current: Any = import_module(module_name)
-    for part in attribute_path.split("."):
-        current = getattr(current, part)
-
-    if isinstance(current, WorkflowBuilder):
-        return current.build(), current
-    if isinstance(current, WorkflowDefinition):
-        return current, None
-    raise TypeError("target must resolve to WorkflowBuilder or WorkflowDefinition")
+VALIDATION_EXIT = int(ExitCode.VALIDATION_ERROR)
+RUN_FAILURE_EXIT = int(ExitCode.EXECUTION_FAILURE)
 
 
 def _load_settings(config: Path | None) -> RuntimeSettings:
     if config is None:
         return RuntimeSettings()
     return RuntimeSettings.load(config_file=config)
-
-
-def _parse_plugin_enablements(
-    value: str | None,
-) -> dict[PluginType, tuple[str, ...]]:
-    if value is None or not value.strip():
-        return {}
-
-    parsed: dict[PluginType, list[str]] = {}
-    for raw_selector in value.split(","):
-        selector = raw_selector.strip()
-        type_name, separator, plugin_name = selector.partition(":")
-        if not separator or not type_name or not plugin_name:
-            raise ValueError(
-                "plugin selector must use type:name syntax (executor, metadata, workload, or event)"
-            )
-        try:
-            plugin_type = PluginType(type_name)
-        except ValueError as exc:
-            raise ValueError(f"unknown plugin type '{type_name}'") from exc
-        parsed.setdefault(plugin_type, []).append(plugin_name)
-
-    return {plugin_type: tuple(sorted(set(names))) for plugin_type, names in parsed.items()}
 
 
 def _run_payload(run: WorkflowRun) -> dict[str, object]:
@@ -422,8 +95,196 @@ def _fail(message: str, *, code: int, json_output: bool) -> None:
     raise typer.Exit(code)
 
 
-if __name__ == "__main__":  # pragma: no cover
-    main()
+def validate_command(
+    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Validate one workflow definition and its DAG."""
+    try:
+        definition, _ = load_workflow_from_spec(target)
+        graph = build_dependency_graph(definition)
+        DAGValidator().validate(definition, graph)
+    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
+        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
+
+    payload = {
+        "valid": True,
+        "workflow_id": str(definition.workflow_id),
+        "workflow_version": definition.version,
+        "task_count": len(definition.tasks),
+    }
+    _emit(payload, json_output=json_output, renderer=render_validation)
 
 
-__all__ = ["app", "main"]
+def plan_command(
+    target: str = typer.Argument(..., help="Workflow reference as module:attribute."),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Render the deterministic execution plan."""
+    try:
+        definition, _ = load_workflow_from_spec(target)
+        graph = build_dependency_graph(definition)
+        DAGValidator().validate(definition, graph)
+        execution_plan = ExecutionPlanner().build_plan(definition, graph)
+    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
+        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
+
+    groups = [
+        {"index": group.index, "tasks": [str(task_id) for task_id in group.task_ids]}
+        for group in execution_plan.groups
+    ]
+    payload = {
+        "workflow_id": str(execution_plan.workflow_id),
+        "workflow_version": execution_plan.workflow_version,
+        "groups": groups,
+    }
+    _emit(payload, json_output=json_output, renderer=render_plan)
+
+
+def run_command(
+    target: Annotated[
+        str, typer.Argument(help="Decorated workflow reference as module:attribute.")
+    ],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Execute one decorated workflow synchronously."""
+    try:
+        definition, builder = load_workflow_from_spec(target)
+        if builder is None:
+            raise TypeError("CLI run requires a decorated WorkflowBuilder target")
+        runtime = WorkflowRuntime(_load_settings(config))
+        for handle in builder.task_handles():
+            runtime.register(handle.handler_ref, handle.handler)
+        result = runtime.run(definition)
+    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
+        _fail(str(exc), code=RUN_FAILURE_EXIT, json_output=json_output)
+
+    payload = _run_payload(result)
+    _emit(
+        payload,
+        json_output=json_output,
+        renderer=lambda value: render_run(value, title="Workflow Run"),
+    )
+    if result.status is not WorkflowRunStatus.SUCCEEDED:
+        raise typer.Exit(RUN_FAILURE_EXIT)
+
+
+def inspect_command(
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """Inspect one persisted workflow run."""
+    try:
+        runtime = WorkflowRuntime(_load_settings(config))
+        run = runtime.get_run(run_id)
+    except (PyWorkflowKitError, TypeError, ValueError) as exc:
+        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
+
+    payload = _run_payload(run)
+    _emit(
+        payload,
+        json_output=json_output,
+        renderer=lambda value: render_run(value, title="Persisted Workflow Run"),
+    )
+
+
+def events_command(
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """List persisted runtime events."""
+    try:
+        runtime = WorkflowRuntime(_load_settings(config))
+        values = runtime.events(run_id)
+    except (PyWorkflowKitError, TypeError, ValueError) as exc:
+        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
+
+    payload = {"run_id": run_id, "events": [_event_payload(event) for event in values]}
+    _emit(payload, json_output=json_output, renderer=render_events)
+
+
+def manifest_command(
+    target: Annotated[str, typer.Argument(help="Workflow reference as module:attribute.")],
+    run_id: Annotated[str, typer.Argument(help="Workflow run identifier.")],
+    config: Annotated[
+        Path | None, typer.Option("--config", help="TOML runtime configuration.")
+    ] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit canonical JSON.")] = False,
+) -> None:
+    """Build the final manifest for a persisted terminal run."""
+    try:
+        definition, _ = load_workflow_from_spec(target)
+        runtime = WorkflowRuntime(_load_settings(config))
+        value = runtime.manifest(definition, run_id)
+        serializer = RunManifestSerializer()
+    except (PyWorkflowKitError, TypeError, ValueError, ImportError, AttributeError) as exc:
+        _fail(str(exc), code=VALIDATION_EXIT, json_output=json_output)
+
+    if json_output:
+        typer.echo(serializer.to_json(value))
+    else:
+        render_manifest(
+            {
+                "run_id": str(value.run_id),
+                "workflow_id": str(value.workflow_id),
+                "workflow_version": value.workflow_version,
+                "status": value.status,
+                "task_count": len(value.tasks),
+                "event_count": len(value.events),
+            }
+        )
+
+
+def plugins_command(
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit machine-readable JSON.")
+    ] = False,
+) -> None:
+    """List installed PyWorkflowKit plugin entry points without loading them."""
+    discovered = PluginDiscovery().discover()
+    plugins_payload = [
+        {
+            "name": plugin.name,
+            "type": plugin.plugin_type.value,
+            "group": plugin.group,
+            "value": plugin.value,
+            "distribution": plugin.distribution,
+            "status": "discovered",
+        }
+        for plugin in discovered
+    ]
+    payload: dict[str, object] = {
+        "count": len(plugins_payload),
+        "plugins": plugins_payload,
+    }
+    _emit(payload, json_output=json_output, renderer=render_plugins)
+
+
+__all__ = [
+    "RUN_FAILURE_EXIT",
+    "VALIDATION_EXIT",
+    "events_command",
+    "inspect_command",
+    "manifest_command",
+    "plan_command",
+    "plugins_command",
+    "run_command",
+    "validate_command",
+]
