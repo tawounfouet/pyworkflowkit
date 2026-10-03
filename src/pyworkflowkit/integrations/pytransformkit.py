@@ -19,7 +19,7 @@ from pyworkflowkit.diagnostics import (
     OutcomeUncertainty,
     Retryability,
 )
-from pyworkflowkit.errors import PyIngestKitRetryOwnershipError
+from pyworkflowkit.errors import PyTransformKitRetryOwnershipError
 from pyworkflowkit.executors import TaskExecutionContext, TaskExecutionResult
 from pyworkflowkit.plugins.v2 import V2WorkloadBinding
 from pyworkflowkit.policies.retry import RetryPolicy
@@ -384,7 +384,7 @@ def pytransformkit_v2_task(
 
     policy = retry_policy or RetryPolicy()
     if retry_owner is PyTransformKitRetryOwner.PYTRANSFORMKIT and policy.max_attempts != 1:
-        raise PyIngestKitRetryOwnershipError(
+        raise PyTransformKitRetryOwnershipError(
             retry_owner=retry_owner.value,
             max_attempts=policy.max_attempts,
         )
