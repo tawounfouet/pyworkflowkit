@@ -58,8 +58,7 @@ def portable_json_value(value: object, *, path: str) -> object:
         return normalized
     if isinstance(value, (list, tuple)):
         return [
-            portable_json_value(item, path=f"{path}[{index}]")
-            for index, item in enumerate(value)
+            portable_json_value(item, path=f"{path}[{index}]") for index, item in enumerate(value)
         ]
     raise TypeError(f"{path} contains unsupported value type {type(value).__name__}")
 
