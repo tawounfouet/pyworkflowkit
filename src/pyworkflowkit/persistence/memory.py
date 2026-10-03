@@ -21,12 +21,17 @@ from pyworkflowkit.persistence.contracts import (
     StateTransitionRecord,
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.runtime.evidence import (
+    RuntimeEvent,
+    TaskOutputCheckpoint,
+    runtime_event_type_for_transition,
+)
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
 from pyworkflowkit.states.enums import WORKFLOW_TERMINAL_STATUSES
 
-IN_MEMORY_SCHEMA_VERSION = "1"
+IN_MEMORY_SCHEMA_VERSION = "2"
 
 
 @dataclass(slots=True)
@@ -39,6 +44,7 @@ class _MemoryState:
         ExternalRunRef,
     ] = field(default_factory=dict)
     transitions: list[StateTransitionRecord] = field(default_factory=list)
+    output_checkpoints: dict[TaskRunId, TaskOutputCheckpoint] = field(default_factory=dict)
     manifests: dict[WorkflowRunId, ManifestReference] = field(default_factory=dict)
     next_transition_sequence: int = 1
 
@@ -385,6 +391,59 @@ class InMemoryMetadataStore:
                 values = [item for item in values if item.entity_id == entity_id]
             return tuple(values)
 
+    def list_runtime_events(
+        self,
+        workflow_run_id: WorkflowRunId,
+    ) -> tuple[RuntimeEvent, ...]:
+        with self._lock:
+            if workflow_run_id not in self._state.workflow_runs:
+                raise MetadataNotFoundError(
+                    entity_type="WorkflowRun",
+                    entity_id=str(workflow_run_id),
+                )
+            events = [
+                event
+                for record in self._state.transitions
+                if (event := self._event_for_transition(record)) is not None
+                and event.workflow_run_id == workflow_run_id
+            ]
+            return tuple(events)
+
+    def set_task_output_checkpoint(
+        self,
+        checkpoint: TaskOutputCheckpoint,
+    ) -> None:
+        if not isinstance(checkpoint, TaskOutputCheckpoint):
+            raise TypeError("checkpoint must be a TaskOutputCheckpoint")
+        with self._lock:
+            task_run = self._task(checkpoint.task_run_id)
+            if task_run.status is not TaskRunStatus.SUCCEEDED:
+                raise MetadataInvariantError(
+                    reason="TaskOutputCheckpoint requires a SUCCEEDED TaskRun"
+                )
+            existing = self._state.output_checkpoints.get(checkpoint.task_run_id)
+            if existing is not None and existing != checkpoint:
+                raise MetadataConflictError(
+                    entity_type="TaskOutputCheckpoint",
+                    entity_id=str(checkpoint.task_run_id),
+                    expected="unchanged or absent",
+                    actual="different persisted checkpoint",
+                )
+            self._state.output_checkpoints[checkpoint.task_run_id] = checkpoint
+
+    def get_task_output_checkpoint(
+        self,
+        task_run_id: TaskRunId,
+    ) -> TaskOutputCheckpoint:
+        with self._lock:
+            try:
+                return self._state.output_checkpoints[task_run_id]
+            except KeyError as exc:
+                raise MetadataNotFoundError(
+                    entity_type="TaskOutputCheckpoint",
+                    entity_id=str(task_run_id),
+                ) from exc
+
     def set_manifest_reference(
         self,
         run_id: WorkflowRunId,
@@ -444,6 +503,66 @@ class InMemoryMetadataStore:
                 entity_type="TaskAttempt",
                 entity_id=str(attempt_id),
             ) from exc
+
+    def _event_for_transition(
+        self,
+        record: StateTransitionRecord,
+    ) -> RuntimeEvent | None:
+        task_run_id: TaskRunId | None = None
+        attempt_id: TaskAttemptId | None = None
+        task_key: str | None = None
+        attempt_number: int | None = None
+
+        if record.entity_type is StateEntityType.WORKFLOW_RUN:
+            workflow_run_id = WorkflowRunId.parse(record.entity_id)
+            if workflow_run_id not in self._state.workflow_runs:
+                return None
+        elif record.entity_type is StateEntityType.TASK_RUN:
+            task_run_id = TaskRunId.parse(record.entity_id)
+            task_run = self._state.task_runs.get(task_run_id)
+            if task_run is None:
+                return None
+            workflow_run_id = task_run.workflow_run_id
+            task_key = task_run.task_key
+        else:
+            attempt_id = TaskAttemptId.parse(record.entity_id)
+            attempt = self._state.task_attempts.get(attempt_id)
+            if attempt is None:
+                return None
+            task_run = self._state.task_runs.get(attempt.task_run_id)
+            if task_run is None:
+                return None
+            workflow_run_id = task_run.workflow_run_id
+            task_run_id = task_run.task_run_id
+            task_key = task_run.task_key
+            attempt_number = attempt.attempt_number
+
+        event_type = runtime_event_type_for_transition(
+            entity_type=record.entity_type.value,
+            from_status=record.from_status,
+            to_status=record.to_status,
+            attempt_number=attempt_number,
+        )
+        if event_type is None:
+            return None
+
+        return RuntimeEvent(
+            sequence=record.sequence,
+            event_id=f"{workflow_run_id}:event-{record.sequence}",
+            event_type=event_type,
+            workflow_run_id=workflow_run_id,
+            task_run_id=task_run_id,
+            attempt_id=attempt_id,
+            task_key=task_key,
+            attempt_number=attempt_number,
+            occurred_at=record.occurred_at,
+            from_status=record.from_status,
+            to_status=record.to_status,
+            payload={
+                "entity_type": record.entity_type.value,
+                "entity_id": record.entity_id,
+            },
+        )
 
     def _append_transition(
         self,

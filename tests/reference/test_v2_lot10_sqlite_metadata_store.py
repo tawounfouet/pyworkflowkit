@@ -17,11 +17,12 @@ def test_lot10_public_surface_exposes_canonical_sqlite_without_touching_root() -
 
 
 def test_lot10_migration_lineage_is_append_only() -> None:
-    assert MIGRATION_HISTORY[-2:] == (
+    index = MIGRATION_HISTORY.index("0004_v2_runtime_metadata")
+    assert MIGRATION_HISTORY[index - 1 : index + 1] == (
         "0003_retry_eligible_at",
         "0004_v2_runtime_metadata",
     )
-    assert MIGRATION_HEAD_REVISION == "0004_v2_runtime_metadata"
+    assert MIGRATION_HEAD_REVISION in MIGRATION_HISTORY
 
 
 def test_lot10_sqlite_store_satisfies_v2_metadata_protocol(tmp_path: Path) -> None:
@@ -30,5 +31,5 @@ def test_lot10_sqlite_store_satisfies_v2_metadata_protocol(tmp_path: Path) -> No
         metadata = store.metadata()
 
     assert metadata.durable is True
-    assert metadata.schema_version == "0004_v2_runtime_metadata"
+    assert metadata.schema_version == MIGRATION_HEAD_REVISION
     assert metadata.supports_concurrent_writers is True

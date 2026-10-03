@@ -45,7 +45,7 @@ def test_m46_snapshot_assembles_m41_to_m45_contracts() -> None:
         "release_candidate": "1",
         "typing": "1",
     }
-    assert snapshot["migration_head"] == "0004_v2_runtime_metadata"
+    assert snapshot["migration_head"] == "0005_v2_task_output_checkpoints"
     assert snapshot["compatibility"]["contract_version"] == "1"
     assert snapshot["compatibility"]["target_release"] == "1.0.0"
     assert snapshot["compatibility"]["by_status"]["deprecated"] == []

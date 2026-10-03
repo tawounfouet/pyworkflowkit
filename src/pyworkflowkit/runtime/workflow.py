@@ -14,6 +14,7 @@ from pyworkflowkit.diagnostics.failure import (
     OutcomeUncertainty,
     Retryability,
 )
+from pyworkflowkit.diagnostics.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
@@ -28,6 +29,12 @@ from pyworkflowkit.executors import (
     TaskExecutionRequest,
     TaskExecutionResult,
 )
+from pyworkflowkit.lineage import (
+    ExecutionLineage,
+    ExecutionLineageProjector,
+    RunManifest,
+    RunManifestBuilder,
+)
 from pyworkflowkit.persistence import MetadataStore
 from pyworkflowkit.planning import ExecutionPlan, TaskPlanEntry, WorkflowPlanner
 from pyworkflowkit.policies.retry import RetryDecision, RetryEvaluator
@@ -35,6 +42,11 @@ from pyworkflowkit.runtime._attempts import next_task_attempt
 from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.runtime.evidence import (
+    RuntimeEvent,
+    TaskOutputCheckpoint,
+    normalize_json_value,
+)
 from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
 from pyworkflowkit.runtime.reconciliation import (
     ExternalRunVerifier,
@@ -255,6 +267,14 @@ class WorkflowRuntime:
                     self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
                     self._transition_task(current, TaskRunStatus.SUCCEEDED)
                     outputs[entry.key] = result.output
+                    checkpoint_diagnostic = self._persist_output_checkpoint(
+                        task_run=current,
+                        output=result.output,
+                        run=run,
+                        attempt_id=attempt.attempt_id,
+                    )
+                    if checkpoint_diagnostic is not None:
+                        diagnostics.append(checkpoint_diagnostic)
 
                     run = self._metadata.get_workflow_run(run_id)
                     if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
@@ -416,6 +436,56 @@ class WorkflowRuntime:
             outputs=outputs,
             diagnostics=tuple(diagnostics),
         )
+
+    def events(self, workflow_run_id: WorkflowRunId) -> tuple[RuntimeEvent, ...]:
+        """Return canonical durable runtime events for one workflow run."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return tuple(self._metadata.list_runtime_events(workflow_run_id))
+
+    def manifest(
+        self,
+        workflow_run_id: WorkflowRunId,
+        *,
+        require_terminal: bool = False,
+    ) -> RunManifest:
+        """Build a deterministic manifest from durable runtime evidence."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return RunManifestBuilder(metadata=self._metadata).build(
+            workflow_run_id,
+            require_terminal=require_terminal,
+        )
+
+    def lineage(
+        self,
+        workflow: WorkflowDefinition | ExecutionPlan,
+        workflow_run_id: WorkflowRunId,
+    ) -> ExecutionLineage:
+        """Project deterministic execution lineage for one persisted run."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return ExecutionLineageProjector(
+            metadata=self._metadata,
+            planner=self._planner,
+        ).project(workflow, workflow_run_id)
+
+    def inspect(
+        self,
+        workflow: WorkflowDefinition | ExecutionPlan,
+        workflow_run_id: WorkflowRunId,
+    ) -> RuntimeInspection:
+        """Inspect one persisted execution against its canonical plan."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return RuntimeInspector(
+            metadata=self._metadata,
+            planner=self._planner,
+        ).inspect(workflow, workflow_run_id)
 
     def recovery_assessment(self, workflow_run_id: WorkflowRunId) -> RecoveryAssessment:
         """Classify durable recovery evidence without mutating runtime state."""
@@ -642,6 +712,34 @@ class WorkflowRuntime:
             attempt_id=attempt.attempt_id,
             reason=executor_result.reason,
         )
+
+    def _persist_output_checkpoint(
+        self,
+        *,
+        task_run: TaskRun,
+        output: object,
+        run: WorkflowRun,
+        attempt_id: TaskAttemptId,
+    ) -> Diagnostic | None:
+        try:
+            checkpoint = TaskOutputCheckpoint(
+                task_run_id=task_run.task_run_id,
+                output=normalize_json_value(output, path=f"task[{task_run.task_key}].output"),
+                recorded_at=self._now(),
+            )
+        except (TypeError, ValueError) as exc:
+            return _diagnostic(
+                "PWK-OUTPUT-NONPORTABLE",
+                "task output is process-local and was not checkpointed durably",
+                run=run,
+                task_run=task_run,
+                attempt_id=attempt_id,
+                severity=DiagnosticSeverity.WARNING,
+                details=(("reason", type(exc).__name__),),
+            )
+
+        self._metadata.set_task_output_checkpoint(checkpoint)
+        return None
 
     def _persist_external_run_refs(
         self,

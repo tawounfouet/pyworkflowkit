@@ -29,6 +29,7 @@ from pyworkflowkit.runtime import (
     WorkflowRun,
     WorkflowRunId,
 )
+from pyworkflowkit.runtime.evidence import TaskOutputCheckpoint, plain_json_value
 from pyworkflowkit.states import (
     BlockReason,
     SkipReason,
@@ -333,6 +334,28 @@ def transition_from_row(value: models.StateTransitionRow) -> StateTransitionReco
     )
 
 
+def output_checkpoint_to_row(
+    value: TaskOutputCheckpoint,
+) -> models.TaskOutputCheckpointRow:
+    return models.TaskOutputCheckpointRow(
+        task_run_id=str(value.task_run_id),
+        output_json=plain_json_value(value.output),
+        recorded_at=value.recorded_at,
+        digest=value.digest,
+    )
+
+
+def output_checkpoint_from_row(
+    value: models.TaskOutputCheckpointRow,
+) -> TaskOutputCheckpoint:
+    return TaskOutputCheckpoint(
+        task_run_id=TaskRunId.parse(value.task_run_id),
+        output=value.output_json,
+        recorded_at=value.recorded_at,
+        digest=value.digest,
+    )
+
+
 def manifest_from_row(value: models.ManifestReferenceRow) -> ManifestReference:
     return ManifestReference(
         locator=value.locator,
@@ -362,6 +385,8 @@ __all__ = [
     "failure_from_json",
     "failure_to_json",
     "manifest_from_row",
+    "output_checkpoint_from_row",
+    "output_checkpoint_to_row",
     "task_run_from_row",
     "task_run_to_row",
     "transition_from_row",

@@ -21,8 +21,10 @@ from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
     ExternalRunRef,
+    RuntimeEventType,
     TaskAttempt,
     TaskAttemptId,
+    TaskOutputCheckpoint,
     TaskRun,
     TaskRunId,
     WorkflowRun,
@@ -318,6 +320,98 @@ class MetadataStoreContractSuite:
 
         unfinished = self.store.list_unfinished_workflow_runs()
         assert tuple(str(run.run_id) for run in unfinished) == ("W-2",)
+
+    def test_runtime_events_are_projected_from_state_transition_truth(self) -> None:
+        run = workflow_run()
+        task = task_run()
+        first = attempt("TA-1", attempt_number=1)
+        self.store.create_workflow_run(run)
+        self.store.create_task_run(task)
+        self.store.append_task_attempt(first)
+
+        loaded_run = self.store.get_workflow_run(run.run_id)
+        WorkflowRunStateMachine().transition(
+            loaded_run,
+            WorkflowRunStatus.RUNNING,
+            at=T1,
+        )
+        self.store.update_workflow_run(
+            loaded_run,
+            expected_status=WorkflowRunStatus.PENDING,
+            transitioned_at=T1,
+        )
+
+        events = self.store.list_runtime_events(run.run_id)
+
+        assert len(events) == 1
+        assert events[0].event_type is RuntimeEventType.WORKFLOW_STARTED
+        assert events[0].event_id == f"{run.run_id}:event-{events[0].sequence}"
+        assert events[0].from_status == WorkflowRunStatus.PENDING.value
+        assert events[0].to_status == WorkflowRunStatus.RUNNING.value
+        assert events[0].workflow_run_id == run.run_id
+
+    def test_output_checkpoint_is_portable_immutable_and_idempotent(self) -> None:
+        run = workflow_run()
+        task = task_run()
+        self.store.create_workflow_run(run)
+        self.store.create_task_run(task)
+
+        persisted_task = self.store.get_task_run(task.task_run_id)
+        machine = TaskRunStateMachine()
+        machine.transition(persisted_task, TaskRunStatus.READY, at=T1)
+        self.store.update_task_run(
+            persisted_task,
+            expected_status=TaskRunStatus.PENDING,
+            transitioned_at=T1,
+        )
+        machine.transition(persisted_task, TaskRunStatus.RUNNING, at=T2)
+        self.store.update_task_run(
+            persisted_task,
+            expected_status=TaskRunStatus.READY,
+            transitioned_at=T2,
+        )
+        machine.transition(persisted_task, TaskRunStatus.SUCCEEDED, at=T3)
+        self.store.update_task_run(
+            persisted_task,
+            expected_status=TaskRunStatus.RUNNING,
+            transitioned_at=T3,
+        )
+
+        checkpoint = TaskOutputCheckpoint(
+            task_run_id=task.task_run_id,
+            output={"rows": 3, "nested": ["a", True]},
+            recorded_at=T3,
+        )
+        self.store.set_task_output_checkpoint(checkpoint)
+        self.store.set_task_output_checkpoint(checkpoint)
+
+        loaded = self.store.get_task_output_checkpoint(task.task_run_id)
+        assert loaded == checkpoint
+        assert loaded.digest.startswith("sha256:")
+
+        with pytest.raises(MetadataConflictError):
+            self.store.set_task_output_checkpoint(
+                TaskOutputCheckpoint(
+                    task_run_id=task.task_run_id,
+                    output={"rows": 4},
+                    recorded_at=T3,
+                )
+            )
+
+    def test_output_checkpoint_requires_successful_task(self) -> None:
+        run = workflow_run()
+        task = task_run()
+        self.store.create_workflow_run(run)
+        self.store.create_task_run(task)
+
+        with pytest.raises(MetadataInvariantError, match="SUCCEEDED"):
+            self.store.set_task_output_checkpoint(
+                TaskOutputCheckpoint(
+                    task_run_id=task.task_run_id,
+                    output={"rows": 1},
+                    recorded_at=T1,
+                )
+            )
 
     def test_manifest_reference_hook_is_idempotent_but_not_last_write_wins(self) -> None:
         run = workflow_run()

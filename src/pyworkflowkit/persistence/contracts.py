@@ -9,11 +9,12 @@ from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.runtime.evidence import RuntimeEvent, TaskOutputCheckpoint
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
 
-V2_METADATA_STORE_CONTRACT_VERSION = "1"
+V2_METADATA_STORE_CONTRACT_VERSION = "2"
 
 V2_METADATA_STORE_METHODS: tuple[str, ...] = (
     "metadata",
@@ -33,6 +34,9 @@ V2_METADATA_STORE_METHODS: tuple[str, ...] = (
     "append_external_run_ref",
     "list_external_run_refs",
     "list_state_transitions",
+    "list_runtime_events",
+    "set_task_output_checkpoint",
+    "get_task_output_checkpoint",
     "set_manifest_reference",
     "get_manifest_reference",
 )
@@ -216,6 +220,24 @@ class MetadataStore(Protocol):
         entity_id: str | None = None,
     ) -> Sequence[StateTransitionRecord]:
         """Query append-only persisted state history."""
+
+    def list_runtime_events(
+        self,
+        workflow_run_id: WorkflowRunId,
+    ) -> Sequence[RuntimeEvent]:
+        """Project canonical runtime events from durable state-transition evidence."""
+
+    def set_task_output_checkpoint(
+        self,
+        checkpoint: TaskOutputCheckpoint,
+    ) -> None:
+        """Persist one immutable portable output checkpoint for a TaskRun."""
+
+    def get_task_output_checkpoint(
+        self,
+        task_run_id: TaskRunId,
+    ) -> TaskOutputCheckpoint:
+        """Load durable portable output evidence or raise MetadataNotFoundError."""
 
     def set_manifest_reference(
         self,

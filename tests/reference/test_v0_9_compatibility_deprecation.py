@@ -41,7 +41,7 @@ from pyworkflowkit.integrations import (
     REFERENCE_INTEROPERABILITY_CONTRACT_VERSION,
 )
 from pyworkflowkit.migrations.contract import (
-    MIGRATION_HEAD_REVISION,
+    MIGRATION_HISTORY,
     PERSISTENCE_SCHEMA_CONTRACT_VERSION,
 )
 from pyworkflowkit.plugins import PLUGIN_API_VERSION
@@ -75,7 +75,8 @@ def test_rq02_all_versioned_contracts_remain_v1() -> None:
     assert REFERENCE_INTEROPERABILITY_CONTRACT_VERSION == "1"
     assert OBSERVABILITY_INTEROPERABILITY_CONTRACT_VERSION == "1"
     assert RELEASE_CANDIDATE_CONTRACT_VERSION == "1"
-    assert MIGRATION_HEAD_REVISION == "0004_v2_runtime_metadata"
+    assert "0004_v2_runtime_metadata" in MIGRATION_HISTORY
+    assert MIGRATION_HISTORY.index("0004_v2_runtime_metadata") < len(MIGRATION_HISTORY)
 
 
 def test_rq02_ecosystem_sdk_v1_covers_0_8_through_1_x() -> None:

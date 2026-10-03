@@ -142,7 +142,7 @@ jobs:
               "release_candidate": "1",
               "typing": "1",
           }
-          assert snapshot["migration_head"] == "0004_v2_runtime_metadata"
+          assert snapshot["migration_head"] == "0005_v2_task_output_checkpoints"
           assert snapshot["compatibility"]["contract_version"] == "1"
           assert snapshot["compatibility"]["target_release"] == "1.0.0"
           assert snapshot["compatibility"]["by_status"]["deprecated"] == []
@@ -162,6 +162,7 @@ jobs:
           assert versions.joinpath("0002_task_output_checkpoints.py").is_file()
           assert versions.joinpath("0003_retry_eligible_at.py").is_file()
           assert versions.joinpath("0004_v2_runtime_metadata.py").is_file()
+          assert versions.joinpath("0005_v2_task_output_checkpoints.py").is_file()
           PY
           test "$(pyworkflow version)" = "$EXPECTED_VERSION"
 

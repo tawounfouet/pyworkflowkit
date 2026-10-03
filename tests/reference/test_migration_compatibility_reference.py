@@ -35,8 +35,9 @@ def test_m45_persistence_contract_and_migration_lineage_are_frozen() -> None:
         "0002_task_output_checkpoints",
         "0003_retry_eligible_at",
         "0004_v2_runtime_metadata",
+        "0005_v2_task_output_checkpoints",
     )
-    assert MIGRATION_HEAD_REVISION == "0004_v2_runtime_metadata"
+    assert MIGRATION_HEAD_REVISION == "0005_v2_task_output_checkpoints"
     assert frozenset(MIGRATION_HISTORY) == SUPPORTED_UPGRADE_ORIGINS
 
     script = ScriptDirectory.from_config(alembic_config())

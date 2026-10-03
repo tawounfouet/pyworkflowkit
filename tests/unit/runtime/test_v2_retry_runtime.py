@@ -28,6 +28,7 @@ from pyworkflowkit.runtime import (
     Clock,
     CorrelationId,
     RetryWaiter,
+    RuntimeEventType,
     RuntimeIdentityFactory,
     TaskAttemptId,
     TaskRunId,
@@ -163,6 +164,9 @@ def test_retry_reuses_task_run_and_creates_new_attempt_identity() -> None:
     assert tuple(attempt.attempt_number for attempt in attempts) == (1, 2)
     assert attempts[0].status is TaskAttemptStatus.FAILED
     assert attempts[1].status is TaskAttemptStatus.SUCCEEDED
+
+    event_types = tuple(event.event_type for event in store.list_runtime_events(result.run_id))
+    assert RuntimeEventType.TASK_RETRYING in event_types
 
     codes = tuple(diagnostic.code for diagnostic in result.diagnostics)
     assert "PWK-RETRY-DECISION" in codes
