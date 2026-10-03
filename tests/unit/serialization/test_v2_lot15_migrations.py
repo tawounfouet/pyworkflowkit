@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from pyworkflowkit.runtime import CorrelationContext
 from pyworkflowkit.serialization import (
+    BoundaryCodec,
     DuplicateWireMigrationError,
     UnsupportedWireVersionError,
     WireEnvelope,
@@ -136,3 +138,32 @@ def test_wire_migration_registry_rejects_blank_identity_fields(
             to_version=kwargs["to_version"],
             migrator=lambda payload: payload,
         )
+
+
+
+def test_boundary_codec_requires_explicit_registered_upcast() -> None:
+    registry = WireMigrationRegistry()
+    registry.register(
+        contract="pykit.correlation_context",
+        from_version="0",
+        to_version="1",
+        migrator=lambda payload: {
+            "correlation_id": payload["correlation"],
+        },
+    )
+    codec = BoundaryCodec(migrations=registry)
+    legacy = (
+        '{"contract":"pykit.correlation_context","contract_version":"0",'
+        '"payload":{"correlation":"C-legacy"}}'
+    )
+
+    restored = codec.decode_as(CorrelationContext, legacy)
+
+    assert str(restored.correlation_id) == "C-legacy"
+    assert codec.encode(restored) == (
+        '{"contract":"pykit.correlation_context","contract_version":"1",'
+        '"payload":{"causation_id":null,"correlation_id":"C-legacy",'
+        '"ingestion_run_id":null,"parent_execution_id":null,"span_id":null,'
+        '"task_attempt_id":null,"task_run_id":null,"trace_id":null,'
+        '"transformation_execution_id":null,"workflow_run_id":null}}'
+    )
