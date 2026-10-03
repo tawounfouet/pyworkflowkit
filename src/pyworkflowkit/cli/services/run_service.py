@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from pyworkflowkit.application.runtime import WorkflowRuntime
 from pyworkflowkit.cli.bootstrap import load_workflow_from_spec

@@ -39,21 +39,65 @@ def active_cli_command_names() -> set[str]:
     return names
 
 
+class CliContractMismatchError(RuntimeError):
+    """Raised when active CLI definitions drift from the frozen contract."""
+
+
 def verify_cli_contract_parity() -> bool:
     """Verify that active Python definitions strictly match the frozen contract JSON."""
     snapshot = load_cli_contract_snapshot()
 
-    assert snapshot["contract_version"] == CLI_MACHINE_CONTRACT_VERSION
-    assert set(snapshot["commands"]) == set(CLI_COMMANDS)
-    assert set(snapshot["json_commands"]) == CLI_JSON_COMMANDS
-    assert snapshot["exit_codes"] == dict(CLI_EXIT_CODES)
-    assert set(snapshot["error_required_keys"]) == CLI_ERROR_REQUIRED_KEYS
+    if snapshot["contract_version"] != CLI_MACHINE_CONTRACT_VERSION:
+        raise CliContractMismatchError(
+            f"Contract version mismatch: {snapshot['contract_version']} != "
+            f"{CLI_MACHINE_CONTRACT_VERSION}"
+        )
+    if set(snapshot["commands"]) != set(CLI_COMMANDS):
+        raise CliContractMismatchError(
+            f"Commands mismatch: {set(snapshot['commands'])} != {set(CLI_COMMANDS)}"
+        )
+    if set(snapshot["json_commands"]) != CLI_JSON_COMMANDS:
+        raise CliContractMismatchError(
+            f"JSON commands mismatch: {set(snapshot['json_commands'])} != {CLI_JSON_COMMANDS}"
+        )
+    if snapshot["exit_codes"] != dict(CLI_EXIT_CODES):
+        raise CliContractMismatchError(
+            f"Exit codes mismatch: {snapshot['exit_codes']} != {dict(CLI_EXIT_CODES)}"
+        )
+    if set(snapshot["error_required_keys"]) != CLI_ERROR_REQUIRED_KEYS:
+        raise CliContractMismatchError(
+            f"Error keys mismatch: {set(snapshot['error_required_keys'])} != "
+            f"{CLI_ERROR_REQUIRED_KEYS}"
+        )
 
     for cmd, keys in snapshot["json_required_keys"].items():
-        assert set(keys) == CLI_JSON_REQUIRED_KEYS[cmd]
+        if cmd not in CLI_JSON_REQUIRED_KEYS or set(keys) != set(CLI_JSON_REQUIRED_KEYS[cmd]):
+            raise CliContractMismatchError(
+                f"JSON required keys mismatch for {cmd}: {set(keys)} != "
+                f"{CLI_JSON_REQUIRED_KEYS.get(cmd)}"
+            )
 
     for key, nested_keys in snapshot["json_nested_required_keys"].items():
-        assert set(nested_keys) == CLI_JSON_NESTED_REQUIRED_KEYS[key]
+        if key not in CLI_JSON_NESTED_REQUIRED_KEYS or set(nested_keys) != set(
+            CLI_JSON_NESTED_REQUIRED_KEYS[key]
+        ):
+            raise CliContractMismatchError(
+                f"Nested keys mismatch for {key}: {set(nested_keys)} != "
+                f"{CLI_JSON_NESTED_REQUIRED_KEYS.get(key)}"
+            )
 
-    assert active_cli_command_names() == set(CLI_COMMANDS)
+    active_commands = active_cli_command_names()
+    if active_commands != set(CLI_COMMANDS):
+        raise CliContractMismatchError(
+            f"Active CLI commands mismatch: {active_commands} != {set(CLI_COMMANDS)}"
+        )
     return True
+
+
+__all__ = [
+    "CLI_CONTRACT_PATH",
+    "CliContractMismatchError",
+    "active_cli_command_names",
+    "load_cli_contract_snapshot",
+    "verify_cli_contract_parity",
+]
