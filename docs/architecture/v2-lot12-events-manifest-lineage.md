@@ -41,15 +41,34 @@ RuntimeEvent projection
 This prevents a split-brain failure where state is committed but a separately persisted
 event is lost.
 
-Canonical event types are:
+Canonical event facts are semantic rather than generic state-change wrappers:
 
 ```text
-WORKFLOW_STATE_CHANGED
-TASK_STATE_CHANGED
-ATTEMPT_STATE_CHANGED
+WORKFLOW_STARTED
+WORKFLOW_RESUMED
+WORKFLOW_SUCCEEDED
+WORKFLOW_FAILED
+WORKFLOW_CANCELLATION_REQUESTED
+WORKFLOW_CANCELLED
+WORKFLOW_TIMED_OUT
+WORKFLOW_UNKNOWN_OUTCOME
+
+TASK_READY
+TASK_STARTED
+TASK_RETRYING
+TASK_SUCCEEDED
+TASK_FAILED
+TASK_SKIPPED
+TASK_CANCELLED
+TASK_TIMED_OUT
+TASK_BLOCKED
+TASK_UNKNOWN_OUTCOME
 ```
 
-The event sequence is the durable state-transition sequence.
+Initial persistence rows such as `PENDING` are not exposed as runtime events. A retry
+is projected when Attempt N+1 is created while the logical TaskRun remains the same.
+The event sequence is the durable state-transition sequence; gaps are valid because not
+every persistence transition is a public runtime fact.
 
 ## Durable output policy
 
@@ -140,10 +159,11 @@ It is intentionally separate from the frozen legacy 1.1 manifest schema version 
 - task status;
 - attempt identity and status;
 - attempt-scoped external executions;
-- portable durable outputs and their digests;
-- canonical runtime events.
+- portable durable outputs and their digests.
 
-The manifest can be built from reopened durable storage without executing workload code.
+The manifest intentionally does not embed the event log: events answer what happened,
+while the manifest remains the compact final summary. It can be built from reopened
+durable storage without executing workload code.
 
 Strict Pydantic/wire serialization remains owned by LOT-15.
 
