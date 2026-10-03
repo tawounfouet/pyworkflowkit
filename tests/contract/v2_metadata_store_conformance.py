@@ -321,7 +321,6 @@ class MetadataStoreContractSuite:
         unfinished = self.store.list_unfinished_workflow_runs()
         assert tuple(str(run.run_id) for run in unfinished) == ("W-2",)
 
-
     def test_runtime_events_are_projected_from_state_transition_truth(self) -> None:
         run = workflow_run()
         task = task_run()
