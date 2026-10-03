@@ -547,6 +547,7 @@ class SQLiteMetadataStore:
                 entity_type = StateEntityType(row.entity_type)
                 task_run_id: TaskRunId | None = None
                 attempt_id: TaskAttemptId | None = None
+                attempt_number: int | None = None
                 task_key: str | None = None
 
                 if entity_type is StateEntityType.WORKFLOW_RUN:
@@ -569,6 +570,7 @@ class SQLiteMetadataStore:
                         continue
                     task_run_id = TaskRunId.parse(task_row.task_run_id)
                     attempt_id = TaskAttemptId.parse(attempt_row.attempt_id)
+                    attempt_number = attempt_row.attempt_number
                     task_key = task_row.task_key
                     event_type = RuntimeEventType.ATTEMPT_STATE_CHANGED
 
@@ -578,8 +580,8 @@ class SQLiteMetadataStore:
                 }
                 if task_key is not None:
                     payload["task_key"] = task_key
-                if attempt_id is not None and attempt_row is not None:
-                    payload["attempt_number"] = attempt_row.attempt_number
+                if attempt_number is not None:
+                    payload["attempt_number"] = attempt_number
 
                 events.append(
                     RuntimeEvent(
