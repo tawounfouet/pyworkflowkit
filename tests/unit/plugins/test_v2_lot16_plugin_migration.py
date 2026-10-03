@@ -439,7 +439,9 @@ def test_lot16_registration_rejects_wrong_api_version() -> None:
     assert any(issue.code is V2PluginContractIssueCode.API_VERSION for issue in report.issues)
 
 
-def test_lot16_discovery_is_metadata_first_and_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_lot16_discovery_is_metadata_first_and_deterministic(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     executor_ep = _FakeEntryPoint(
         name="z-executor",
         group=V2_ENTRY_POINT_GROUPS[PluginType.EXECUTOR],
