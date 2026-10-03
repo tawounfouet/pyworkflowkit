@@ -488,3 +488,12 @@ def test_lot19_snapshot_freezes_transform_boundary() -> None:
     assert snapshot["provider_retry_owner"] == "pytransformkit"
     assert snapshot["unknown_outcome_requires_reconciliation"] is True
     assert snapshot["raw_credentials_supported"] is False
+
+def test_lot21_workload_rejects_incompatible_integration_contract_version() -> None:
+    with pytest.raises(ValueError, match="unsupported PyTransformKit V2"):
+        PyTransformKitWorkload(
+            plan_ref="plans.customer360",
+            engine="polars",
+            contract_version="999",
+        )
+
