@@ -23,7 +23,8 @@ from pyworkflowkit.errors import PyTransformKitRetryOwnershipError
 from pyworkflowkit.executors import TaskExecutionContext, TaskExecutionResult
 from pyworkflowkit.plugins.v2 import V2WorkloadBinding
 from pyworkflowkit.policies.retry import RetryPolicy
-from pyworkflowkit.runtime import ExternalRunRef, normalize_json_value, plain_json_value
+from pyworkflowkit.runtime import ExternalRunRef
+from pyworkflowkit.runtime.evidence import normalize_json_value, plain_json_value
 
 V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION = "1"
 V2_PYTRANSFORMKIT_INTEGRATION_KEY = "pytransformkit"
