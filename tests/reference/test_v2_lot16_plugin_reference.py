@@ -5,7 +5,6 @@ from __future__ import annotations
 import pyworkflowkit
 import pyworkflowkit.plugins as legacy_plugins
 import pyworkflowkit.plugins.v2 as plugins_v2
-
 from pyworkflowkit.plugins import PluginType
 
 
