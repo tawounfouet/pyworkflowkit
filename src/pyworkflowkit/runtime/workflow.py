@@ -850,10 +850,7 @@ class WorkflowRuntime:
                         f"{requirement.workload_kind!r}"
                     )
                 )
-            if (
-                entry.retry_policy.max_attempts > 1
-                and descriptor.performs_implicit_workload_retry
-            ):
+            if entry.retry_policy.max_attempts > 1 and descriptor.performs_implicit_workload_retry:
                 raise RuntimeInvariantError(
                     reason=(
                         f"task {entry.key!r} requests workflow retry while executor "
