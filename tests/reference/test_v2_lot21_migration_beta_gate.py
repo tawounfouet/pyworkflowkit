@@ -82,3 +82,9 @@ def test_lot21_customer360_beta_script_is_executable_from_consumer_context() -> 
         "sibling_calls": 0,
         "workflow_status": "FAILED",
     }
+    assert payload["incompatible_contracts"] == {
+        "pyingestkit_result": True,
+        "pyingestkit_workload": True,
+        "pytransformkit_result": True,
+        "pytransformkit_workload": True,
+    }
