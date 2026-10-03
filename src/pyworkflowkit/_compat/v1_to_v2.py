@@ -15,57 +15,43 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from pyworkflowkit.authoring import (
-    RegisteredWorkload,
-    TaskDefinition as V2TaskDefinition,
-    WorkflowDefinition as V2WorkflowDefinition,
-)
+from pyworkflowkit.authoring import RegisteredWorkload
+from pyworkflowkit.authoring import TaskDefinition as V2TaskDefinition
+from pyworkflowkit.authoring import WorkflowDefinition as V2WorkflowDefinition
 from pyworkflowkit.diagnostics import FailureCategory
-from pyworkflowkit.domain.definitions import (
-    TaskDefinition as V1TaskDefinition,
-    WorkflowDefinition as V1WorkflowDefinition,
-)
-from pyworkflowkit.domain.enums import (
-    SkipReason as V1SkipReason,
-    TaskAttemptStatus as V1TaskAttemptStatus,
-    TaskRunStatus as V1TaskRunStatus,
-    TimeoutMode,
-    WorkflowRunStatus as V1WorkflowRunStatus,
-)
-from pyworkflowkit.domain.ids import (
-    ExternalRunRefId,
-    TaskAttemptId as V1TaskAttemptId,
-    TaskId,
-    TaskRunId as V1TaskRunId,
-    WorkflowId,
-    WorkflowRunId as V1WorkflowRunId,
-)
-from pyworkflowkit.domain.runtime import (
-    TaskAttempt as V1TaskAttempt,
-    TaskRun as V1TaskRun,
-    WorkflowRun as V1WorkflowRun,
-)
+from pyworkflowkit.domain.definitions import TaskDefinition as V1TaskDefinition
+from pyworkflowkit.domain.definitions import WorkflowDefinition as V1WorkflowDefinition
+from pyworkflowkit.domain.enums import SkipReason as V1SkipReason
+from pyworkflowkit.domain.enums import TaskAttemptStatus as V1TaskAttemptStatus
+from pyworkflowkit.domain.enums import TaskRunStatus as V1TaskRunStatus
+from pyworkflowkit.domain.enums import TimeoutMode
+from pyworkflowkit.domain.enums import WorkflowRunStatus as V1WorkflowRunStatus
+from pyworkflowkit.domain.ids import ExternalRunRefId, TaskId, WorkflowId
+from pyworkflowkit.domain.ids import TaskAttemptId as V1TaskAttemptId
+from pyworkflowkit.domain.ids import TaskRunId as V1TaskRunId
+from pyworkflowkit.domain.ids import WorkflowRunId as V1WorkflowRunId
+from pyworkflowkit.domain.runtime import TaskAttempt as V1TaskAttempt
+from pyworkflowkit.domain.runtime import TaskRun as V1TaskRun
+from pyworkflowkit.domain.runtime import WorkflowRun as V1WorkflowRun
 from pyworkflowkit.domain.values import ExternalRunRef as V1ExternalRunRef
 from pyworkflowkit.policies import RetryPolicy as V2RetryPolicy
 from pyworkflowkit.policies import TimeoutPolicy
 from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
-    ExternalRunRef as V2ExternalRunRef,
-    TaskAttempt as V2TaskAttempt,
     TaskAttemptId,
-    TaskRun as V2TaskRun,
     TaskRunId,
-    WorkflowRun as V2WorkflowRun,
     WorkflowRunId,
 )
+from pyworkflowkit.runtime import ExternalRunRef as V2ExternalRunRef
+from pyworkflowkit.runtime import TaskAttempt as V2TaskAttempt
+from pyworkflowkit.runtime import TaskRun as V2TaskRun
+from pyworkflowkit.runtime import WorkflowRun as V2WorkflowRun
 from pyworkflowkit.runtime.evidence import normalize_json_value, plain_json_value
-from pyworkflowkit.states import (
-    SkipReason as V2SkipReason,
-    TaskAttemptStatus as V2TaskAttemptStatus,
-    TaskRunStatus as V2TaskRunStatus,
-    WorkflowRunStatus as V2WorkflowRunStatus,
-)
+from pyworkflowkit.states import SkipReason as V2SkipReason
+from pyworkflowkit.states import TaskAttemptStatus as V2TaskAttemptStatus
+from pyworkflowkit.states import TaskRunStatus as V2TaskRunStatus
+from pyworkflowkit.states import WorkflowRunStatus as V2WorkflowRunStatus
 
 V1_TO_V2_MIGRATION_CONTRACT_VERSION = "1"
 
@@ -246,7 +232,7 @@ class V1RuntimeMetadataSnapshot:
         )
 
     @classmethod
-    def from_json(cls, payload: str) -> "V1RuntimeMetadataSnapshot":
+    def from_json(cls, payload: str) -> V1RuntimeMetadataSnapshot:
         """Decode the closed migration schema without importing payload-selected types."""
 
         if not isinstance(payload, str):
