@@ -19,11 +19,86 @@ JsonValue: TypeAlias = JsonScalar | tuple["JsonValue", ...] | Mapping[str, "Json
 
 
 class RuntimeEventType(StrEnum):
-    """Canonical event classes derived from durable state evidence."""
+    """Canonical semantic runtime facts derived from durable state evidence."""
 
-    WORKFLOW_STATE_CHANGED = "WORKFLOW_STATE_CHANGED"
-    TASK_STATE_CHANGED = "TASK_STATE_CHANGED"
-    ATTEMPT_STATE_CHANGED = "ATTEMPT_STATE_CHANGED"
+    WORKFLOW_STARTED = "WORKFLOW_STARTED"
+    WORKFLOW_SUCCEEDED = "WORKFLOW_SUCCEEDED"
+    WORKFLOW_FAILED = "WORKFLOW_FAILED"
+    WORKFLOW_CANCELLATION_REQUESTED = "WORKFLOW_CANCELLATION_REQUESTED"
+    WORKFLOW_CANCELLED = "WORKFLOW_CANCELLED"
+    WORKFLOW_TIMED_OUT = "WORKFLOW_TIMED_OUT"
+    WORKFLOW_UNKNOWN_OUTCOME = "WORKFLOW_UNKNOWN_OUTCOME"
+
+    TASK_READY = "TASK_READY"
+    TASK_STARTED = "TASK_STARTED"
+    TASK_RETRYING = "TASK_RETRYING"
+    TASK_SUCCEEDED = "TASK_SUCCEEDED"
+    TASK_FAILED = "TASK_FAILED"
+    TASK_SKIPPED = "TASK_SKIPPED"
+    TASK_CANCELLED = "TASK_CANCELLED"
+    TASK_TIMED_OUT = "TASK_TIMED_OUT"
+    TASK_BLOCKED = "TASK_BLOCKED"
+    TASK_UNKNOWN_OUTCOME = "TASK_UNKNOWN_OUTCOME"
+
+
+_WORKFLOW_EVENT_BY_STATUS = {
+    "RUNNING": RuntimeEventType.WORKFLOW_STARTED,
+    "SUCCEEDED": RuntimeEventType.WORKFLOW_SUCCEEDED,
+    "FAILED": RuntimeEventType.WORKFLOW_FAILED,
+    "CANCELLATION_REQUESTED": RuntimeEventType.WORKFLOW_CANCELLATION_REQUESTED,
+    "CANCELLED": RuntimeEventType.WORKFLOW_CANCELLED,
+    "TIMED_OUT": RuntimeEventType.WORKFLOW_TIMED_OUT,
+    "UNKNOWN_OUTCOME": RuntimeEventType.WORKFLOW_UNKNOWN_OUTCOME,
+}
+
+_TASK_EVENT_BY_STATUS = {
+    "READY": RuntimeEventType.TASK_READY,
+    "RUNNING": RuntimeEventType.TASK_STARTED,
+    "SUCCEEDED": RuntimeEventType.TASK_SUCCEEDED,
+    "FAILED": RuntimeEventType.TASK_FAILED,
+    "SKIPPED": RuntimeEventType.TASK_SKIPPED,
+    "CANCELLED": RuntimeEventType.TASK_CANCELLED,
+    "TIMED_OUT": RuntimeEventType.TASK_TIMED_OUT,
+    "BLOCKED": RuntimeEventType.TASK_BLOCKED,
+    "UNKNOWN_OUTCOME": RuntimeEventType.TASK_UNKNOWN_OUTCOME,
+}
+
+
+def runtime_event_type_for_transition(
+    *,
+    entity_type: str,
+    from_status: str | None,
+    to_status: str,
+    attempt_number: int | None = None,
+) -> RuntimeEventType | None:
+    """Map persisted transitions to semantic runtime facts.
+
+    Initial PENDING rows are persistence evidence, not public runtime events.
+    A later TaskAttempt creation represents TASK_RETRYING because TaskRun remains
+    RUNNING while a fresh concrete attempt is scheduled.
+    """
+
+    if entity_type == "workflow_run":
+        if from_status is None:
+            return None
+        return _WORKFLOW_EVENT_BY_STATUS.get(to_status)
+
+    if entity_type == "task_run":
+        if from_status is None:
+            return None
+        return _TASK_EVENT_BY_STATUS.get(to_status)
+
+    if entity_type == "task_attempt":
+        if (
+            from_status is None
+            and to_status == "PENDING"
+            and attempt_number is not None
+            and attempt_number > 1
+        ):
+            return RuntimeEventType.TASK_RETRYING
+        return None
+
+    raise ValueError(f"unsupported state entity type {entity_type!r}")
 
 
 def normalize_json_value(value: object, *, path: str = "value") -> JsonValue:
@@ -77,6 +152,7 @@ class RuntimeEvent:
     """Immutable V2 runtime event projected from durable transition evidence."""
 
     sequence: int
+    event_id: str
     event_type: RuntimeEventType
     workflow_run_id: WorkflowRunId
     occurred_at: datetime
@@ -84,6 +160,8 @@ class RuntimeEvent:
     to_status: str
     task_run_id: TaskRunId | None = None
     attempt_id: TaskAttemptId | None = None
+    task_key: str | None = None
+    attempt_number: int | None = None
     payload: Mapping[str, JsonValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -91,6 +169,8 @@ class RuntimeEvent:
             raise TypeError("sequence must be an integer")
         if self.sequence < 1:
             raise ValueError("sequence must be greater than or equal to 1")
+        if not isinstance(self.event_id, str) or not self.event_id.strip():
+            raise ValueError("event_id must not be empty")
         if not isinstance(self.event_type, RuntimeEventType):
             raise TypeError("event_type must be a RuntimeEventType")
         if not isinstance(self.workflow_run_id, WorkflowRunId):
@@ -99,6 +179,15 @@ class RuntimeEvent:
             raise TypeError("task_run_id must be TaskRunId or None")
         if self.attempt_id is not None and not isinstance(self.attempt_id, TaskAttemptId):
             raise TypeError("attempt_id must be TaskAttemptId or None")
+        if self.task_key is not None and (
+            not isinstance(self.task_key, str) or not self.task_key.strip()
+        ):
+            raise ValueError("task_key must be non-empty when provided")
+        if self.attempt_number is not None:
+            if isinstance(self.attempt_number, bool) or not isinstance(self.attempt_number, int):
+                raise TypeError("attempt_number must be an integer when provided")
+            if self.attempt_number < 1:
+                raise ValueError("attempt_number must be greater than or equal to 1")
         if self.occurred_at.tzinfo is None or self.occurred_at.utcoffset() is None:
             raise ValueError("occurred_at must be timezone-aware")
         if self.from_status is not None and (
@@ -146,4 +235,5 @@ __all__ = [
     "canonical_json_digest",
     "normalize_json_value",
     "plain_json_value",
+    "runtime_event_type_for_transition",
 ]
