@@ -18,6 +18,42 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 2.0.0 - 2026-10-03
+
+Stable PyWorkflowKit 2.0 release promoted from the fully qualified `2.0.0rc1` candidate.
+
+### Added
+
+- Stable 2.0 release note and auditable LOT-23 qualification report.
+- Final 1.x → 2.0 migration guide covering root API migration, persistence lineage,
+  retry/attempt identity, executors, plugins, sibling integrations, and compatibility paths.
+- Stable-promotion qualification proving the runtime source tree is byte-for-byte the
+  same Git tree as the qualified LOT-22 RC baseline.
+
+### Changed
+
+- Package version promoted from `2.0.0rc1` to `2.0.0`.
+- Distribution classifier promoted from Beta to Production/Stable.
+- Release Qualification now includes an explicit V2 stable-promotion gate after the
+  qualified RC-lineage gate.
+
+### Deprecated
+
+- Nothing new.
+
+### Removed
+
+- Nothing new.
+
+### Fixed
+
+- No runtime defect was changed during stable promotion.
+
+### Security
+
+- No security behavior changed. All RC security, migration, persistence, artifact,
+  sibling-isolation, and Customer 360 gates remain blocking for stable promotion.
+
 ## 2.0.0rc1 - 2026-10-03
 
 PyWorkflowKit 2.0 release-candidate freeze.
