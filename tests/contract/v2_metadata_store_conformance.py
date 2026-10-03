@@ -343,18 +343,12 @@ class MetadataStoreContractSuite:
 
         events = self.store.list_runtime_events(run.run_id)
 
-        assert tuple(event.sequence for event in events) == tuple(
-            sorted(event.sequence for event in events)
-        )
-        assert tuple(event.event_type for event in events[:3]) == (
-            RuntimeEventType.WORKFLOW_STATE_CHANGED,
-            RuntimeEventType.TASK_STATE_CHANGED,
-            RuntimeEventType.ATTEMPT_STATE_CHANGED,
-        )
-        assert events[-1].event_type is RuntimeEventType.WORKFLOW_STATE_CHANGED
-        assert events[-1].from_status == WorkflowRunStatus.PENDING.value
-        assert events[-1].to_status == WorkflowRunStatus.RUNNING.value
-        assert all(event.workflow_run_id == run.run_id for event in events)
+        assert len(events) == 1
+        assert events[0].event_type is RuntimeEventType.WORKFLOW_STARTED
+        assert events[0].event_id == f"{run.run_id}:event-{events[0].sequence}"
+        assert events[0].from_status == WorkflowRunStatus.PENDING.value
+        assert events[0].to_status == WorkflowRunStatus.RUNNING.value
+        assert events[0].workflow_run_id == run.run_id
 
     def test_output_checkpoint_is_portable_immutable_and_idempotent(self) -> None:
         run = workflow_run()
