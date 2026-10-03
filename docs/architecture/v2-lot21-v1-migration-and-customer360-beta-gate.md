@@ -344,6 +344,26 @@ The beta qualification imports only the qualified PyWorkflowKit integration surf
 The core package remains importable without PyIngestKit or PyTransformKit installed.
 Sibling packages are not imported implicitly by the V2 anti-corruption modules.
 
+### Incompatible sibling contracts
+
+PyWorkflowKit does not infer compatibility from a sibling package version string. The
+qualified boundary is the explicit integration contract version carried by each
+descriptor/result.
+
+LOT-21 therefore fails closed on any contract other than `"1"` for:
+
+```text
+PyIngestKitWorkload
+PyIngestKitExecutionResult
+PyTransformKitWorkload
+PyTransformKitExecutionResult
+PyTransformKitResourceReference
+```
+
+Descriptor incompatibility is rejected before execution. Result/resource incompatibility
+is rejected when sibling evidence crosses the anti-corruption boundary. The installed
+wheel/sdist beta script exercises both descriptor and result rejection paths.
+
 ## Exit criteria
 
 LOT-21 is complete when:
@@ -368,6 +388,7 @@ LOT-21 is complete when:
 [ ] security negative scenario is green
 [ ] wheel/sdist installed-artifact execution is green
 [ ] sibling integrations remain optional and public-boundary-only
+[ ] incompatible sibling integration contracts fail closed
 [ ] CI is green
 [ ] Release Qualification is green
 ```
