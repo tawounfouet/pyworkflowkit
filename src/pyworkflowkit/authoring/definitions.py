@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, cast, overload
 
-from typing_extensions import TypeVar
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:  # pragma: no cover
+    from typing_extensions import TypeVar
 
 from pyworkflowkit.authoring._values import (
     FrozenJsonValue,
@@ -93,9 +97,9 @@ class TaskDefinition(Generic[T_Input, T_Output]):
             add_authoring_dependency(self, other)
             return other
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for item in other:
-                if not isinstance(item, TaskDefinition):
-                    return NotImplemented
                 add_authoring_dependency(self, item)
             return TaskSequence(other)
         return NotImplemented
@@ -106,9 +110,9 @@ class TaskDefinition(Generic[T_Input, T_Output]):
     ) -> TaskDefinition[T_Input, T_Output]:
         """Support fan-in: [task_a, task_b] >> self."""
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for item in other:
-                if not isinstance(item, TaskDefinition):
-                    return NotImplemented
                 add_authoring_dependency(item, self)
             return self
         return NotImplemented
@@ -122,9 +126,9 @@ class TaskDefinition(Generic[T_Input, T_Output]):
             add_authoring_dependency(other, self)
             return self
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for item in other:
-                if not isinstance(item, TaskDefinition):
-                    return NotImplemented
                 add_authoring_dependency(item, self)
             return self
         return NotImplemented
@@ -135,9 +139,9 @@ class TaskDefinition(Generic[T_Input, T_Output]):
     ) -> TaskSequence:
         """Support fan-out reverse: [task_a, task_b] << self."""
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for item in other:
-                if not isinstance(item, TaskDefinition):
-                    return NotImplemented
                 add_authoring_dependency(self, item)
             return TaskSequence(other)
         return NotImplemented
@@ -215,10 +219,10 @@ class TaskSequence(Sequence[TaskDefinition[Any, Any]]):
                 add_authoring_dependency(task, other)
             return other
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for task in self._tasks:
                 for item in other:
-                    if not isinstance(item, TaskDefinition):
-                        return NotImplemented
                     add_authoring_dependency(task, item)
             return TaskSequence(other)
         return NotImplemented
@@ -232,9 +236,9 @@ class TaskSequence(Sequence[TaskDefinition[Any, Any]]):
                 add_authoring_dependency(other, task)
             return self
         if isinstance(other, Sequence):
+            if any(not isinstance(item, TaskDefinition) for item in other):
+                return NotImplemented
             for item in other:
-                if not isinstance(item, TaskDefinition):
-                    return NotImplemented
                 for task in self._tasks:
                     add_authoring_dependency(item, task)
             return self
