@@ -57,9 +57,9 @@ LOT-20 adds cross-framework qualification for:
 5. correlation/causation propagation;
 6. missing optional sibling isolation.
 
-The remaining beta/migration qualification line still owns:
+LOT-21 closes the remaining beta/migration qualification line:
 
-1. incompatible sibling version handling;
+1. incompatible sibling integration-contract handling;
 2. full lineage traversal from WorkflowRun to sibling execution/data references;
 3. V1 migration evidence and compatibility-shim decisions.
 
@@ -79,7 +79,8 @@ The gate now includes:
 6. credential-reference non-disclosure;
 7. non-portable dependency fail-closed behavior;
 8. execution from installed wheel artifacts on Python 3.11/3.12/3.13;
-9. execution from installed sdist on Python 3.13.
+9. execution from installed sdist on Python 3.13;
+10. fail-closed rejection of incompatible PyIngestKit/PyTransformKit integration contracts.
 
 The installed-artifact gate is implemented by:
 
