@@ -780,7 +780,11 @@ jobs:
           python -m pip install -e ".[dev,postgres]"
 
       - name: PostgreSQL upgrade matrix
-        run: pytest tests/integration/test_migrations_postgres.py -q
+        run: >-
+          pytest
+          tests/integration/test_migrations_postgres.py
+          tests/contract/test_v2_postgresql_metadata_store_contract.py
+          -q
 
   security:
     name: Release security gates

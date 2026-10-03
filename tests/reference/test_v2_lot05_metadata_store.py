@@ -42,12 +42,15 @@ def test_qualified_v2_persistence_surface_is_explicit() -> None:
         "ManifestReference",
         "MetadataStore",
         "MetadataStoreMetadata",
+        "PostgreSQLMetadataStore",
+        "PostgreSQLSettings",
         "SQLiteMetadataStore",
         "SQLiteSettings",
         "StateEntityType",
         "StateTransitionRecord",
         "V2_METADATA_STORE_CONTRACT_VERSION",
         "V2_METADATA_STORE_METHODS",
+        "create_postgresql_engine",
         "v2_metadata_store_contract_snapshot",
     )
 
