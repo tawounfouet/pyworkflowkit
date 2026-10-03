@@ -1,0 +1,1 @@
+{"contract":"pykit.correlation_context","contract_version":"1","payload":{"causation_id":null,"correlation_id":"C-golden","ingestion_run_id":null,"parent_execution_id":null,"span_id":null,"task_attempt_id":null,"task_run_id":null,"trace_id":null,"transformation_execution_id":null,"workflow_run_id":null}}
