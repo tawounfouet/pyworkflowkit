@@ -167,9 +167,7 @@ def test_lot19_workload_is_portable_registered_workload_and_planner_integration(
     assert workload.credential_ref == "secretref://transform/customer360"
     assert task.portable is True
 
-    plan = WorkflowPlanner().compile(
-        WorkflowDefinition(name="lot19-plan", tasks=(ingest, task))
-    )
+    plan = WorkflowPlanner().compile(WorkflowDefinition(name="lot19-plan", tasks=(ingest, task)))
     assert plan.required_integrations == ("pytransformkit",)
     assert plan.task("transform").required_integrations == ("pytransformkit",)
     assert plan.task("transform").executor_requirement.workload_kind == "registered"
