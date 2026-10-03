@@ -37,17 +37,21 @@ publish task
 
 No DataFrame or sibling ORM entity is required for recovery.
 
-## Required qualification variants
+## Executable status after LOT-19
 
-Later lots must add executable fixtures for:
+LOT-19 now provides executable acceptance for:
 
 1. happy-path ingestion → transform → publication;
-2. confirmed sibling failure followed by workflow retry;
-3. UNKNOWN_OUTCOME with no blind retry;
-4. process restart and reconciliation of the same TaskAttempt;
-5. cancellation requested but unconfirmed;
-6. portable reference roundtrip;
-7. missing optional sibling;
-8. incompatible sibling version;
-9. credential-reference redaction;
-10. lineage traversal from WorkflowRun to sibling execution/data references.
+2. portable JSON handoff and durable task-output checkpoints;
+3. sibling-owned ExternalRunRef evidence for ingestion, transformation and publication;
+4. confirmed transformation failure and PyWorkflowKit-owned retry;
+5. transformation UNKNOWN_OUTCOME with no blind retry;
+6. credential-reference exclusion from external-run metadata.
+
+The remaining cross-framework qualification line still owns:
+
+1. process restart and reconciliation of the same TaskAttempt;
+2. cancellation requested but unconfirmed;
+3. missing optional sibling;
+4. incompatible sibling version;
+5. full lineage traversal from WorkflowRun to sibling execution/data references.

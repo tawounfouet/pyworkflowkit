@@ -46,7 +46,7 @@ REMOVED
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
 | `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
 | PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | IMPLEMENTED |
-| PyTransformKit integration | NEW | integrations.pytransformkit | 19 | PLANNED |
+| PyTransformKit integration | NEW | integrations.pytransformkit | 19 | IMPLEMENTED |
 | `compatibility.py` | MOVE/SHIM | _compat | 21 | PLANNED |
 
 ## Rewrite hotspots
@@ -665,3 +665,33 @@ attempt.
 
 The historical 1.1 PyIngestKit adapter remains available unchanged. LOT-19 owns the
 PyTransformKit sibling boundary and the first complete Customer 360 cross-framework graph.
+
+
+## LOT-19 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| PyTransformKitWorkload | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitExecutionJob | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitExecutionResult | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitExecutionStatus | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitResourceReference | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitWorkloadHandler | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| pytransformkit_v2_task | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| pytransformkit_v2_workload_binding | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
+| PyTransformKitRetryOwnershipError | pyworkflowkit.errors | IMPLEMENTED |
+| portable dependency handoff | PyTransformKit integration | IMPLEMENTED |
+| UNKNOWN_OUTCOME reconciliation mapping | PyTransformKit integration | IMPLEMENTED |
+| credential-reference-only posture | PyTransformKit integration | IMPLEMENTED |
+| Customer 360 cross-framework happy path | tests/integration | IMPLEMENTED |
+| LOT-19 runtime qualification | tests/unit/integrations | IMPLEMENTED |
+| LOT-19 reference acceptance | tests/reference | IMPLEMENTED |
+
+LOT-19 adds the dependency-free PyTransformKit sibling boundary. Transformation
+descriptors remain registered V2 workloads, and dependency outputs are strict
+JSON-portable values before sibling execution is allowed.
+
+The Customer 360 fixture is now executable end to end for the happy path:
+PyIngestKit ingestion → PyTransformKit transformation → PyIngestKit publication.
+Provider execution identities remain durable ExternalRunRef evidence owned by the
+corresponding TaskAttempt.
