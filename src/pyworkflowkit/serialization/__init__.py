@@ -1,11 +1,11 @@
 """Canonical V2 serialization contracts and codecs."""
 
 from pyworkflowkit.serialization.codec import (
+    DEFAULT_MAX_NESTING_DEPTH,
+    DEFAULT_MAX_PAYLOAD_BYTES,
     BoundaryContractSpec,
     BoundaryUpcasterRegistry,
     BoundaryWireCodec,
-    DEFAULT_MAX_NESTING_DEPTH,
-    DEFAULT_MAX_PAYLOAD_BYTES,
     WireContractError,
     boundary_contract_specs,
 )
