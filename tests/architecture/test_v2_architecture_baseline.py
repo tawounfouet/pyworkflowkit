@@ -136,3 +136,22 @@ def test_canonical_v2_facades_do_not_depend_on_compatibility_layer() -> None:
                 name == "pyworkflowkit._compat" or name.startswith("pyworkflowkit._compat.")
                 for name in imported
             ), f"{_module_name(path)} depends on V1 compatibility code"
+
+
+
+def test_lot15_keeps_pydantic_out_of_canonical_domain_models() -> None:
+    domain_files = (
+        SOURCE_ROOT / "runtime" / "context.py",
+        SOURCE_ROOT / "runtime" / "references.py",
+        SOURCE_ROOT / "runtime" / "evidence.py",
+        SOURCE_ROOT / "diagnostics" / "failure.py",
+        SOURCE_ROOT / "diagnostics" / "model.py",
+        SOURCE_ROOT / "lineage" / "model.py",
+    )
+
+    for path in domain_files:
+        imported = _imported_modules(path)
+        assert not any(
+            name == "pydantic" or name.startswith("pydantic.")
+            for name in imported
+        ), f"{_module_name(path)} leaks Pydantic into the canonical domain"
