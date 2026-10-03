@@ -69,6 +69,7 @@ def test_lot12_migration_lineage_is_append_only() -> None:
 def test_lot12_event_vocabulary_is_frozen() -> None:
     assert tuple(value.value for value in runtime.RuntimeEventType) == (
         "WORKFLOW_STARTED",
+        "WORKFLOW_RESUMED",
         "WORKFLOW_SUCCEEDED",
         "WORKFLOW_FAILED",
         "WORKFLOW_CANCELLATION_REQUESTED",
