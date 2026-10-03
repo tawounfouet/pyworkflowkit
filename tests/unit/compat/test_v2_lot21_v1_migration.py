@@ -16,6 +16,7 @@ from pyworkflowkit._compat.v1_to_v2 import (
     import_v1_runtime_metadata,
     migrate_external_run_ref,
     migrate_task_attempt,
+    migrate_task_attempt_sequence,
     migrate_task_definition,
     migrate_task_run,
     migrate_workflow_definition,
@@ -287,6 +288,70 @@ def test_lot21_task_run_and_attempt_preserve_legacy_identity_and_failure_evidenc
     assert migrated_attempt.legacy_evidence.error_metadata["provider_code"] == 503
 
 
+def test_lot21_retry_history_migrates_as_contiguous_attempt_sequence() -> None:
+    attempts = (
+        V1TaskAttempt(
+            attempt_id=V1TaskAttemptId("TA-1"),
+            task_run_id=V1TaskRunId("TR-42"),
+            attempt_number=1,
+            status=V1TaskAttemptStatus.FAILED,
+            started_at=T0,
+            finished_at=T1,
+            error_type="Transient",
+        ),
+        V1TaskAttempt(
+            attempt_id=V1TaskAttemptId("TA-2"),
+            task_run_id=V1TaskRunId("TR-42"),
+            attempt_number=2,
+            status=V1TaskAttemptStatus.SUCCEEDED,
+            started_at=T1,
+            finished_at=T2,
+        ),
+    )
+
+    migrated = migrate_task_attempt_sequence(
+        attempts,
+        created_at_by_attempt_id={"TA-1": T0, "TA-2": T1},
+    )
+
+    assert tuple(item.attempt.attempt_number for item in migrated) == (1, 2)
+    assert tuple(str(item.attempt.attempt_id) for item in migrated) == ("TA-1", "TA-2")
+    assert migrated[0].legacy_evidence.error_type == "Transient"
+
+
+def test_lot21_retry_history_rejects_gaps_and_missing_creation_evidence() -> None:
+    gap = (
+        V1TaskAttempt(
+            attempt_id=V1TaskAttemptId("TA-2"),
+            task_run_id=V1TaskRunId("TR-42"),
+            attempt_number=2,
+            status=V1TaskAttemptStatus.SUCCEEDED,
+            started_at=T1,
+            finished_at=T2,
+        ),
+    )
+    with pytest.raises(V1MigrationUnsupportedError) as caught:
+        migrate_task_attempt_sequence(
+            gap,
+            created_at_by_attempt_id={"TA-2": T1},
+        )
+    assert caught.value.issue.code == "PWK-MIG-V1-ATTEMPT-SEQUENCE"
+
+    first = V1TaskAttempt(
+        attempt_id=V1TaskAttemptId("TA-1"),
+        task_run_id=V1TaskRunId("TR-42"),
+        attempt_number=1,
+        status=V1TaskAttemptStatus.SUCCEEDED,
+        started_at=T1,
+        finished_at=T2,
+    )
+    with pytest.raises(V1MigrationEvidenceError):
+        migrate_task_attempt_sequence(
+            (first,),
+            created_at_by_attempt_id={},
+        )
+
+
 def test_lot21_external_tracking_requires_explicit_kind_and_preserves_legacy_fields() -> None:
     legacy = V1ExternalRunRef(
         external_ref_id=ExternalRunRefId("ER-42"),
@@ -417,6 +482,7 @@ def test_lot21_snapshot_freezes_no_invention_migration_posture() -> None:
     assert snapshot["workflow_run_requires_external_fingerprints"] is True
     assert snapshot["workflow_run_requires_external_correlation"] is True
     assert snapshot["task_attempt_requires_external_created_at"] is True
+    assert snapshot["retry_history_requires_contiguous_attempt_numbers"] is True
     assert snapshot["external_run_kind_requires_explicit_input"] is True
     assert snapshot["semantic_metadata_export_import"] is True
     assert snapshot["semantic_metadata_external_attempt_ownership"] is None
