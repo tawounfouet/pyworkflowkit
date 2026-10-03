@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from pyworkflowkit.diagnostics.failure import FailureEvidence
 from pyworkflowkit.diagnostics.model import Diagnostic
+from pyworkflowkit.errors import PyWorkflowKitError
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.references import ExternalRunRef, WorkflowExecutionReference
 from pyworkflowkit.serialization.contracts import (
@@ -42,7 +43,7 @@ Upcaster: TypeAlias = Callable[[Mapping[str, object]], Mapping[str, object]]
 BoundaryT = TypeVar("BoundaryT", bound=BoundaryValue)
 
 
-class WireContractError(ValueError):
+class WireContractError(PyWorkflowKitError):
     """Raised when a wire payload violates the qualified V2 contract."""
 
 
