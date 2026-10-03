@@ -8,8 +8,10 @@ Python workloads without requiring a scheduler, server, worker cluster, or orche
 platform.
 
 > **Current stable:** `1.1.0` — Developer Experience & Learning.
-> **Runtime compatibility baseline:** `1.0.0`.
-> The 1.1 release preserves the stable 1.0 runtime contracts while adding the qualified developer-learning surfaces.
+> **Current release candidate:** `2.0.0rc1` — V2 architecture and runtime freeze.
+> **Historical runtime compatibility baseline:** `1.0.0`.
+> The 2.0 RC promotes the qualified V2 contracts to the package root while retaining
+> explicit 1.x migration/compatibility surfaces.
 
 ## What the stable 1.0 release provides
 
@@ -133,38 +135,43 @@ These guides intentionally start from the frozen `pyworkflowkit` and
 
 ## Public API example
 
+PyWorkflowKit 2.0 keeps the package root intentionally small. Executor and persistence
+implementations remain explicit qualified dependencies:
+
 ```python
-from pyworkflowkit import TaskHandle, WorkflowRuntime, task, workflow
+from pyworkflowkit import TaskDefinition, WorkflowDefinition, WorkflowRuntime
+from pyworkflowkit.executors import InlineExecutor
+from pyworkflowkit.persistence import InMemoryMetadataStore
 
 
-@task
 def fetch() -> dict[str, int]:
     return {"rows": 10}
 
 
-@task(depends_on=(fetch,))
-def publish() -> str:
-    return "published"
+definition = WorkflowDefinition(
+    name="demo.etl",
+    version="2",
+    tasks=(
+        TaskDefinition(
+            key="fetch",
+            workload=fetch,
+        ),
+    ),
+)
 
+runtime = WorkflowRuntime(
+    executor=InlineExecutor(),
+    metadata=InMemoryMetadataStore(),
+)
+result = runtime.run(definition)
 
-@workflow(id="demo.etl", version="1")
-def demo() -> tuple[TaskHandle, ...]:
-    return (fetch, publish)
-
-
-runtime = WorkflowRuntime()
-for handle in demo.task_handles():
-    runtime.register(handle.handler_ref, handle.handler)
-
-definition = demo.build()
-run = runtime.run(definition)
-manifest = runtime.manifest(definition, run.run_id)
-
-print(run.status)
-print(manifest.run_id)
+print(result.status)
+print(result.run_id)
 ```
 
-Decoration and import are lazy: defining a task or workflow does not execute a workload.
+Authoring is declarative: constructing a workflow does not execute its workloads. The
+historical 1.x decorator facade remains documented through the migration material rather
+than the frozen 2.0 package root.
 
 ## Concurrent execution in 0.4
 
