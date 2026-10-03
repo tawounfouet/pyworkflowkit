@@ -249,8 +249,7 @@ class PyIngestKitExecutionResult:
             raise TypeError("retryable must be a bool")
         if self.contract_version != V2_PYINGESTKIT_INTEGRATION_CONTRACT_VERSION:
             raise ValueError(
-                "unsupported PyIngestKit V2 integration contract version "
-                f"{self.contract_version!r}"
+                f"unsupported PyIngestKit V2 integration contract version {self.contract_version!r}"
             )
 
         metadata = _normalize_v2_pairs(self.metadata, field_name="metadata")
@@ -383,8 +382,7 @@ class PyIngestKitWorkloadHandler:
                     retryability=Retryability.NON_RETRYABLE,
                     uncertainty=OutcomeUncertainty.KNOWN,
                     message_summary=(
-                        "PyIngestKitExecutionJob.run() must return "
-                        "PyIngestKitExecutionResult"
+                        "PyIngestKitExecutionJob.run() must return PyIngestKitExecutionResult"
                     ),
                     details=(("job_ref", self.workload.job_ref),),
                 )
@@ -514,9 +512,7 @@ def _v2_external_ref(
     result: PyIngestKitExecutionResult,
     context: TaskExecutionContext,
 ) -> V2ExternalRunRef:
-    metadata = {
-        key: value for key, value in result.metadata if key != _V2_CREDENTIAL_REF_PARAMETER
-    }
+    metadata = {key: value for key, value in result.metadata if key != _V2_CREDENTIAL_REF_PARAMETER}
     metadata["job_ref"] = workload.job_ref
     metadata["retry_owner"] = workload.retry_owner.value
     return V2ExternalRunRef(
