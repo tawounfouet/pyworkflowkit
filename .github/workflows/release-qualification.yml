@@ -846,7 +846,6 @@ jobs:
       - developer-experience-v2
       - packaging-distribution
       - release-candidate
-      - v2-release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -870,7 +869,6 @@ jobs:
           test "${{ needs.developer-experience-v2.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
           test "${{ needs.release-candidate.result }}" = "success"
-          test "${{ needs.v2-release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"
@@ -919,6 +917,7 @@ jobs:
       - developer-experience
       - packaging-distribution
       - release-candidate
+      - v2-release-candidate
       - reference-contracts
       - reference-integrations
       - control-plane-provider
@@ -941,6 +940,7 @@ jobs:
           test "${{ needs.developer-experience.result }}" = "success"
           test "${{ needs.packaging-distribution.result }}" = "success"
           test "${{ needs.release-candidate.result }}" = "success"
+          test "${{ needs.v2-release-candidate.result }}" = "success"
           test "${{ needs.reference-contracts.result }}" = "success"
           test "${{ needs.reference-integrations.result }}" = "success"
           test "${{ needs.control-plane-provider.result }}" = "success"
