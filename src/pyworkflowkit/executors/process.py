@@ -134,9 +134,7 @@ def _worker_main(
             )
         else:
             result = (
-                raw
-                if isinstance(raw, TaskExecutionResult)
-                else TaskExecutionResult(output=raw)
+                raw if isinstance(raw, TaskExecutionResult) else TaskExecutionResult(output=raw)
             )
 
         serialization_error = _ensure_picklable(result)
