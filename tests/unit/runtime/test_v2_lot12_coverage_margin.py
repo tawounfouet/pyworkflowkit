@@ -283,7 +283,6 @@ def test_runtime_inspector_rejects_plan_identity_mismatch() -> None:
         RuntimeInspector(metadata=store).inspect(plan, run.run_id)
 
 
-
 def test_memory_lot12_evidence_errors_and_orphan_transition_projection() -> None:
     store = InMemoryMetadataStore()
     missing_run = WorkflowRunId.parse("W-MISSING")
