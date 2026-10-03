@@ -78,7 +78,7 @@ from pyworkflowkit.states.enums import TASK_RUN_TERMINAL_STATUSES
 
 
 class WorkflowRuntime:
-    """Deterministic synchronous V2 runtime for one explicitly injected executor."""
+    """Deterministic synchronous V2 runtime with explicit per-task executor routing."""
 
     def __init__(
         self,
