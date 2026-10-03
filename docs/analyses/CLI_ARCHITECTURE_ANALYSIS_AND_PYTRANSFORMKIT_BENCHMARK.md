@@ -34,17 +34,17 @@ Alors que `pyworkflowkit 2.0` promeut les espaces de noms `pyworkflowkit.runtime
 ```python
 # Extrait réel de src/pyworkflowkit/cli.py
 from pyworkflowkit.application.manifest import RunManifestSerializer  # ❌ V1 legacy
-from pyworkflowkit.application.planning import (                      # ❌ V1 legacy
+from pyworkflowkit.application.planning import (  # ❌ V1 legacy
     DAGValidator,
     ExecutionPlanner,
     build_dependency_graph,
 )
-from pyworkflowkit.application.runtime import WorkflowRuntime         # ❌ V1 legacy
-from pyworkflowkit.config import RuntimeSettings                      # ❌ V1 legacy
-from pyworkflowkit.declarative import WorkflowBuilder                 # ❌ V1 legacy
-from pyworkflowkit.domain.definitions import WorkflowDefinition       # ❌ V1 legacy
-from pyworkflowkit.domain.enums import WorkflowRunStatus              # ❌ V1 legacy
-from pyworkflowkit.plugins import PluginCatalog, PluginDiscovery      # ❌ V1 legacy
+from pyworkflowkit.application.runtime import WorkflowRuntime  # ❌ V1 legacy
+from pyworkflowkit.config import RuntimeSettings  # ❌ V1 legacy
+from pyworkflowkit.declarative import WorkflowBuilder  # ❌ V1 legacy
+from pyworkflowkit.domain.definitions import WorkflowDefinition  # ❌ V1 legacy
+from pyworkflowkit.domain.enums import WorkflowRunStatus  # ❌ V1 legacy
+from pyworkflowkit.plugins import PluginCatalog, PluginDiscovery  # ❌ V1 legacy
 ```
 
 **Conséquence** : La CLI actuelle est incapable de manipuler les objets canoniques de la V2 (`ExecutionPlan`, `WorkflowPlanner`, `TaskAttempt`, `SQLiteMetadataStore`, `PostgreSQLMetadataStore`, `TaskAttemptId`, `WorkflowRunId`). Elle est en déconnexion totale avec le cœur moderne du produit.

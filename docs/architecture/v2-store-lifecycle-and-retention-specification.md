@@ -36,22 +36,19 @@ class RetentionPolicy(BaseModel):
     """Politique de rétention et de nettoyage des exécutions historiques."""
 
     retention_days: int | None = Field(
-        default=30,
-        ge=1,
-        description="Âge maximal en jours des runs terminés à conserver."
+        default=30, ge=1, description="Âge maximal en jours des runs terminés à conserver."
     )
     max_runs_per_workflow: int | None = Field(
         default=100,
         ge=1,
-        description="Nombre maximal de runs récents à conserver par nom de workflow."
+        description="Nombre maximal de runs récents à conserver par nom de workflow.",
     )
     prune_states: list[WorkflowState] = Field(
         default_factory=lambda: [WorkflowState.SUCCEEDED, WorkflowState.CANCELLED],
-        description="États ciblés par la purge. Les runs FAILED peuvent être exclus pour audit."
+        description="États ciblés par la purge. Les runs FAILED peuvent être exclus pour audit.",
     )
     retain_failed_runs_days: int | None = Field(
-        default=90,
-        description="Durée de rétention spécifique étendue pour les runs en FAILED."
+        default=90, description="Durée de rétention spécifique étendue pour les runs en FAILED."
     )
 ```
 

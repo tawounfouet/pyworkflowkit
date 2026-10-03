@@ -78,46 +78,58 @@ from abc import ABC, abstractmethod
 from typing import Any, Iterator
 from contextlib import contextmanager
 
+
 class TelemetryBridge(ABC):
     @contextmanager
     @abstractmethod
-    def start_workflow_span(self, workflow_name: str, run_id: str, correlation: Any) -> Iterator[Any]:
-        ...
+    def start_workflow_span(
+        self, workflow_name: str, run_id: str, correlation: Any
+    ) -> Iterator[Any]: ...
 
     @contextmanager
     @abstractmethod
-    def start_task_span(self, task_id: str, task_run_id: str, workflow_run_id: str) -> Iterator[Any]:
-        ...
+    def start_task_span(
+        self, task_id: str, task_run_id: str, workflow_run_id: str
+    ) -> Iterator[Any]: ...
 
     @contextmanager
     @abstractmethod
-    def start_attempt_span(self, attempt_number: int, attempt_id: str, executor_type: str) -> Iterator[Any]:
-        ...
+    def start_attempt_span(
+        self, attempt_number: int, attempt_id: str, executor_type: str
+    ) -> Iterator[Any]: ...
 
     @abstractmethod
-    def inject_w3c_context(self, env: dict[str, str]) -> None:
-        ...
+    def inject_w3c_context(self, env: dict[str, str]) -> None: ...
+
 
 class NoOpTelemetryBridge(TelemetryBridge):
     @contextmanager
-    def start_workflow_span(self, workflow_name: str, run_id: str, correlation: Any) -> Iterator[None]:
+    def start_workflow_span(
+        self, workflow_name: str, run_id: str, correlation: Any
+    ) -> Iterator[None]:
         yield None
 
     @contextmanager
-    def start_task_span(self, task_id: str, task_run_id: str, workflow_run_id: str) -> Iterator[None]:
+    def start_task_span(
+        self, task_id: str, task_run_id: str, workflow_run_id: str
+    ) -> Iterator[None]:
         yield None
 
     @contextmanager
-    def start_attempt_span(self, attempt_number: int, attempt_id: str, executor_type: str) -> Iterator[None]:
+    def start_attempt_span(
+        self, attempt_number: int, attempt_id: str, executor_type: str
+    ) -> Iterator[None]:
         yield None
 
     def inject_w3c_context(self, env: dict[str, str]) -> None:
         pass
 
+
 def get_telemetry_bridge() -> TelemetryBridge:
     """Détecte la présence d'OpenTelemetry et instancie le pont adéquat."""
     try:
         import opentelemetry.trace as trace
+
         # Si un TracerProvider valide est configuré, on charge le pont OTel
         return OpenTelemetryBridge(trace.get_tracer("pyworkflowkit"))
     except ImportError:

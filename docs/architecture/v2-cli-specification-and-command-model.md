@@ -86,12 +86,12 @@ from enum import IntEnum
 
 class ExitCode(IntEnum):
     SUCCESS = 0
-    USER_ERROR = 1             # Erreur de syntaxe de commande, flag invalide
-    VALIDATION_ERROR = 2       # Échec de validation statique du workflow (cycle, orphelin)
-    EXECUTION_FAILURE = 3      # Échec d'exécution du workflow (tâche en FAILED)
-    SECURITY_ERROR = 4         # Violation de sécurité filesystem ou accès interdit
-    STORE_ERROR = 5            # Erreur d'accès ou de transaction sur le MetadataStore
-    INTERNAL_ERROR = 10        # Exception non interceptée (bug runtime)
+    USER_ERROR = 1  # Erreur de syntaxe de commande, flag invalide
+    VALIDATION_ERROR = 2  # Échec de validation statique du workflow (cycle, orphelin)
+    EXECUTION_FAILURE = 3  # Échec d'exécution du workflow (tâche en FAILED)
+    SECURITY_ERROR = 4  # Violation de sécurité filesystem ou accès interdit
+    STORE_ERROR = 5  # Erreur d'accès ou de transaction sur le MetadataStore
+    INTERNAL_ERROR = 10  # Exception non interceptée (bug runtime)
 ```
 
 ### 3.2 Structure de Rapport d'Erreur (`CliErrorReport`)

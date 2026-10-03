@@ -64,17 +64,21 @@ from pyworkflowkit.authoring import workflow, task
 from pyworkflowkit.runtime import WorkflowRuntime
 from pyworkflowkit.persistence import SQLiteMetadataStore
 
+
 @task(id="ingest_customers")
 def ingest_customers():
     return {"customers_count": 1000}
+
 
 @task(id="ingest_orders")
 def ingest_orders():
     return {"orders_count": 5000}
 
+
 @task(id="reconcile_360")
 def reconcile_360(ingest_customers, ingest_orders):
     return {"reconciled": True}
+
 
 # Utilisation de la nouvelle syntaxe fluide d'authoring (LOT-32)
 wf = workflow("customer_360_v2")(
