@@ -12,8 +12,12 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
-from pyworkflowkit.domain.runtime import RuntimeEvent
 from pyworkflowkit.runtime.context import CorrelationContext
+from pyworkflowkit.runtime.evidence import (
+    RuntimeEvent,
+    RuntimeEventType,
+    TaskOutputCheckpoint,
+)
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import (
     CorrelationId,
@@ -102,6 +106,7 @@ __all__ = [
     "ReconciliationReport",
     "ReconciliationService",
     "RuntimeEvent",
+    "RuntimeEventType",
     "RetryWaiter",
     "RuntimeIdentityFactory",
     "SystemClock",
@@ -109,6 +114,7 @@ __all__ = [
     "TaskAttempt",
     "TaskAttemptId",
     "TaskOutcome",
+    "TaskOutputCheckpoint",
     "TaskReconciliation",
     "TaskRun",
     "TaskRunId",
