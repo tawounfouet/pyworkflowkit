@@ -15,6 +15,7 @@ from pyworkflowkit.diagnostics.failure import (
     Retryability,
 )
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
+from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
 from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
 from pyworkflowkit.executors import (
@@ -35,6 +36,12 @@ from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
+from pyworkflowkit.runtime.reconciliation import (
+    ExternalRunVerifier,
+    ExternalRunVerifierRegistry,
+    ReconciliationReport,
+    ReconciliationService,
+)
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
 from pyworkflowkit.runtime.services import (
@@ -89,6 +96,12 @@ class WorkflowRuntime:
         self._workflow_states = WorkflowRunStateMachine()
         self._task_states = TaskRunStateMachine()
         self._attempt_states = TaskAttemptStateMachine()
+        self._reconciliation_verifiers = ExternalRunVerifierRegistry()
+        self._reconciliation = ReconciliationService(
+            metadata=metadata,
+            verifier_registry=self._reconciliation_verifiers,
+            clock=self._clock,
+        )
         self._active_requests: dict[TaskAttemptId, TaskExecutionRequest] = {}
         self._active_requests_lock = RLock()
 
@@ -403,6 +416,30 @@ class WorkflowRuntime:
             outputs=outputs,
             diagnostics=tuple(diagnostics),
         )
+
+    def recovery_assessment(self, workflow_run_id: WorkflowRunId) -> RecoveryAssessment:
+        """Classify durable recovery evidence without mutating runtime state."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return self._reconciliation.assess(workflow_run_id)
+
+    def recovery_candidates(self) -> tuple[RecoveryAssessment, ...]:
+        """Discover non-terminal persisted runs requiring recovery attention."""
+
+        return self._reconciliation.discover()
+
+    def register_external_run_verifier(self, verifier: ExternalRunVerifier) -> None:
+        """Register one provider-specific external-run verifier."""
+
+        self._reconciliation_verifiers.register(verifier)
+
+    def reconcile_run(self, workflow_run_id: WorkflowRunId) -> ReconciliationReport:
+        """Reconcile one durable run using local evidence and registered providers."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return self._reconciliation.reconcile(workflow_run_id)
 
     def cancel(self, workflow_run_id: WorkflowRunId) -> CancellationResult:
         run = self._metadata.get_workflow_run(workflow_run_id)
