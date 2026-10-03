@@ -182,10 +182,7 @@ def _binding(task, job):
 
 
 def _executor_for(definition: WorkflowDefinition, jobs: tuple[object, ...]) -> InlineExecutor:
-    bindings = tuple(
-        _binding(task, job)
-        for task, job in zip(definition.tasks, jobs, strict=True)
-    )
+    bindings = tuple(_binding(task, job) for task, job in zip(definition.tasks, jobs, strict=True))
     return InlineExecutor({item.registry_key: item.handler for item in bindings})
 
 
@@ -222,10 +219,7 @@ def test_lot20_equivalent_retry_scopes_cannot_be_stacked_implicitly() -> None:
     attempts = metadata.list_task_attempts(task_run.task_run_id)
     assert len(attempts) == 2
 
-    refs = [
-        metadata.list_external_run_refs(attempt.attempt_id)[0]
-        for attempt in attempts
-    ]
+    refs = [metadata.list_external_run_refs(attempt.attempt_id)[0] for attempt in attempts]
     assert len({ref.external_run_id for ref in refs}) == 2
     assert all(dict(ref.metadata)["provider_retry_count"] == "2" for ref in refs)
 
@@ -258,9 +252,7 @@ def test_lot20_transform_unknown_outcome_survives_sqlite_restart_and_reconciles_
 
     with SQLiteMetadataStore(database, wal=False) as store:
         result = WorkflowRuntime(
-            executor=InlineExecutor(
-                {item.registry_key: item.handler for item in bindings}
-            ),
+            executor=InlineExecutor({item.registry_key: item.handler for item in bindings}),
             metadata=store,
         ).run(definition)
 
@@ -311,10 +303,7 @@ def test_lot20_transform_unknown_outcome_survives_sqlite_restart_and_reconciles_
         assert attempts[0].attempt_id == original_attempt_id
         assert attempts[0].status is TaskAttemptStatus.SUCCEEDED
         assert transform_run.status is TaskRunStatus.SUCCEEDED
-        assert (
-            reopened.list_external_run_refs(original_attempt_id)[0].external_run_id
-            == external_id
-        )
+        assert reopened.list_external_run_refs(original_attempt_id)[0].external_run_id == external_id
 
     assert transform_job.calls == 1
 
@@ -385,23 +374,14 @@ def test_lot20_publication_uncertainty_reconciles_after_restart_without_republis
             "pyingestkit",
             "pytransformkit",
         }
-        assert all(
-            str(ref.correlation_id) == "C-LOT20"
-            for ref in refs_by_task.values()
-        )
-        assert all(
-            ref.causation_id == "request-42"
-            for ref in refs_by_task.values()
-        )
+        assert all(str(ref.correlation_id) == "C-LOT20" for ref in refs_by_task.values())
+        assert all(ref.causation_id == "request-42" for ref in refs_by_task.values())
 
         transform_checkpoint = store.get_task_output_checkpoint(
             task_runs["transform_customer_360"].task_run_id
         )
         assert transform_checkpoint.output["kind"] == "pytransformkit.resource_reference"
-        assert (
-            transform_checkpoint.output["locator"]
-            == "warehouse/customer360/v1.parquet"
-        )
+        assert transform_checkpoint.output["locator"] == "warehouse/customer360/v1.parquet"
 
         publish_ref = refs_by_task["publish_mart"]
         assert publish_ref.status_hint == "unknown_outcome"
@@ -479,9 +459,7 @@ def test_lot20_cancelled_provider_truth_resolves_ambiguous_attempt_without_dupli
             if item.task_key == "transform_customer_360"
         )
         attempt = store.list_task_attempts(transform_run.task_run_id)[0]
-        external_id = store.list_external_run_refs(
-            attempt.attempt_id
-        )[0].external_run_id
+        external_id = store.list_external_run_refs(attempt.attempt_id)[0].external_run_id
         attempt_id = attempt.attempt_id
 
     registry = ExternalRunVerifierRegistry()
