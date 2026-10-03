@@ -107,9 +107,7 @@ def test_lot16_executor_contract_targets_canonical_v2_executor() -> None:
 def test_lot16_catalog_validates_all_four_plugin_categories_on_creation() -> None:
     catalog = V2PluginCatalog()
 
-    catalog.executors.register(
-        _registration("inline-v2", PluginType.EXECUTOR, InlineExecutor)
-    )
+    catalog.executors.register(_registration("inline-v2", PluginType.EXECUTOR, InlineExecutor))
     catalog.metadata.register(
         _registration("memory-v2", PluginType.METADATA, InMemoryMetadataStore)
     )
@@ -123,9 +121,7 @@ def test_lot16_catalog_validates_all_four_plugin_categories_on_creation() -> Non
             ),
         )
     )
-    catalog.events.register(
-        _registration("events-v2", PluginType.EVENT, RecordingSink)
-    )
+    catalog.events.register(_registration("events-v2", PluginType.EVENT, RecordingSink))
 
     assert isinstance(catalog.executors.create("inline-v2"), InlineExecutor)
     assert isinstance(catalog.metadata.create("memory-v2"), InMemoryMetadataStore)
@@ -137,9 +133,7 @@ def test_lot16_catalog_validates_all_four_plugin_categories_on_creation() -> Non
 
 def test_lot16_catalog_fails_closed_on_wrong_instance_contract() -> None:
     catalog = V2PluginCatalog()
-    catalog.executors.register(
-        _registration("wrong", PluginType.EXECUTOR, lambda: object())
-    )
+    catalog.executors.register(_registration("wrong", PluginType.EXECUTOR, lambda: object()))
 
     with pytest.raises(Exception, match="does not satisfy"):
         catalog.executors.create("wrong")
