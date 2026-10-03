@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json
+from copy import deepcopy
 from importlib.metadata import PackageNotFoundError, version
 
 from pyworkflowkit._architecture import v2_architecture_snapshot
@@ -119,7 +119,7 @@ def v2_release_candidate_evidence_manifest() -> dict[str, object]:
         },
     }
     # Detach the emitted proof from mutable objects owned by composed contract modules.
-    return json.loads(json.dumps(payload, allow_nan=False, sort_keys=True))
+    return deepcopy(payload)
 
 
 __all__ = [
