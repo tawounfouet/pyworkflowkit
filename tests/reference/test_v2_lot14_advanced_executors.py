@@ -30,8 +30,7 @@ def test_lot14_executor_descriptors_publish_distinct_physical_semantics() -> Non
         assert process.descriptor.execution_modes == ("child_process",)
         assert process.descriptor.supports_execution_timeout is True
         assert (
-            process.descriptor.cancellation_capability
-            is executors.CancellationCapability.CONFIRMED
+            process.descriptor.cancellation_capability is executors.CancellationCapability.CONFIRMED
         )
         assert "handler_must_be_picklable" in process.descriptor.portability_constraints
 
@@ -44,9 +43,7 @@ def test_lot14_executor_descriptors_publish_distinct_physical_semantics() -> Non
             async_executor.descriptor.cancellation_capability
             is executors.CancellationCapability.BEST_EFFORT
         )
-        assert "cancellation_is_cooperative" in (
-            async_executor.descriptor.portability_constraints
-        )
+        assert "cancellation_is_cooperative" in (async_executor.descriptor.portability_constraints)
 
         assert subprocess_executor.descriptor.executor_id == "subprocess"
         assert subprocess_executor.descriptor.execution_modes == ("external_process",)
