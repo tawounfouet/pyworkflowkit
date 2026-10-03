@@ -22,6 +22,11 @@ from pyworkflowkit.persistence.contracts import (
     v2_metadata_store_contract_snapshot,
 )
 from pyworkflowkit.persistence.memory import InMemoryMetadataStore
+from pyworkflowkit.persistence.postgresql import (
+    PostgreSQLMetadataStore,
+    PostgreSQLSettings,
+    create_postgresql_engine,
+)
 from pyworkflowkit.persistence.sqlite import SQLiteMetadataStore, SQLiteSettings
 from pyworkflowkit.ports.metadata_store import MetadataStore as LegacyMetadataStore
 from pyworkflowkit.ports.metadata_store import UnitOfWork as LegacyUnitOfWork
@@ -37,11 +42,14 @@ __all__ = [
     "ManifestReference",
     "MetadataStore",
     "MetadataStoreMetadata",
+    "PostgreSQLMetadataStore",
+    "PostgreSQLSettings",
     "SQLiteMetadataStore",
     "SQLiteSettings",
     "StateEntityType",
     "StateTransitionRecord",
     "V2_METADATA_STORE_CONTRACT_VERSION",
     "V2_METADATA_STORE_METHODS",
+    "create_postgresql_engine",
     "v2_metadata_store_contract_snapshot",
 ]
