@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from pyworkflowkit import WorkflowRuntime
+from pyworkflowkit._compat.v1_root import WorkflowRuntime
 from pyworkflowkit.control_plane import ControlPlaneOperation, WorkflowRuntimeProvider
 from pyworkflowkit.ecosystem import CancellationCapability, ExecutorCapabilities
 
