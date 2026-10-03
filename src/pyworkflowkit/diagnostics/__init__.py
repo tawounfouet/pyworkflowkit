@@ -5,7 +5,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
-from pyworkflowkit.application.inspection import RuntimeInspection, RuntimeInspector, TaskInspection
 from pyworkflowkit.diagnostics.failure import (
     FailureCategory,
     FailureEvidence,
@@ -15,12 +14,25 @@ from pyworkflowkit.diagnostics.failure import (
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 
 if TYPE_CHECKING:
+    from pyworkflowkit.diagnostics.inspection import (
+        RuntimeInspection,
+        RuntimeInspector,
+        TaskInspection,
+    )
     from pyworkflowkit.diagnostics.recovery import (
         RecoveryAssessment,
         RecoveryDisposition,
         RecoveryInspector,
         TaskRecoveryAssessment,
     )
+
+_INSPECTION_EXPORTS = frozenset(
+    {
+        "RuntimeInspection",
+        "RuntimeInspector",
+        "TaskInspection",
+    }
+)
 
 _RECOVERY_EXPORTS = frozenset(
     {
@@ -33,6 +45,9 @@ _RECOVERY_EXPORTS = frozenset(
 
 
 def __getattr__(name: str) -> Any:
+    if name in _INSPECTION_EXPORTS:
+        module = import_module("pyworkflowkit.diagnostics.inspection")
+        return getattr(module, name)
     if name in _RECOVERY_EXPORTS:
         module = import_module("pyworkflowkit.diagnostics.recovery")
         return getattr(module, name)
