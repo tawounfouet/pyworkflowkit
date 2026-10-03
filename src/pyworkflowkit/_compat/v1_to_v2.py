@@ -9,6 +9,7 @@ or migration fails closed with :class:`V1MigrationEvidenceError`.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -25,10 +26,19 @@ from pyworkflowkit.domain.definitions import (
     WorkflowDefinition as V1WorkflowDefinition,
 )
 from pyworkflowkit.domain.enums import (
+    SkipReason as V1SkipReason,
     TaskAttemptStatus as V1TaskAttemptStatus,
     TaskRunStatus as V1TaskRunStatus,
     TimeoutMode,
     WorkflowRunStatus as V1WorkflowRunStatus,
+)
+from pyworkflowkit.domain.ids import (
+    ExternalRunRefId,
+    TaskAttemptId as V1TaskAttemptId,
+    TaskId,
+    TaskRunId as V1TaskRunId,
+    WorkflowId,
+    WorkflowRunId as V1WorkflowRunId,
 )
 from pyworkflowkit.domain.runtime import (
     TaskAttempt as V1TaskAttempt,
@@ -49,6 +59,7 @@ from pyworkflowkit.runtime import (
     WorkflowRun as V2WorkflowRun,
     WorkflowRunId,
 )
+from pyworkflowkit.runtime.evidence import normalize_json_value, plain_json_value
 from pyworkflowkit.states import (
     SkipReason as V2SkipReason,
     TaskAttemptStatus as V2TaskAttemptStatus,
@@ -165,6 +176,122 @@ class ExternalRunMigration:
 
     external_run: V2ExternalRunRef
     legacy_evidence: LegacyExternalRunEvidence
+
+
+@dataclass(frozen=True, slots=True)
+class V1RuntimeMetadataSnapshot:
+    """Strict data-only export of legacy runtime metadata.
+
+    ExternalRunRef values remain unowned because the legacy value object did not carry a
+    TaskAttempt identity.
+    """
+
+    workflow_run: V1WorkflowRun
+    task_runs: tuple[V1TaskRun, ...]
+    task_attempts: tuple[V1TaskAttempt, ...]
+    external_runs: tuple[V1ExternalRunRef, ...]
+    contract_version: str = V1_TO_V2_MIGRATION_CONTRACT_VERSION
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.workflow_run, V1WorkflowRun):
+            raise TypeError("workflow_run must be a V1 WorkflowRun")
+        if any(not isinstance(item, V1TaskRun) for item in self.task_runs):
+            raise TypeError("task_runs must contain V1 TaskRun values")
+        if any(not isinstance(item, V1TaskAttempt) for item in self.task_attempts):
+            raise TypeError("task_attempts must contain V1 TaskAttempt values")
+        if any(not isinstance(item, V1ExternalRunRef) for item in self.external_runs):
+            raise TypeError("external_runs must contain V1 ExternalRunRef values")
+        if self.contract_version != V1_TO_V2_MIGRATION_CONTRACT_VERSION:
+            raise ValueError(
+                f"unsupported V1 runtime metadata contract version {self.contract_version!r}"
+            )
+
+    def to_payload(self) -> dict[str, object]:
+        """Return a strict JSON-portable semantic snapshot."""
+
+        return {
+            "contract": "pyworkflowkit.v1_runtime_metadata",
+            "contract_version": self.contract_version,
+            "workflow_run": _export_v1_workflow_run(self.workflow_run),
+            "task_runs": [
+                _export_v1_task_run(item)
+                for item in sorted(self.task_runs, key=lambda value: str(value.task_run_id))
+            ],
+            "task_attempts": [
+                _export_v1_task_attempt(item)
+                for item in sorted(
+                    self.task_attempts,
+                    key=lambda value: (str(value.task_run_id), value.attempt_number),
+                )
+            ],
+            "external_runs": [
+                _export_v1_external_run(item)
+                for item in sorted(
+                    self.external_runs,
+                    key=lambda value: str(value.external_ref_id),
+                )
+            ],
+            "external_run_attempt_ownership": None,
+        }
+
+    def to_json(self) -> str:
+        """Encode canonical JSON without executable Python state."""
+
+        return json.dumps(
+            self.to_payload(),
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+    @classmethod
+    def from_json(cls, payload: str) -> "V1RuntimeMetadataSnapshot":
+        """Decode the closed migration schema without importing payload-selected types."""
+
+        if not isinstance(payload, str):
+            raise TypeError("payload must be a string")
+        data = json.loads(payload)
+        if not isinstance(data, dict):
+            raise ValueError("V1 runtime metadata payload must be an object")
+        expected = {
+            "contract",
+            "contract_version",
+            "workflow_run",
+            "task_runs",
+            "task_attempts",
+            "external_runs",
+            "external_run_attempt_ownership",
+        }
+        if set(data) != expected:
+            raise ValueError("V1 runtime metadata payload fields do not match contract")
+        if data["contract"] != "pyworkflowkit.v1_runtime_metadata":
+            raise ValueError("unsupported V1 runtime metadata contract")
+        if data["contract_version"] != V1_TO_V2_MIGRATION_CONTRACT_VERSION:
+            raise ValueError("unsupported V1 runtime metadata contract version")
+        if data["external_run_attempt_ownership"] is not None:
+            raise ValueError(
+                "V1 runtime metadata must not invent ExternalRunRef TaskAttempt ownership"
+            )
+        workflow = _import_v1_workflow_run(_require_object(data["workflow_run"], "workflow_run"))
+        task_runs = tuple(
+            _import_v1_task_run(_require_object(item, "task_run"))
+            for item in _require_list(data["task_runs"], "task_runs")
+        )
+        attempts = tuple(
+            _import_v1_task_attempt(_require_object(item, "task_attempt"))
+            for item in _require_list(data["task_attempts"], "task_attempts")
+        )
+        external_runs = tuple(
+            _import_v1_external_run(_require_object(item, "external_run"))
+            for item in _require_list(data["external_runs"], "external_runs")
+        )
+        return cls(
+            workflow_run=workflow,
+            task_runs=task_runs,
+            task_attempts=attempts,
+            external_runs=external_runs,
+        )
 
 
 def migrate_workflow_definition(
@@ -429,6 +556,256 @@ def migrate_external_run_ref(
     )
 
 
+def export_v1_runtime_metadata(
+    *,
+    workflow_run: V1WorkflowRun,
+    task_runs: tuple[V1TaskRun, ...],
+    task_attempts: tuple[V1TaskAttempt, ...],
+    external_runs: tuple[V1ExternalRunRef, ...] = (),
+) -> V1RuntimeMetadataSnapshot:
+    """Build a strict V1 runtime metadata export without inferred ownership."""
+
+    return V1RuntimeMetadataSnapshot(
+        workflow_run=workflow_run,
+        task_runs=task_runs,
+        task_attempts=task_attempts,
+        external_runs=external_runs,
+    )
+
+
+def import_v1_runtime_metadata(payload: str) -> V1RuntimeMetadataSnapshot:
+    """Decode a strict V1 semantic export."""
+
+    return V1RuntimeMetadataSnapshot.from_json(payload)
+
+
+def _export_v1_workflow_run(value: V1WorkflowRun) -> dict[str, object]:
+    return {
+        "run_id": str(value.run_id),
+        "workflow_id": str(value.workflow_id),
+        "workflow_version": value.workflow_version,
+        "status": value.status.value,
+        "parameters": _portable_mapping(value.parameters, path="workflow_run.parameters"),
+        "created_at": _iso(value.created_at),
+        "started_at": _iso(value.started_at),
+        "finished_at": _iso(value.finished_at),
+    }
+
+
+def _export_v1_task_run(value: V1TaskRun) -> dict[str, object]:
+    return {
+        "task_run_id": str(value.task_run_id),
+        "run_id": str(value.run_id),
+        "task_id": str(value.task_id),
+        "status": value.status.value,
+        "skip_reason": value.skip_reason.value if value.skip_reason is not None else None,
+        "created_at": _iso(value.created_at),
+        "started_at": _iso(value.started_at),
+        "finished_at": _iso(value.finished_at),
+    }
+
+
+def _export_v1_task_attempt(value: V1TaskAttempt) -> dict[str, object]:
+    return {
+        "attempt_id": str(value.attempt_id),
+        "task_run_id": str(value.task_run_id),
+        "attempt_number": value.attempt_number,
+        "status": value.status.value,
+        "started_at": _iso(value.started_at),
+        "finished_at": _iso(value.finished_at),
+        "error_type": value.error_type,
+        "error_message": value.error_message,
+        "error_category": value.error_category,
+        "retry_eligible_at": _iso(value.retry_eligible_at),
+        "error_metadata": _portable_mapping(
+            value.error_metadata,
+            path="task_attempt.error_metadata",
+        ),
+    }
+
+
+def _export_v1_external_run(value: V1ExternalRunRef) -> dict[str, object]:
+    return {
+        "external_ref_id": str(value.external_ref_id),
+        "provider": value.provider,
+        "external_run_id": value.external_run_id,
+        "uri": value.uri,
+        "metadata": _portable_mapping(value.metadata, path="external_run.metadata"),
+    }
+
+
+def _import_v1_workflow_run(value: Mapping[str, object]) -> V1WorkflowRun:
+    _require_fields(
+        value,
+        {
+            "run_id",
+            "workflow_id",
+            "workflow_version",
+            "status",
+            "parameters",
+            "created_at",
+            "started_at",
+            "finished_at",
+        },
+        "workflow_run",
+    )
+    return V1WorkflowRun(
+        run_id=V1WorkflowRunId(_string(value["run_id"], "run_id")),
+        workflow_id=WorkflowId(_string(value["workflow_id"], "workflow_id")),
+        workflow_version=_string(value["workflow_version"], "workflow_version"),
+        status=V1WorkflowRunStatus(_string(value["status"], "status")),
+        parameters=_require_object(value["parameters"], "parameters"),
+        created_at=_datetime_or_none(value["created_at"], "created_at"),
+        started_at=_datetime_or_none(value["started_at"], "started_at"),
+        finished_at=_datetime_or_none(value["finished_at"], "finished_at"),
+    )
+
+
+def _import_v1_task_run(value: Mapping[str, object]) -> V1TaskRun:
+    _require_fields(
+        value,
+        {
+            "task_run_id",
+            "run_id",
+            "task_id",
+            "status",
+            "skip_reason",
+            "created_at",
+            "started_at",
+            "finished_at",
+        },
+        "task_run",
+    )
+    skip_value = value["skip_reason"]
+    return V1TaskRun(
+        task_run_id=V1TaskRunId(_string(value["task_run_id"], "task_run_id")),
+        run_id=V1WorkflowRunId(_string(value["run_id"], "run_id")),
+        task_id=TaskId(_string(value["task_id"], "task_id")),
+        status=V1TaskRunStatus(_string(value["status"], "status")),
+        skip_reason=(
+            V1SkipReason(_string(skip_value, "skip_reason"))
+            if skip_value is not None
+            else None
+        ),
+        created_at=_datetime_or_none(value["created_at"], "created_at"),
+        started_at=_datetime_or_none(value["started_at"], "started_at"),
+        finished_at=_datetime_or_none(value["finished_at"], "finished_at"),
+    )
+
+
+def _import_v1_task_attempt(value: Mapping[str, object]) -> V1TaskAttempt:
+    _require_fields(
+        value,
+        {
+            "attempt_id",
+            "task_run_id",
+            "attempt_number",
+            "status",
+            "started_at",
+            "finished_at",
+            "error_type",
+            "error_message",
+            "error_category",
+            "retry_eligible_at",
+            "error_metadata",
+        },
+        "task_attempt",
+    )
+    attempt_number = value["attempt_number"]
+    if isinstance(attempt_number, bool) or not isinstance(attempt_number, int):
+        raise ValueError("attempt_number must be an integer")
+    return V1TaskAttempt(
+        attempt_id=V1TaskAttemptId(_string(value["attempt_id"], "attempt_id")),
+        task_run_id=V1TaskRunId(_string(value["task_run_id"], "task_run_id")),
+        attempt_number=attempt_number,
+        status=V1TaskAttemptStatus(_string(value["status"], "status")),
+        started_at=_datetime_or_none(value["started_at"], "started_at"),
+        finished_at=_datetime_or_none(value["finished_at"], "finished_at"),
+        error_type=_optional_string(value["error_type"], "error_type"),
+        error_message=_optional_string(value["error_message"], "error_message"),
+        error_category=_optional_string(value["error_category"], "error_category"),
+        retry_eligible_at=_datetime_or_none(
+            value["retry_eligible_at"],
+            "retry_eligible_at",
+        ),
+        error_metadata=_require_object(value["error_metadata"], "error_metadata"),
+    )
+
+
+def _import_v1_external_run(value: Mapping[str, object]) -> V1ExternalRunRef:
+    _require_fields(
+        value,
+        {"external_ref_id", "provider", "external_run_id", "uri", "metadata"},
+        "external_run",
+    )
+    return V1ExternalRunRef(
+        external_ref_id=ExternalRunRefId(
+            _string(value["external_ref_id"], "external_ref_id")
+        ),
+        provider=_string(value["provider"], "provider"),
+        external_run_id=_string(value["external_run_id"], "external_run_id"),
+        uri=_optional_string(value["uri"], "uri"),
+        metadata=_require_object(value["metadata"], "metadata"),
+    )
+
+
+def _portable_mapping(value: Mapping[str, object], *, path: str) -> dict[str, object]:
+    normalized = normalize_json_value(dict(value), path=path)
+    portable = plain_json_value(normalized)
+    if not isinstance(portable, dict):
+        raise TypeError(f"{path} must normalize to an object")
+    return portable
+
+
+def _iso(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    _require_aware(value, field_name="datetime")
+    return value.isoformat()
+
+
+def _datetime_or_none(value: object, field_name: str) -> datetime | None:
+    if value is None:
+        return None
+    raw = _string(value, field_name)
+    parsed = datetime.fromisoformat(raw)
+    _require_aware(parsed, field_name=field_name)
+    return parsed
+
+
+def _require_object(value: object, field_name: str) -> dict[str, object]:
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise ValueError(f"{field_name} must be an object with string keys")
+    return dict(value)
+
+
+def _require_list(value: object, field_name: str) -> list[object]:
+    if not isinstance(value, list):
+        raise ValueError(f"{field_name} must be a list")
+    return value
+
+
+def _require_fields(
+    value: Mapping[str, object],
+    expected: set[str],
+    field_name: str,
+) -> None:
+    if set(value) != expected:
+        raise ValueError(f"{field_name} fields do not match migration contract")
+
+
+def _string(value: object, field_name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be a non-empty string")
+    return value
+
+
+def _optional_string(value: object, field_name: str) -> str | None:
+    if value is None:
+        return None
+    return _string(value, field_name)
+
+
 def migration_contract_snapshot() -> dict[str, object]:
     """Return the deterministic LOT-21 V1 migration posture."""
 
@@ -446,6 +823,8 @@ def migration_contract_snapshot() -> dict[str, object]:
         "external_run_kind_requires_explicit_input": True,
         "legacy_failure_fields_preserved_as_evidence": True,
         "legacy_retry_eligible_at_preserved_as_evidence": True,
+        "semantic_metadata_export_import": True,
+        "semantic_metadata_external_attempt_ownership": None,
         "ambiguous_external_attempt_ownership_invented": False,
     }
 
@@ -498,11 +877,14 @@ __all__ = [
     "MigrationIssue",
     "TaskAttemptMigration",
     "TaskAttemptMigrationContext",
+    "V1RuntimeMetadataSnapshot",
     "V1MigrationError",
     "V1MigrationEvidenceError",
     "V1MigrationUnsupportedError",
     "V1_TO_V2_MIGRATION_CONTRACT_VERSION",
     "WorkflowRunMigrationContext",
+    "export_v1_runtime_metadata",
+    "import_v1_runtime_metadata",
     "migrate_external_run_ref",
     "migrate_task_attempt",
     "migrate_task_definition",
