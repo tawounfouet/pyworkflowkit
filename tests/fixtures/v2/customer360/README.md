@@ -62,3 +62,29 @@ The remaining beta/migration qualification line still owns:
 1. incompatible sibling version handling;
 2. full lineage traversal from WorkflowRun to sibling execution/data references;
 3. V1 migration evidence and compatibility-shim decisions.
+
+
+## Beta gate after LOT-21
+
+LOT-21 promotes Customer 360 from a cross-framework conformance fixture to the V2 beta
+gate.
+
+The gate now includes:
+
+1. complete four-task execution;
+2. workflow-level retry on the transformation task;
+3. portable output checkpoints;
+4. inherited publication UNKNOWN_OUTCOME and SQLite restart/reconciliation from LOT-20;
+5. full ExecutionLineage traversal;
+6. credential-reference non-disclosure;
+7. non-portable dependency fail-closed behavior;
+8. execution from installed wheel artifacts on Python 3.11/3.12/3.13;
+9. execution from installed sdist on Python 3.13.
+
+The installed-artifact gate is implemented by:
+
+```text
+scripts/qualify_v2_customer360_beta.py
+```
+
+and is invoked by Release Qualification from `/tmp`.
