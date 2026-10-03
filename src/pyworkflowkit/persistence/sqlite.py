@@ -28,6 +28,8 @@ from pyworkflowkit.persistence._sqlalchemy.mapping import (
     external_ref_to_row,
     failure_to_json,
     manifest_from_row,
+    output_checkpoint_from_row,
+    output_checkpoint_to_row,
     task_run_from_row,
     task_run_to_row,
     transition_from_row,
@@ -42,6 +44,11 @@ from pyworkflowkit.persistence.contracts import (
     StateTransitionRecord,
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
+from pyworkflowkit.runtime.evidence import (
+    RuntimeEvent,
+    RuntimeEventType,
+    TaskOutputCheckpoint,
+)
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 from pyworkflowkit.runtime.references import ExternalRunRef
 from pyworkflowkit.states import TaskAttemptStatus, TaskRunStatus, WorkflowRunStatus
@@ -520,6 +527,120 @@ class SQLiteMetadataStore:
         with self._session_factory() as session:
             rows = session.scalars(statement.order_by(models.StateTransitionRow.sequence)).all()
             return tuple(transition_from_row(row) for row in rows)
+
+    def list_runtime_events(
+        self,
+        workflow_run_id: WorkflowRunId,
+    ) -> tuple[RuntimeEvent, ...]:
+        with self._session_factory() as session:
+            if session.get(models.WorkflowRunRow, str(workflow_run_id)) is None:
+                raise MetadataNotFoundError(
+                    entity_type="WorkflowRun",
+                    entity_id=str(workflow_run_id),
+                )
+
+            transitions = session.scalars(
+                select(models.StateTransitionRow).order_by(models.StateTransitionRow.sequence)
+            ).all()
+            events: list[RuntimeEvent] = []
+            for row in transitions:
+                entity_type = StateEntityType(row.entity_type)
+                task_run_id: TaskRunId | None = None
+                attempt_id: TaskAttemptId | None = None
+                task_key: str | None = None
+
+                if entity_type is StateEntityType.WORKFLOW_RUN:
+                    if row.entity_id != str(workflow_run_id):
+                        continue
+                    event_type = RuntimeEventType.WORKFLOW_STATE_CHANGED
+                elif entity_type is StateEntityType.TASK_RUN:
+                    task_row = session.get(models.TaskRunRow, row.entity_id)
+                    if task_row is None or task_row.workflow_run_id != str(workflow_run_id):
+                        continue
+                    task_run_id = TaskRunId.parse(task_row.task_run_id)
+                    task_key = task_row.task_key
+                    event_type = RuntimeEventType.TASK_STATE_CHANGED
+                else:
+                    attempt_row = session.get(models.TaskAttemptRow, row.entity_id)
+                    if attempt_row is None:
+                        continue
+                    task_row = session.get(models.TaskRunRow, attempt_row.task_run_id)
+                    if task_row is None or task_row.workflow_run_id != str(workflow_run_id):
+                        continue
+                    task_run_id = TaskRunId.parse(task_row.task_run_id)
+                    attempt_id = TaskAttemptId.parse(attempt_row.attempt_id)
+                    task_key = task_row.task_key
+                    event_type = RuntimeEventType.ATTEMPT_STATE_CHANGED
+
+                payload: dict[str, object] = {
+                    "entity_type": entity_type.value,
+                    "entity_id": row.entity_id,
+                }
+                if task_key is not None:
+                    payload["task_key"] = task_key
+                if attempt_id is not None and attempt_row is not None:
+                    payload["attempt_number"] = attempt_row.attempt_number
+
+                events.append(
+                    RuntimeEvent(
+                        sequence=row.sequence,
+                        event_type=event_type,
+                        workflow_run_id=workflow_run_id,
+                        task_run_id=task_run_id,
+                        attempt_id=attempt_id,
+                        occurred_at=row.occurred_at,
+                        from_status=row.from_status,
+                        to_status=row.to_status,
+                        payload=payload,
+                    )
+                )
+            return tuple(events)
+
+    def set_task_output_checkpoint(
+        self,
+        checkpoint: TaskOutputCheckpoint,
+    ) -> None:
+        if not isinstance(checkpoint, TaskOutputCheckpoint):
+            raise TypeError("checkpoint must be a TaskOutputCheckpoint")
+        with self._session_factory.begin() as session:
+            task_row = session.get(models.TaskRunRow, str(checkpoint.task_run_id))
+            if task_row is None:
+                raise MetadataNotFoundError(
+                    entity_type="TaskRun",
+                    entity_id=str(checkpoint.task_run_id),
+                )
+            if task_row.status != TaskRunStatus.SUCCEEDED.value:
+                raise MetadataInvariantError(
+                    reason="TaskOutputCheckpoint requires a SUCCEEDED TaskRun"
+                )
+            existing = session.get(
+                models.TaskOutputCheckpointRow,
+                str(checkpoint.task_run_id),
+            )
+            if existing is not None:
+                current = output_checkpoint_from_row(existing)
+                if current != checkpoint:
+                    raise MetadataConflictError(
+                        entity_type="TaskOutputCheckpoint",
+                        entity_id=str(checkpoint.task_run_id),
+                        expected="unchanged or absent",
+                        actual="different persisted checkpoint",
+                    )
+                return
+            session.add(output_checkpoint_to_row(checkpoint))
+
+    def get_task_output_checkpoint(
+        self,
+        task_run_id: TaskRunId,
+    ) -> TaskOutputCheckpoint:
+        with self._session_factory() as session:
+            row = session.get(models.TaskOutputCheckpointRow, str(task_run_id))
+            if row is None:
+                raise MetadataNotFoundError(
+                    entity_type="TaskOutputCheckpoint",
+                    entity_id=str(task_run_id),
+                )
+            return output_checkpoint_from_row(row)
 
     def set_manifest_reference(
         self,
