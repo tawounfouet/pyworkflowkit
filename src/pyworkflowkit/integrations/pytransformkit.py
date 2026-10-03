@@ -134,7 +134,8 @@ class PyTransformKitExecutionResult:
             raise TypeError("retryable must be a bool")
         if self.contract_version != V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION:
             raise ValueError(
-                f"unsupported PyTransformKit V2 integration contract version {self.contract_version!r}"
+                "unsupported PyTransformKit V2 integration contract version "
+                f"{self.contract_version!r}"
             )
         object.__setattr__(
             self,
