@@ -38,6 +38,7 @@ EXPECTED_TABLES = {
     "v2_manifest_references",
     "v2_state_transitions",
     "v2_task_attempts",
+    "v2_task_output_checkpoints",
     "v2_task_runs",
     "v2_workflow_runs",
 }
