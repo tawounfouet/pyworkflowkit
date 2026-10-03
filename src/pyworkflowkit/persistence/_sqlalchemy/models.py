@@ -168,6 +168,25 @@ class StateTransitionRow(Base):
     occurred_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
 
 
+class TaskOutputCheckpointRow(Base):
+    __tablename__ = "v2_task_output_checkpoints"
+    __table_args__ = ({"schema": DB_SCHEMA},)
+
+    task_run_id: Mapped[str] = mapped_column(
+        Text,
+        ForeignKey(
+            f"{DB_SCHEMA}.v2_task_runs.task_run_id",
+            onupdate="RESTRICT",
+            ondelete="CASCADE",
+            name="fk_v2_task_output_checkpoints_task_run",
+        ),
+        primary_key=True,
+    )
+    output_json: Mapped[Any] = mapped_column(JSON_VALUE, nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    digest: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class ManifestReferenceRow(Base):
     __tablename__ = "v2_manifest_references"
     __table_args__ = ({"schema": DB_SCHEMA},)
@@ -192,6 +211,7 @@ __all__ = [
     "ManifestReferenceRow",
     "StateTransitionRow",
     "TaskAttemptRow",
+    "TaskOutputCheckpointRow",
     "TaskRunRow",
     "WorkflowRunRow",
 ]
