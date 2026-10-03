@@ -449,9 +449,7 @@ def test_lot20_cancelled_provider_truth_resolves_ambiguous_attempt_without_dupli
 
     with SQLiteMetadataStore(database, wal=False) as store:
         result = WorkflowRuntime(
-            executor=InlineExecutor(
-                {item.registry_key: item.handler for item in bindings}
-            ),
+            executor=InlineExecutor({item.registry_key: item.handler for item in bindings}),
             metadata=store,
         ).run(definition)
         transform_run = next(
