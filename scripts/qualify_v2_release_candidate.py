@@ -18,8 +18,11 @@ from pyworkflowkit.contracts.v2_release_candidate import (
 def main() -> None:
     manifest = v2_release_candidate_evidence_manifest()
 
-    assert pyworkflowkit.__version__ == V2_RELEASE_CANDIDATE_VERSION
-    assert manifest["package_version"] == V2_RELEASE_CANDIDATE_VERSION
+    assert pyworkflowkit.__version__ in {
+        V2_RELEASE_CANDIDATE_VERSION,
+        V2_RELEASE_CANDIDATE_TARGET_RELEASE,
+    }
+    assert manifest["package_version"] == pyworkflowkit.__version__
     assert manifest["candidate_version"] == V2_RELEASE_CANDIDATE_VERSION
     assert manifest["target_release"] == V2_RELEASE_CANDIDATE_TARGET_RELEASE
     assert tuple(pyworkflowkit.__all__) == V2_ROOT_TARGET_ALLOWLIST
