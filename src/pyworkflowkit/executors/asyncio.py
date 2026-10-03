@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Mapping
-from concurrent.futures import CancelledError as FutureCancelledError
 from dataclasses import dataclass, field
 from datetime import datetime
 from inspect import isawaitable
