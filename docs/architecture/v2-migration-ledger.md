@@ -47,6 +47,7 @@ REMOVED
 | `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
 | PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | IMPLEMENTED |
 | PyTransformKit integration | NEW | integrations.pytransformkit | 19 | IMPLEMENTED |
+| cross-framework retry/recovery conformance | ADD | integrations + runtime + persistence | 20 | IMPLEMENTED |
 | `compatibility.py` | MOVE/SHIM | _compat | 21 | PLANNED |
 
 ## Rewrite hotspots
@@ -703,3 +704,38 @@ remain fail-closed reconciliation states.
 
 The Customer 360 fixture is executable end to end:
 PyIngestKit ingestion → PyTransformKit transformation → PyIngestKit publication.
+
+
+## LOT-20 delivered conformance
+
+| Contract / evidence | Canonical owner | Status |
+|---|---|---|
+| equivalent retry-scope anti-amplification | integrations + RetryPolicy | IMPLEMENTED |
+| TransformationExecutionId per workflow attempt | PyTransformKit integration | IMPLEMENTED |
+| provider retry evidence remains sibling-scoped | PyTransformKit integration | IMPLEMENTED |
+| transformation UNKNOWN_OUTCOME restart | SQLiteMetadataStore + ReconciliationService | IMPLEMENTED |
+| publication UNKNOWN_OUTCOME restart | PyIngestKit integration + ReconciliationService | IMPLEMENTED |
+| same-attempt reconciliation after process loss | runtime reconciliation | IMPLEMENTED |
+| cancellation truth after reconciliation | runtime reconciliation | IMPLEMENTED |
+| ExternalRunRef restart persistence | persistence | IMPLEMENTED |
+| correlation/causation propagation | integration adapters | IMPLEMENTED |
+| portable cross-framework checkpoints | runtime evidence | IMPLEMENTED |
+| optional sibling import isolation | architecture + integration acceptance | IMPLEMENTED |
+| Customer 360 LOT-20 conformance | tests/integration | IMPLEMENTED |
+
+LOT-20 does not introduce another retry engine, scheduler or persistence schema. It
+qualifies the contracts already delivered by LOT-07 through LOT-19 as one cross-framework
+reliability boundary.
+
+Equivalent workload retry ownership remains explicit for PyIngestKit. PyWorkflowKit owns
+PyTransformKit workload retry while PyTransformKit keeps engine/provider retry inside one
+TransformationExecution. Provider retry evidence therefore does not silently allocate
+additional TaskAttempts.
+
+UNKNOWN_OUTCOME remains attached to the original attempt. SQLite restart plus provider
+verification resolves that same attempt and preserves the original ExternalRunRef. The
+Customer 360 publication scenario proves that upstream ingestion/transformation work is
+not replayed when only publication truth was uncertain.
+
+LOT-21 owns V1 migration evidence, compatibility-shim decisions, incompatible sibling
+version handling, full Customer 360 beta/lineage qualification, and the 2.0.0b2 gate.
