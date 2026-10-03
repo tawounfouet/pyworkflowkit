@@ -143,9 +143,7 @@ class RuntimeInspector:
         nonterminal = [
             task_run for task_run in task_runs if task_run.status not in TASK_RUN_TERMINAL_STATUSES
         ]
-        has_active_work = any(
-            task_run.status in _ACTIVE_TASK_STATUSES for task_run in nonterminal
-        )
+        has_active_work = any(task_run.status in _ACTIVE_TASK_STATUSES for task_run in nonterminal)
         deadlocked = bool(nonterminal) and not ready and not has_active_work
         reason = (
             "non-terminal tasks remain but no task has all dependencies in SUCCEEDED state"
