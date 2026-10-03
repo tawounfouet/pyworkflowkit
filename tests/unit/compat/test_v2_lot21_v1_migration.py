@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -464,8 +465,6 @@ def test_lot21_runtime_metadata_import_rejects_invented_external_attempt_ownersh
     )
     payload = exported.to_payload()
     payload["external_run_attempt_ownership"] = {"ER-42": "TA-42"}
-
-    import json
 
     with pytest.raises(ValueError, match="must not invent ExternalRunRef TaskAttempt ownership"):
         import_v1_runtime_metadata(
