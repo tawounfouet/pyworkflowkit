@@ -45,11 +45,15 @@ class Customer360Transform:
     def run(self, *, context, inputs):
         assert set(inputs) == {"ingest_customers", "ingest_orders"}
         return PyTransformKitExecutionResult(
-            external_run_id=f"transform-{context.attempt_id}",
+            transformation_execution_id=f"T-{context.attempt_id}",
             status=PyTransformKitExecutionStatus.SUCCEEDED,
+            engine_id="polars",
+            plan_fingerprint="sha256:customer360",
             resource=PyTransformKitResourceReference(
-                resource_id="customer360-v1",
-                uri="resource://customer360/v1",
+                scheme="s3",
+                locator="warehouse/customer360/v1.parquet",
+                media_type="application/vnd.apache.parquet",
+                metadata=(("dataset", "customer360"),),
             ),
         )
 
@@ -64,7 +68,7 @@ class MartPublication:
             status=PyIngestKitExecutionStatus.SUCCEEDED,
             output={
                 "kind": "pyingestkit.publication_reference",
-                "resource_id": resource["resource_id"],
+                "locator": resource["locator"],
             },
         )
 
@@ -89,6 +93,7 @@ def test_lot19_customer360_cross_framework_happy_path() -> None:
     transform = pytransformkit_v2_task(
         key="transform_customer_360",
         plan_ref="customer360.join",
+        engine="polars",
         dependencies=("ingest_customers", "ingest_orders"),
     )
     publish = pyingestkit_v2_task(
@@ -124,8 +129,12 @@ def test_lot19_customer360_cross_framework_happy_path() -> None:
     assert result.status is WorkflowRunStatus.SUCCEEDED
     assert result.task("ingest_customers").output["dataset_id"] == "customers"
     assert result.task("ingest_orders").output["dataset_id"] == "orders"
-    assert result.task("transform_customer_360").output["resource_id"] == "customer360-v1"
-    assert result.task("publish_mart").output["resource_id"] == "customer360-v1"
+    assert result.task("transform_customer_360").output["scheme"] == "s3"
+    assert (
+        result.task("transform_customer_360").output["locator"]
+        == "warehouse/customer360/v1.parquet"
+    )
+    assert result.task("publish_mart").output["locator"] == "warehouse/customer360/v1.parquet"
 
     providers = {}
     for task_run in metadata.list_task_runs(result.run_id):
@@ -150,6 +159,7 @@ def test_lot19_transform_handoff_is_durable_portable_checkpoint() -> None:
     transform = pytransformkit_v2_task(
         key="transform_customer_360",
         plan_ref="customer360.project",
+        engine="polars",
         dependencies=("ingest_customers",),
     )
 
@@ -157,11 +167,13 @@ def test_lot19_transform_handoff_is_durable_portable_checkpoint() -> None:
         def run(self, *, context, inputs):
             assert inputs["ingest_customers"]["dataset_id"] == "customers"
             return PyTransformKitExecutionResult(
-                external_run_id=f"transform-{context.attempt_id}",
+                transformation_execution_id=f"T-{context.attempt_id}",
                 status=PyTransformKitExecutionStatus.SUCCEEDED,
+                engine_id="polars",
                 resource=PyTransformKitResourceReference(
-                    resource_id="customer360-single",
-                    uri="resource://customer360/single",
+                    scheme="file",
+                    locator="customer360/single.parquet",
+                    media_type="application/vnd.apache.parquet",
                 ),
             )
 
@@ -185,3 +197,4 @@ def test_lot19_transform_handoff_is_durable_portable_checkpoint() -> None:
     )
     assert ingest_checkpoint.output["kind"] == "pyingestkit.dataset_version_reference"
     assert transform_checkpoint.output["kind"] == "pytransformkit.resource_reference"
+    assert transform_checkpoint.output["scheme"] == "file"
