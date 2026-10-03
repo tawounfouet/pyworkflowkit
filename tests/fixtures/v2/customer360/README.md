@@ -48,10 +48,17 @@ LOT-19 now provides executable acceptance for:
 5. transformation UNKNOWN_OUTCOME with no blind retry;
 6. credential-reference exclusion from external-run metadata.
 
-The remaining cross-framework qualification line still owns:
+LOT-20 adds cross-framework qualification for:
 
 1. process restart and reconciliation of the same TaskAttempt;
-2. cancellation requested but unconfirmed;
-3. missing optional sibling;
-4. incompatible sibling version;
-5. full lineage traversal from WorkflowRun to sibling execution/data references.
+2. transformation and publication UNKNOWN_OUTCOME;
+3. provider cancellation discovered during reconciliation;
+4. retry-scope amplification controls;
+5. correlation/causation propagation;
+6. missing optional sibling isolation.
+
+The remaining beta/migration qualification line still owns:
+
+1. incompatible sibling version handling;
+2. full lineage traversal from WorkflowRun to sibling execution/data references;
+3. V1 migration evidence and compatibility-shim decisions.
