@@ -85,7 +85,6 @@ class RunManifestBuilder:
             started_at=run.started_at.isoformat() if run.started_at is not None else None,
             ended_at=run.ended_at.isoformat() if run.ended_at is not None else None,
             tasks=tuple(tasks),
-            events=tuple(self._metadata.list_runtime_events(workflow_run_id)),
         )
 
 
