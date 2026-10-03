@@ -215,9 +215,7 @@ def test_lot16_registration_reports_unknown_group_name_type_and_version() -> Non
     )
     assert unknown.compatible is False
     assert unknown.plugin_type is None
-    assert {
-        issue.code for issue in unknown.issues
-    } >= {
+    assert {issue.code for issue in unknown.issues} >= {
         V2PluginContractIssueCode.ENTRY_POINT_GROUP,
         V2PluginContractIssueCode.DESCRIPTOR_NAME,
         V2PluginContractIssueCode.API_VERSION,
@@ -228,9 +226,7 @@ def test_lot16_registration_reports_unknown_group_name_type_and_version() -> Non
         entry_point_name="entry-name",
         entry_point_group=V2_ENTRY_POINT_GROUPS[PluginType.EXECUTOR],
     )
-    assert {
-        issue.code for issue in mismatch.issues
-    } >= {
+    assert {issue.code for issue in mismatch.issues} >= {
         V2PluginContractIssueCode.DESCRIPTOR_NAME,
         V2PluginContractIssueCode.DESCRIPTOR_TYPE,
         V2PluginContractIssueCode.API_VERSION,
@@ -374,9 +370,7 @@ def test_lot16_registry_guards_are_fail_closed() -> None:
     with pytest.raises(TypeError, match="PluginType"):
         V2PluginRegistry(plugin_type="executor")  # type: ignore[arg-type]
 
-    registry: V2PluginRegistry[object] = V2PluginRegistry(
-        plugin_type=PluginType.EXECUTOR
-    )
+    registry: V2PluginRegistry[object] = V2PluginRegistry(plugin_type=PluginType.EXECUTOR)
     with pytest.raises(TypeError, match="V2RegisteredPlugin"):
         registry.register(object())  # type: ignore[arg-type]
 
