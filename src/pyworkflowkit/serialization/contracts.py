@@ -51,6 +51,21 @@ V2_BOUNDARY_WIRE_CONTRACTS: Mapping[str, WireContractDescriptor] = MappingProxyT
             contract_version="1",
             owner="pykit",
         ),
+        "run_manifest": WireContractDescriptor(
+            contract="pyworkflowkit.run_manifest",
+            contract_version="1",
+            owner="pyworkflowkit",
+        ),
+        "runtime_event": WireContractDescriptor(
+            contract="pyworkflowkit.runtime_event",
+            contract_version="1",
+            owner="pyworkflowkit",
+        ),
+        "task_output_checkpoint": WireContractDescriptor(
+            contract="pyworkflowkit.task_output_checkpoint",
+            contract_version="1",
+            owner="pyworkflowkit",
+        ),
         "workflow_execution_reference": WireContractDescriptor(
             contract="pyworkflowkit.workflow_execution_reference",
             contract_version="1",
@@ -65,6 +80,9 @@ def v2_boundary_wire_contract_snapshot() -> dict[str, object]:
 
     return {
         "contract_family_version": "1",
+        "codec": "canonical_json_utf8",
+        "strict_unknown_fields": True,
+        "implicit_migrations": False,
         "contracts": {
             name: {
                 "contract": descriptor.contract,
