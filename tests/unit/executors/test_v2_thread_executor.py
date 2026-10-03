@@ -45,10 +45,7 @@ def test_thread_executor_satisfies_v2_protocol_and_declares_soft_boundary() -> N
         assert isinstance(executor, Executor)
         assert executor.descriptor.executor_id == "thread"
         assert executor.descriptor.supports_execution_timeout is True
-        assert (
-            executor.descriptor.cancellation_capability
-            is CancellationCapability.UNSUPPORTED
-        )
+        assert executor.descriptor.cancellation_capability is CancellationCapability.UNSUPPORTED
         assert "deadline_does_not_stop_running_thread" in (
             executor.descriptor.portability_constraints
         )
@@ -130,10 +127,7 @@ def test_thread_soft_timeout_is_uncertain_and_never_claims_work_stopped() -> Non
         assert result.failure is not None
         assert result.failure.category is FailureCategory.TIMEOUT
         assert result.failure.retryability is Retryability.RETRYABLE_AFTER_RECONCILIATION
-        assert (
-            result.failure.uncertainty
-            is OutcomeUncertainty.REQUIRES_RECONCILIATION
-        )
+        assert result.failure.uncertainty is OutcomeUncertainty.REQUIRES_RECONCILIATION
         assert "may still be running" in result.failure.message_summary
 
         release.set()
