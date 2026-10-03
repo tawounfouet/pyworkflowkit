@@ -379,7 +379,7 @@ def test_lot19_wrapper_exception_and_invalid_result_fail_closed() -> None:
     assert invalid.failure.error_code == "PWK-PYTRANSFORMKIT-RESULT-CONTRACT"
 
 
-def test_lot19_terminal_statuses_preserve_timeout_and_cancellation_categories() -> None:
+def test_lot19_terminal_statuses_preserve_timeout_and_sibling_cancellation_evidence() -> None:
     class TerminalTransform:
         def __init__(self, status):
             self.status = status
@@ -403,7 +403,10 @@ def test_lot19_terminal_statuses_preserve_timeout_and_cancellation_categories() 
         TerminalTransform(PyTransformKitExecutionStatus.CANCELLED),
     )
     assert cancelled_result.failure is not None
-    assert cancelled_result.failure.category is FailureCategory.CANCELLED
+    assert cancelled_result.failure.category is FailureCategory.EXTERNAL_PROVIDER
+    assert cancelled_result.failure.retryability is Retryability.NON_RETRYABLE
+    assert cancelled_result.failure.external_run is not None
+    assert cancelled_result.failure.external_run.status_hint == "cancelled"
 
     timeout = pytransformkit_v2_task(
         key="transform",
