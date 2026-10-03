@@ -136,9 +136,7 @@ def test_lot15_rejects_unknown_contract_and_unmigrated_version() -> None:
     codec = BoundaryWireCodec()
 
     with pytest.raises(WireContractError, match="unknown boundary contract"):
-        codec.decode(
-            '{"contract":"unknown.contract","contract_version":"1","payload":{}}'
-        )
+        codec.decode('{"contract":"unknown.contract","contract_version":"1","payload":{}}')
 
     with pytest.raises(WireContractError, match="no upcaster"):
         codec.decode(
