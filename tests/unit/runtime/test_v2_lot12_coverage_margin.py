@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 
 import pytest
 
 from pyworkflowkit.authoring import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.diagnostics import RuntimeInspector
-from pyworkflowkit.errors import RuntimeInvariantError
+from pyworkflowkit.errors import MetadataNotFoundError, RuntimeInvariantError
 from pyworkflowkit.lineage import ExecutionLineageProjector, RunManifestBuilder
-from pyworkflowkit.persistence import InMemoryMetadataStore
+from pyworkflowkit.persistence import (
+    InMemoryMetadataStore,
+    SQLiteMetadataStore,
+    StateEntityType,
+    StateTransitionRecord,
+)
 from pyworkflowkit.planning import WorkflowPlanner
 from pyworkflowkit.runtime import (
     CorrelationContext,
@@ -275,3 +281,68 @@ def test_runtime_inspector_rejects_plan_identity_mismatch() -> None:
 
     with pytest.raises(RuntimeInvariantError, match="does not match"):
         RuntimeInspector(metadata=store).inspect(plan, run.run_id)
+
+
+
+def test_memory_lot12_evidence_errors_and_orphan_transition_projection() -> None:
+    store = InMemoryMetadataStore()
+    missing_run = WorkflowRunId.parse("W-MISSING")
+    missing_task = TaskRunId.parse("TR-MISSING")
+
+    with pytest.raises(MetadataNotFoundError):
+        store.list_runtime_events(missing_run)
+    with pytest.raises(TypeError, match="TaskOutputCheckpoint"):
+        store.set_task_output_checkpoint(object())  # type: ignore[arg-type]
+    with pytest.raises(MetadataNotFoundError):
+        store.get_task_output_checkpoint(missing_task)
+
+    orphan_workflow = StateTransitionRecord(
+        sequence=1,
+        entity_type=StateEntityType.WORKFLOW_RUN,
+        entity_id=str(missing_run),
+        from_status=None,
+        to_status="PENDING",
+        occurred_at=NOW,
+    )
+    orphan_task = StateTransitionRecord(
+        sequence=2,
+        entity_type=StateEntityType.TASK_RUN,
+        entity_id=str(missing_task),
+        from_status=None,
+        to_status="PENDING",
+        occurred_at=NOW,
+    )
+    orphan_attempt = StateTransitionRecord(
+        sequence=3,
+        entity_type=StateEntityType.TASK_ATTEMPT,
+        entity_id="TA-MISSING",
+        from_status=None,
+        to_status="PENDING",
+        occurred_at=NOW,
+    )
+
+    assert store._event_for_transition(orphan_workflow) is None
+    assert store._event_for_transition(orphan_task) is None
+    assert store._event_for_transition(orphan_attempt) is None
+
+
+def test_sqlite_lot12_evidence_errors_are_explicit(tmp_path: Path) -> None:
+    database = tmp_path / "lot12-errors.sqlite3"
+    missing_run = WorkflowRunId.parse("W-MISSING")
+    missing_task = TaskRunId.parse("TR-MISSING")
+
+    with SQLiteMetadataStore(database, wal=False) as store:
+        with pytest.raises(MetadataNotFoundError):
+            store.list_runtime_events(missing_run)
+        with pytest.raises(TypeError, match="TaskOutputCheckpoint"):
+            store.set_task_output_checkpoint(object())  # type: ignore[arg-type]
+        with pytest.raises(MetadataNotFoundError):
+            store.get_task_output_checkpoint(missing_task)
+
+        checkpoint = TaskOutputCheckpoint(
+            task_run_id=missing_task,
+            output={"rows": 1},
+            recorded_at=NOW,
+        )
+        with pytest.raises(MetadataNotFoundError):
+            store.set_task_output_checkpoint(checkpoint)
