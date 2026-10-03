@@ -68,7 +68,21 @@ def test_lot12_migration_lineage_is_append_only() -> None:
 
 def test_lot12_event_vocabulary_is_frozen() -> None:
     assert tuple(value.value for value in runtime.RuntimeEventType) == (
-        "WORKFLOW_STATE_CHANGED",
-        "TASK_STATE_CHANGED",
-        "ATTEMPT_STATE_CHANGED",
+        "WORKFLOW_STARTED",
+        "WORKFLOW_SUCCEEDED",
+        "WORKFLOW_FAILED",
+        "WORKFLOW_CANCELLATION_REQUESTED",
+        "WORKFLOW_CANCELLED",
+        "WORKFLOW_TIMED_OUT",
+        "WORKFLOW_UNKNOWN_OUTCOME",
+        "TASK_READY",
+        "TASK_STARTED",
+        "TASK_RETRYING",
+        "TASK_SUCCEEDED",
+        "TASK_FAILED",
+        "TASK_SKIPPED",
+        "TASK_CANCELLED",
+        "TASK_TIMED_OUT",
+        "TASK_BLOCKED",
+        "TASK_UNKNOWN_OUTCOME",
     )
