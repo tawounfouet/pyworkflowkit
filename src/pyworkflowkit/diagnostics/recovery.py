@@ -76,8 +76,7 @@ class RecoveryInspector:
             disposition = RecoveryDisposition.NO_ACTION
             reasons = ("workflow_is_terminal",)
         elif any(
-            item.disposition is RecoveryDisposition.MANUAL_REQUIRED
-            for item in task_assessments
+            item.disposition is RecoveryDisposition.MANUAL_REQUIRED for item in task_assessments
         ):
             disposition = RecoveryDisposition.MANUAL_REQUIRED
             reasons = ("at_least_one_task_requires_manual_recovery",)
@@ -103,8 +102,7 @@ class RecoveryInspector:
         """Return every non-terminal durable run in deterministic identity order."""
 
         return tuple(
-            self.assess(run.run_id)
-            for run in self._metadata.list_unfinished_workflow_runs()
+            self.assess(run.run_id) for run in self._metadata.list_unfinished_workflow_runs()
         )
 
     def _assess_task(self, task_run_id: TaskRunId) -> TaskRecoveryAssessment:
