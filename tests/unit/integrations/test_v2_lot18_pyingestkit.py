@@ -131,9 +131,7 @@ def test_lot18_workload_is_portable_registered_workload_and_planner_integration(
     assert workload.credential_ref == "secretref://ingest/customers"
     assert task.portable is True
 
-    plan = WorkflowPlanner().compile(
-        WorkflowDefinition(name="lot18-plan", tasks=(task,))
-    )
+    plan = WorkflowPlanner().compile(WorkflowDefinition(name="lot18-plan", tasks=(task,)))
     assert plan.required_integrations == ("pyingestkit",)
     assert plan.task("ingest_customers").required_integrations == ("pyingestkit",)
     assert plan.task("ingest_customers").executor_requirement.workload_kind == "registered"
