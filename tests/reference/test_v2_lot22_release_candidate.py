@@ -35,12 +35,12 @@ from pyworkflowkit.runtime import (
 )
 
 
-def test_lot22_package_identity_is_2_0_rc1() -> None:
+def test_lot22_candidate_identity_remains_frozen_after_stable_promotion() -> None:
     assert V2_RELEASE_CANDIDATE_VERSION == "2.0.0rc1"
     assert V2_RELEASE_CANDIDATE_TARGET_RELEASE == "2.0.0"
     assert V2_PUBLIC_API_TARGET_RELEASE == "2.0.0"
-    assert pyworkflowkit.__version__ == "2.0.0rc1"
-    assert version("pyworkflowkit") == "2.0.0rc1"
+    assert pyworkflowkit.__version__ in {"2.0.0rc1", "2.0.0"}
+    assert version("pyworkflowkit") == pyworkflowkit.__version__
 
 
 def test_lot22_root_is_exact_canonical_v2_allowlist() -> None:
@@ -109,7 +109,7 @@ def test_lot22_manifest_composes_every_v2_freeze_contract() -> None:
 
     assert manifest["candidate_version"] == V2_RELEASE_CANDIDATE_VERSION
     assert manifest["target_release"] == V2_RELEASE_CANDIDATE_TARGET_RELEASE
-    assert manifest["package_version"] == V2_RELEASE_CANDIDATE_VERSION
+    assert manifest["package_version"] == pyworkflowkit.__version__
     assert manifest["supported_python_versions"] == list(V2_SUPPORTED_PYTHON_VERSIONS)
     assert manifest["change_policy"] == V2_RC_CHANGE_POLICY
     assert manifest["architecture_redesign_permitted"] is False
