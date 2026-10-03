@@ -24,13 +24,12 @@ from pyworkflowkit.runtime import (
     ExternalRunRef,
     TaskAttempt,
     TaskAttemptId,
-    TaskOutputCheckpoint,
     TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
-    plain_json_value,
 )
+from pyworkflowkit.runtime.evidence import TaskOutputCheckpoint, plain_json_value
 from pyworkflowkit.states import (
     BlockReason,
     SkipReason,
