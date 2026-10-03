@@ -341,8 +341,6 @@ def test_runtime_inspector_fails_closed_on_invalid_inputs_and_missing_tasks() ->
         inspector.inspect(plan, run.run_id)
 
 
-
-
 def test_runtime_inspector_does_not_report_active_task_as_ready_or_deadlocked() -> None:
     store = InMemoryMetadataStore()
     workflow = _workflow()
