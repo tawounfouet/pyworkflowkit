@@ -481,13 +481,9 @@ class ReconciliationService:
                 else "PWK-RECONCILED-EXTERNAL-FAILED"
             ),
             category=(
-                FailureCategory.CANCELLED
-                if cancelled
-                else FailureCategory.EXTERNAL_PROVIDER
+                FailureCategory.CANCELLED if cancelled else FailureCategory.EXTERNAL_PROVIDER
             ),
-            retryability=(
-                Retryability.NON_RETRYABLE if cancelled else Retryability.UNKNOWN
-            ),
+            retryability=(Retryability.NON_RETRYABLE if cancelled else Retryability.UNKNOWN),
             uncertainty=OutcomeUncertainty.KNOWN,
             correlation_id=run.correlation.correlation_id,
             workflow_run_id=str(run.run_id),
