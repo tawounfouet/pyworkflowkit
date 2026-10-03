@@ -10,6 +10,7 @@ from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, Workflow
 from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
 from pyworkflowkit.executors import (
     ExecutorDescriptor,
+    ExecutorRegistry,
     InlineExecutor,
     TaskExecutionRequest,
     TaskExecutionResult,
@@ -117,6 +118,30 @@ def test_runtime_constructor_rejects_non_protocol_dependencies() -> None:
         WorkflowRuntime(
             executor=InlineExecutor(),
             metadata=object(),  # type: ignore[arg-type]
+        )
+
+
+def test_runtime_constructor_accepts_registry_and_rejects_empty_or_invalid_registry() -> None:
+    registry = ExecutorRegistry((InlineExecutor(),))
+    runtime = WorkflowRuntime(
+        executor_registry=registry,
+        metadata=InMemoryMetadataStore(),
+    )
+    assert runtime.executor_registry is registry
+
+    with pytest.raises(TypeError, match="executor or executor_registry"):
+        WorkflowRuntime(metadata=InMemoryMetadataStore())
+
+    with pytest.raises(TypeError, match="executor_registry"):
+        WorkflowRuntime(
+            executor_registry=object(),  # type: ignore[arg-type]
+            metadata=InMemoryMetadataStore(),
+        )
+
+    with pytest.raises(ValueError, match="at least one executor"):
+        WorkflowRuntime(
+            executor_registry=ExecutorRegistry(),
+            metadata=InMemoryMetadataStore(),
         )
 
 
