@@ -307,10 +307,7 @@ def migrate_workflow_definition(
     if executor_map is not None:
         mapping.update(executor_map)
 
-    tasks = tuple(
-        migrate_task_definition(task, executor_map=mapping)
-        for task in value.tasks
-    )
+    tasks = tuple(migrate_task_definition(task, executor_map=mapping) for task in value.tasks)
     metadata: dict[str, object] = {"migration.source_contract": "pyworkflowkit-1.1"}
     if value.description is not None:
         metadata["migration.legacy_description"] = value.description
@@ -368,9 +365,7 @@ def migrate_task_definition(
                 code="PWK-MIG-V1-EXECUTOR",
                 disposition=MigrationDisposition.UNSUPPORTED,
                 field="executor_key",
-                summary=(
-                    f"legacy executor {value.executor_key!r} has no explicit V2 mapping"
-                ),
+                summary=(f"legacy executor {value.executor_key!r} has no explicit V2 mapping"),
             )
         )
 
@@ -446,11 +441,7 @@ def migrate_task_run(value: V1TaskRun) -> V2TaskRun:
     if value.created_at is None:
         raise _missing_evidence("created_at", "V1 TaskRun has no created_at")
 
-    skip_reason = (
-        V2SkipReason[value.skip_reason.name]
-        if value.skip_reason is not None
-        else None
-    )
+    skip_reason = V2SkipReason[value.skip_reason.name] if value.skip_reason is not None else None
     return V2TaskRun(
         task_run_id=TaskRunId.parse(str(value.task_run_id)),
         workflow_run_id=WorkflowRunId.parse(str(value.run_id)),
@@ -726,9 +717,7 @@ def _import_v1_task_run(value: Mapping[str, object]) -> V1TaskRun:
         task_id=TaskId(_string(value["task_id"], "task_id")),
         status=V1TaskRunStatus(_string(value["status"], "status")),
         skip_reason=(
-            V1SkipReason(_string(skip_value, "skip_reason"))
-            if skip_value is not None
-            else None
+            V1SkipReason(_string(skip_value, "skip_reason")) if skip_value is not None else None
         ),
         created_at=_datetime_or_none(value["created_at"], "created_at"),
         started_at=_datetime_or_none(value["started_at"], "started_at"),
@@ -782,9 +771,7 @@ def _import_v1_external_run(value: Mapping[str, object]) -> V1ExternalRunRef:
         "external_run",
     )
     return V1ExternalRunRef(
-        external_ref_id=ExternalRunRefId(
-            _string(value["external_ref_id"], "external_ref_id")
-        ),
+        external_ref_id=ExternalRunRefId(_string(value["external_ref_id"], "external_ref_id")),
         provider=_string(value["provider"], "provider"),
         external_run_id=_string(value["external_run_id"], "external_run_id"),
         uri=_optional_string(value["uri"], "uri"),
