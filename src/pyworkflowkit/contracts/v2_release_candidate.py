@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import cast
 from importlib.metadata import PackageNotFoundError, version
+from typing import cast
 
 from pyworkflowkit._architecture import v2_architecture_snapshot
 from pyworkflowkit._compat.v1_to_v2 import migration_contract_snapshot
