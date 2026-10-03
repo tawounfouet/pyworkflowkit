@@ -6,7 +6,7 @@ import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, TypeAlias, TypeVar, cast
+from typing import TypeAlias, TypeVar, cast
 
 from pydantic import ValidationError
 
@@ -216,10 +216,7 @@ class BoundaryWireCodec:
         envelope = WireEnvelopeSchema(
             contract=spec.descriptor.contract,
             contract_version=spec.descriptor.contract_version,
-            payload=cast(
-                dict[str, Any],
-                schema.model_dump(mode="json", exclude_none=True),
-            ),
+            payload=schema.model_dump(mode="json", exclude_none=True),
         )
         plain = envelope.model_dump(mode="json")
         _validate_nesting(plain, max_depth=self._max_nesting_depth)
