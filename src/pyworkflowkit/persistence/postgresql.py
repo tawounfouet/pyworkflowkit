@@ -82,7 +82,7 @@ class PostgreSQLMetadataStore(SQLiteMetadataStore):
     SQLite connection settings or SQLite PRAGMA behavior.
     """
 
-    settings: PostgreSQLSettings
+    postgresql_settings: PostgreSQLSettings
 
     def __init__(
         self,
@@ -93,13 +93,13 @@ class PostgreSQLMetadataStore(SQLiteMetadataStore):
         application_name: str = DEFAULT_V2_POSTGRES_APPLICATION_NAME,
         create_schema: bool = True,
     ) -> None:
-        self.settings = PostgreSQLSettings(
+        self.postgresql_settings = PostgreSQLSettings(
             dsn=dsn,
             pool_size=pool_size,
             max_overflow=max_overflow,
             application_name=application_name,
         )
-        self.engine = create_postgresql_engine(self.settings)
+        self.engine = create_postgresql_engine(self.postgresql_settings)
 
         if create_schema:
             upgrade_database(self.engine)
