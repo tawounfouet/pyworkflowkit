@@ -303,7 +303,8 @@ def test_lot20_transform_unknown_outcome_survives_sqlite_restart_and_reconciles_
         assert attempts[0].attempt_id == original_attempt_id
         assert attempts[0].status is TaskAttemptStatus.SUCCEEDED
         assert transform_run.status is TaskRunStatus.SUCCEEDED
-        assert reopened.list_external_run_refs(original_attempt_id)[0].external_run_id == external_id
+        persisted_ref = reopened.list_external_run_refs(original_attempt_id)[0]
+        assert persisted_ref.external_run_id == external_id
 
     assert transform_job.calls == 1
 
