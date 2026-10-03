@@ -20,6 +20,8 @@ from pyworkflowkit.executors.contracts import (
     v2_executor_contract_snapshot,
 )
 from pyworkflowkit.executors.inline import InlineExecutor
+from pyworkflowkit.executors.registry import ExecutorRegistry
+from pyworkflowkit.executors.thread import ThreadExecutor
 
 __all__ = [
     "CancellationCapability",
@@ -27,12 +29,14 @@ __all__ = [
     "CancellableExecutor",
     "Executor",
     "ExecutorDescriptor",
+    "ExecutorRegistry",
     "InlineExecutor",
     "TaskCancellationRequest",
     "TaskCancellationResult",
     "TaskExecutionContext",
     "TaskExecutionRequest",
     "TaskExecutionResult",
+    "ThreadExecutor",
     "V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS",
     "V2_EXECUTOR_CONTRACT_VERSION",
     "V2_EXECUTOR_PROTOCOL_METHODS",

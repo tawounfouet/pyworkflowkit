@@ -18,12 +18,13 @@ from pyworkflowkit.diagnostics.inspection import RuntimeInspection, RuntimeInspe
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
+from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.executors import (
     CancellableExecutor,
     CancellationCapability,
     CancellationStatus,
     Executor,
+    ExecutorRegistry,
     TaskCancellationRequest,
     TaskExecutionContext,
     TaskExecutionRequest,
@@ -77,12 +78,13 @@ from pyworkflowkit.states.enums import TASK_RUN_TERMINAL_STATUSES
 
 
 class WorkflowRuntime:
-    """Deterministic synchronous V2 runtime for one explicitly injected executor."""
+    """Deterministic synchronous V2 runtime with explicit per-task executor routing."""
 
     def __init__(
         self,
         *,
-        executor: Executor,
+        executor: Executor | None = None,
+        executor_registry: ExecutorRegistry | None = None,
         metadata: MetadataStore,
         planner: WorkflowPlanner | None = None,
         clock: Clock | None = None,
@@ -90,11 +92,21 @@ class WorkflowRuntime:
         retry_evaluator: RetryEvaluator | None = None,
         retry_waiter: RetryWaiter | None = None,
     ) -> None:
-        if not isinstance(executor, Executor):
+        if executor is not None and not isinstance(executor, Executor):
             raise TypeError("executor must satisfy the V2 Executor Protocol")
+        if executor_registry is not None and not isinstance(executor_registry, ExecutorRegistry):
+            raise TypeError("executor_registry must be an ExecutorRegistry")
+        if executor is None and executor_registry is None:
+            raise TypeError("executor or executor_registry must be provided")
         if not isinstance(metadata, MetadataStore):
             raise TypeError("metadata must satisfy the V2 MetadataStore Protocol")
-        self._executor = executor
+
+        self._executors = executor_registry or ExecutorRegistry()
+        if executor is not None:
+            self._executors.register(executor)
+        if not self._executors.executor_ids:
+            raise ValueError("executor_registry must contain at least one executor")
+
         self._metadata = metadata
         self._planner = planner or WorkflowPlanner()
         self._clock = clock or SystemClock()
@@ -499,6 +511,15 @@ class WorkflowRuntime:
 
         return self._reconciliation.discover()
 
+    def register_executor(self, executor: Executor) -> None:
+        """Register one additional executor for per-task resolution."""
+
+        self._executors.register(executor)
+
+    @property
+    def executor_registry(self) -> ExecutorRegistry:
+        return self._executors
+
     def register_external_run_verifier(self, verifier: ExternalRunVerifier) -> None:
         """Register one provider-specific external-run verifier."""
 
@@ -663,9 +684,10 @@ class WorkflowRuntime:
                 reason="active_execution_handle_not_available",
             )
 
+        executor = self._executors.resolve(request.executor_key)
         if (
-            self._executor.descriptor.cancellation_capability is CancellationCapability.UNSUPPORTED
-            or not isinstance(self._executor, CancellableExecutor)
+            executor.descriptor.cancellation_capability is CancellationCapability.UNSUPPORTED
+            or not isinstance(executor, CancellableExecutor)
         ):
             attempt = self._metadata.get_task_attempt(attempt.attempt_id)
             self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
@@ -677,7 +699,7 @@ class WorkflowRuntime:
                 reason="executor_cancellation_unsupported",
             )
 
-        executor_result = self._executor.cancel(
+        executor_result = executor.cancel(
             TaskCancellationRequest(
                 workflow_run_id=workflow_run_id,
                 task_run_id=task_run_id,
@@ -815,44 +837,41 @@ class WorkflowRuntime:
         raise TypeError("workflow must be WorkflowDefinition or ExecutionPlan")
 
     def _preflight(self, plan: ExecutionPlan) -> None:
-        executor_id = self._executor.descriptor.executor_id
-        supported_kinds = frozenset(self._executor.descriptor.supported_workload_kinds)
-
         for entry in plan.tasks:
             requirement = entry.executor_requirement
-            if requirement.executor_key != executor_id:
-                raise ExecutorNotFoundError(executor_key=requirement.executor_key)
+            executor = self._executors.resolve(requirement.executor_key)
+            descriptor = executor.descriptor
+            supported_kinds = frozenset(descriptor.supported_workload_kinds)
+
             if requirement.workload_kind not in supported_kinds:
                 raise RuntimeInvariantError(
                     reason=(
-                        f"executor {executor_id!r} does not support workload kind "
+                        f"executor {descriptor.executor_id!r} does not support workload kind "
                         f"{requirement.workload_kind!r}"
                     )
                 )
-            if (
-                entry.retry_policy.max_attempts > 1
-                and self._executor.descriptor.performs_implicit_workload_retry
-            ):
+            if entry.retry_policy.max_attempts > 1 and descriptor.performs_implicit_workload_retry:
                 raise RuntimeInvariantError(
                     reason=(
                         f"task {entry.key!r} requests workflow retry while executor "
-                        f"{executor_id!r} declares implicit workload retry"
+                        f"{descriptor.executor_id!r} declares implicit workload retry"
                     )
                 )
             if (
                 entry.timeout_policy.execution_timeout is not None
-                and not self._executor.descriptor.supports_execution_timeout
+                and not descriptor.supports_execution_timeout
             ):
                 raise RuntimeInvariantError(
                     reason=(
                         f"task {entry.key!r} requests execution_timeout but executor "
-                        f"{executor_id!r} does not support execution deadlines"
+                        f"{descriptor.executor_id!r} does not support execution deadlines"
                     )
                 )
 
     def _execute(self, request: TaskExecutionRequest) -> TaskExecutionResult:
+        executor = self._executors.resolve(request.executor_key)
         try:
-            result = self._executor.execute(request)
+            result = executor.execute(request)
         except Exception as exc:
             return TaskExecutionResult(
                 failure=FailureEvidence(

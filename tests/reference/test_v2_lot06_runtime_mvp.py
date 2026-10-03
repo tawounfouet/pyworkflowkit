@@ -36,12 +36,14 @@ def test_executor_contract_snapshot_is_machine_readable() -> None:
         "CancellableExecutor",
         "Executor",
         "ExecutorDescriptor",
+        "ExecutorRegistry",
         "InlineExecutor",
         "TaskCancellationRequest",
         "TaskCancellationResult",
         "TaskExecutionContext",
         "TaskExecutionRequest",
         "TaskExecutionResult",
+        "ThreadExecutor",
         "V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS",
         "V2_EXECUTOR_CONTRACT_VERSION",
         "V2_EXECUTOR_PROTOCOL_METHODS",
@@ -58,8 +60,8 @@ def test_runtime_mvp_contract_snapshot_records_deferred_semantics() -> None:
     assert snapshot["retry_execution"] is True
     assert snapshot["timeout_execution"] is True
     assert snapshot["cancellation_commands"] is True
-    assert snapshot["durable_outputs"] is False
-    assert snapshot["basic_events"] == "metadata_state_transitions"
+    assert snapshot["durable_outputs"] is True
+    assert snapshot["basic_events"] == "semantic_projection_from_state_transitions"
 
 
 def test_qualified_runtime_now_owns_v2_runtime_facade_and_result() -> None:

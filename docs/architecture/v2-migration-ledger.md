@@ -32,7 +32,7 @@ REMOVED
 | `application.retry` | SPLIT | policies/runtime internals | 07 | IMPLEMENTED |
 | `ports.executor` | REWRITE | executors | 06 | IMPLEMENTED |
 | `adapters.executors.local` | RENAME + ADAPT | executors.inline | 06 | IMPLEMENTED |
-| other executor adapters | MOVE + ADAPT | executors | 13/14 | PLANNED |
+| other executor adapters | MOVE + ADAPT | executors | 13/14 | IN_PROGRESS |
 | `ports.metadata_store` | MOVE + ADAPT | persistence | 05 | IMPLEMENTED |
 | metadata adapters | MOVE + MIGRATE | persistence | 05/10/17 | IN_PROGRESS |
 | SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IN_PROGRESS |
@@ -449,3 +449,41 @@ schema version 1.
 
 Migration 0005 extends the published migration history append-only. It adds only
 v2_task_output_checkpoints; revisions 0001 through 0004 remain immutable.
+
+
+
+## LOT-13 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| ExecutorRegistry | pyworkflowkit.executors | IMPLEMENTED |
+| ThreadExecutor | pyworkflowkit.executors | IMPLEMENTED |
+| deterministic executor-id routing | ExecutorRegistry | IMPLEMENTED |
+| per-task executor resolution | WorkflowRuntime | IMPLEMENTED |
+| WorkflowRuntime.executor_registry | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.register_executor | pyworkflowkit.runtime | IMPLEMENTED |
+| backward-compatible executor= constructor | WorkflowRuntime | IMPLEMENTED |
+| thread registered-workload bindings | ThreadExecutor | IMPLEMENTED |
+| bounded worker pool | ThreadExecutor | IMPLEMENTED |
+| soft deadline observation | ThreadExecutor | IMPLEMENTED |
+| uncertain running-thread timeout evidence | ThreadExecutor | IMPLEMENTED |
+| no-blind-retry thread timeout | WorkflowRuntime / RetryEvaluator | IMPLEMENTED |
+| explicit unsupported active cancellation | ThreadExecutor | IMPLEMENTED |
+| runtime contract v4 | pyworkflowkit.runtime.contracts | IMPLEMENTED |
+| mixed inline/thread workflow acceptance | tests/unit/runtime | IMPLEMENTED |
+| qualified executor surface freeze | tests/reference | IMPLEMENTED |
+
+LOT-13 intentionally keeps the V2 WorkflowRuntime execution loop sequential. The new
+ThreadExecutor provides a bounded worker-thread execution boundary but does not claim
+concurrent DAG scheduling.
+
+Thread deadlines are fail-closed. If a running thread exceeds its deadline and cannot be
+cancelled, the resulting FailureEvidence requires reconciliation and the runtime does not
+allocate a blind new TaskAttempt.
+
+The single-executor constructor remains supported. ExecutorRegistry is additive on the
+qualified V2 surface and the frozen 1.1 package root remains unchanged.
+
+LOT-14 owns ProcessExecutor, AsyncExecutor and SubprocessExecutor migration. Those adapters
+must preserve explicit process/async/subprocess capability and serialization boundaries
+rather than being copied mechanically from 1.1.
