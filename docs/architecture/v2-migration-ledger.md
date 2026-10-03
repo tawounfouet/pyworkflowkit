@@ -679,8 +679,10 @@ PyTransformKit sibling boundary and the first complete Customer 360 cross-framew
 | PyTransformKitWorkloadHandler | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
 | pytransformkit_v2_task | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
 | pytransformkit_v2_workload_binding | pyworkflowkit.integrations.pytransformkit | IMPLEMENTED |
-| PyTransformKitRetryOwnershipError | pyworkflowkit.errors | IMPLEMENTED |
 | portable dependency handoff | PyTransformKit integration | IMPLEMENTED |
+| ResourceReference scheme/locator/media_type contract | PyTransformKit integration | IMPLEMENTED |
+| workload retry ownership | PyWorkflowKit RetryPolicy | IMPLEMENTED |
+| provider retry ownership | PyTransformKit | IMPLEMENTED |
 | UNKNOWN_OUTCOME reconciliation mapping | PyTransformKit integration | IMPLEMENTED |
 | credential-reference-only posture | PyTransformKit integration | IMPLEMENTED |
 | Customer 360 cross-framework happy path | tests/integration | IMPLEMENTED |
@@ -688,10 +690,16 @@ PyTransformKit sibling boundary and the first complete Customer 360 cross-framew
 | LOT-19 reference acceptance | tests/reference | IMPLEMENTED |
 
 LOT-19 adds the dependency-free PyTransformKit sibling boundary. Transformation
-descriptors remain registered V2 workloads, and dependency outputs are strict
-JSON-portable values before sibling execution is allowed.
+descriptors remain registered V2 workloads, the execution engine is explicit, and
+dependency outputs are strict JSON-portable values before sibling execution is allowed.
 
-The Customer 360 fixture is now executable end to end for the happy path:
+The anti-corruption ResourceReference mirrors the sibling portable shape:
+scheme + locator + optional media_type + string metadata. TransformationExecutionId is
+preserved as attempt-scoped ExternalRunRef evidence.
+
+PyWorkflowKit owns workload-level retry and recovery. PyTransformKit keeps provider-level
+retry inside TransformationRuntime. UNKNOWN_OUTCOME and REQUIRES_RECONCILIATION both
+remain fail-closed reconciliation states.
+
+The Customer 360 fixture is executable end to end:
 PyIngestKit ingestion → PyTransformKit transformation → PyIngestKit publication.
-Provider execution identities remain durable ExternalRunRef evidence owned by the
-corresponding TaskAttempt.

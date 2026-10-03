@@ -1,8 +1,9 @@
 """Canonical V2 PyTransformKit anti-corruption integration.
 
-PyWorkflowKit owns workflow ordering, attempt identity, retry/recovery and durable
-evidence. PyTransformKit owns transformation-plan semantics and transformation
-execution. This module intentionally imports no PyTransformKit package.
+PyWorkflowKit owns workflow ordering, TaskRun/TaskAttempt identity, workload retry,
+recovery and durable orchestration evidence. PyTransformKit owns transformation-plan
+semantics, engine execution and provider-level retry. This module intentionally imports
+no PyTransformKit package.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ from pyworkflowkit.diagnostics import (
     OutcomeUncertainty,
     Retryability,
 )
-from pyworkflowkit.errors import PyTransformKitRetryOwnershipError
 from pyworkflowkit.executors import TaskExecutionContext, TaskExecutionResult
 from pyworkflowkit.plugins.v2 import V2WorkloadBinding
 from pyworkflowkit.policies.retry import RetryPolicy
@@ -31,47 +31,43 @@ V2_PYTRANSFORMKIT_INTEGRATION_KEY = "pytransformkit"
 V2_PYTRANSFORMKIT_REGISTRY_PREFIX = "pytransformkit:"
 
 _PLAN_REF_PARAMETER = "pytransformkit.plan_ref"
-_RETRY_OWNER_PARAMETER = "pytransformkit.retry_owner"
+_ENGINE_PARAMETER = "pytransformkit.engine"
 _CREDENTIAL_REF_PARAMETER = "pytransformkit.credential_ref"
 _RESERVED_PARAMETERS = frozenset(
     {
         _PLAN_REF_PARAMETER,
-        _RETRY_OWNER_PARAMETER,
+        _ENGINE_PARAMETER,
         _CREDENTIAL_REF_PARAMETER,
     }
 )
 
 
-class PyTransformKitRetryOwner(StrEnum):
-    """Single owner of workload-level retry across the sibling boundary."""
-
-    PYWORKFLOWKIT = "pyworkflowkit"
-    PYTRANSFORMKIT = "pytransformkit"
-
-
 class PyTransformKitExecutionStatus(StrEnum):
-    """Normalized sibling execution disposition."""
+    """Normalized terminal PyTransformKit execution state."""
 
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+    CANCELLED = "cancelled"
+    TIMED_OUT = "timed_out"
     UNKNOWN_OUTCOME = "unknown_outcome"
+    REQUIRES_RECONCILIATION = "requires_reconciliation"
 
 
 @dataclass(frozen=True, slots=True)
 class PyTransformKitResourceReference:
-    """Portable anti-corruption reference to a transformation-owned resource."""
+    """Dependency-free mirror of PyTransformKit ResourceReference."""
 
-    resource_id: str
-    uri: str
-    version: str | None = None
+    scheme: str
+    locator: str
+    media_type: str | None = None
     metadata: tuple[tuple[str, str], ...] = ()
     contract_version: str = V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION
 
     def __post_init__(self) -> None:
-        _require_text(self.resource_id, field_name="resource_id")
-        _require_text(self.uri, field_name="uri")
-        if self.version is not None:
-            _require_text(self.version, field_name="version")
+        _require_text(self.scheme, field_name="scheme")
+        _require_text(self.locator, field_name="locator")
+        if self.media_type is not None:
+            _require_text(self.media_type, field_name="media_type")
         if self.contract_version != V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION:
             raise ValueError(
                 f"unsupported PyTransformKit resource contract version {self.contract_version!r}"
@@ -83,13 +79,13 @@ class PyTransformKitResourceReference:
         )
 
     def as_portable_output(self) -> dict[str, object]:
-        """Return strict JSON-portable output suitable for durable checkpointing."""
+        """Return the strict JSON representation used for durable handoff."""
 
         return {
             "kind": "pytransformkit.resource_reference",
-            "resource_id": self.resource_id,
-            "uri": self.uri,
-            "version": self.version,
+            "scheme": self.scheme,
+            "locator": self.locator,
+            "media_type": self.media_type,
             "metadata": {key: value for key, value in self.metadata},
             "contract_version": self.contract_version,
         }
@@ -97,11 +93,13 @@ class PyTransformKitResourceReference:
 
 @dataclass(frozen=True, slots=True)
 class PyTransformKitExecutionResult:
-    """Normalized result returned by one transformation wrapper."""
+    """Normalized boundary result for one PyTransformKit TransformationExecution."""
 
-    external_run_id: str
+    transformation_execution_id: str
     status: PyTransformKitExecutionStatus
     resource: PyTransformKitResourceReference | None = None
+    engine_id: str | None = None
+    plan_fingerprint: str | None = None
     status_locator: str | None = None
     metadata: tuple[tuple[str, str], ...] = ()
     error_code: str | None = None
@@ -111,7 +109,10 @@ class PyTransformKitExecutionResult:
     contract_version: str = V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION
 
     def __post_init__(self) -> None:
-        _require_text(self.external_run_id, field_name="external_run_id")
+        _require_text(
+            self.transformation_execution_id,
+            field_name="transformation_execution_id",
+        )
         if not isinstance(self.status, PyTransformKitExecutionStatus):
             raise TypeError("status must be a PyTransformKitExecutionStatus")
         if self.resource is not None and not isinstance(
@@ -119,9 +120,10 @@ class PyTransformKitExecutionResult:
             PyTransformKitResourceReference,
         ):
             raise TypeError("resource must be a PyTransformKitResourceReference or None")
-        if self.status_locator is not None:
-            _require_text(self.status_locator, field_name="status_locator")
         for name, value in (
+            ("engine_id", self.engine_id),
+            ("plan_fingerprint", self.plan_fingerprint),
+            ("status_locator", self.status_locator),
             ("error_code", self.error_code),
             ("provider_code", self.provider_code),
             ("message_summary", self.message_summary),
@@ -156,7 +158,7 @@ class PyTransformKitExecutionResult:
 
 @runtime_checkable
 class PyTransformKitExecutionJob(Protocol):
-    """Minimal sibling-owned transformation protocol."""
+    """Small sibling-owned wrapper contract used by PyWorkflowKit."""
 
     def run(
         self,
@@ -164,11 +166,11 @@ class PyTransformKitExecutionJob(Protocol):
         context: TaskExecutionContext,
         inputs: Mapping[str, object],
     ) -> PyTransformKitExecutionResult:
-        """Execute one complete transformation plan over portable dependency inputs."""
+        """Execute one complete transformation plan over portable inputs."""
 
 
 class PyTransformKitWorkload(RegisteredWorkload):
-    """Portable V2 workload descriptor for one PyTransformKit transformation plan."""
+    """Portable RegisteredWorkload for one PyTransformKit transformation plan."""
 
     integration_key = V2_PYTRANSFORMKIT_INTEGRATION_KEY
 
@@ -176,15 +178,14 @@ class PyTransformKitWorkload(RegisteredWorkload):
         self,
         *,
         plan_ref: str,
+        engine: str,
         parameters: tuple[tuple[str, str], ...] = (),
-        retry_owner: PyTransformKitRetryOwner = PyTransformKitRetryOwner.PYTRANSFORMKIT,
         credential_ref: str | None = None,
         executor_key: str = "inline",
         contract_version: str = V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION,
     ) -> None:
         _require_text(plan_ref, field_name="plan_ref")
-        if not isinstance(retry_owner, PyTransformKitRetryOwner):
-            raise TypeError("retry_owner must be a PyTransformKitRetryOwner")
+        _require_text(engine, field_name="engine")
         if credential_ref is not None:
             _require_text(credential_ref, field_name="credential_ref")
 
@@ -198,7 +199,7 @@ class PyTransformKitWorkload(RegisteredWorkload):
         integration_parameters = [
             *caller_parameters,
             (_PLAN_REF_PARAMETER, plan_ref),
-            (_RETRY_OWNER_PARAMETER, retry_owner.value),
+            (_ENGINE_PARAMETER, engine),
         ]
         if credential_ref is not None:
             integration_parameters.append((_CREDENTIAL_REF_PARAMETER, credential_ref))
@@ -215,8 +216,8 @@ class PyTransformKitWorkload(RegisteredWorkload):
         return dict(self.parameters)[_PLAN_REF_PARAMETER]
 
     @property
-    def retry_owner(self) -> PyTransformKitRetryOwner:
-        return PyTransformKitRetryOwner(dict(self.parameters)[_RETRY_OWNER_PARAMETER])
+    def engine(self) -> str:
+        return dict(self.parameters)[_ENGINE_PARAMETER]
 
     @property
     def credential_ref(self) -> str | None:
@@ -228,7 +229,7 @@ class PyTransformKitWorkload(RegisteredWorkload):
             {
                 "integration_key": self.integration_key,
                 "plan_ref": self.plan_ref,
-                "retry_owner": self.retry_owner.value,
+                "engine": self.engine,
                 "credential_ref": self.credential_ref,
             }
         )
@@ -237,7 +238,7 @@ class PyTransformKitWorkload(RegisteredWorkload):
 
 @dataclass(frozen=True, slots=True)
 class PyTransformKitWorkloadHandler:
-    """Translate portable workflow inputs and sibling evidence into V2 runtime evidence."""
+    """Translate workflow inputs and PyTransformKit evidence into V2 runtime evidence."""
 
     workload: PyTransformKitWorkload
     job: PyTransformKitExecutionJob
@@ -307,14 +308,17 @@ class PyTransformKitWorkloadHandler:
         )
 
         if result.status is PyTransformKitExecutionStatus.SUCCEEDED:
-            if result.resource is None:  # pragma: no cover - guarded by DTO invariant
+            if result.resource is None:  # pragma: no cover - DTO invariant
                 raise RuntimeError("successful PyTransformKit result missing resource")
             return TaskExecutionResult(
                 output=result.resource.as_portable_output(),
                 external_runs=(external_ref,),
             )
 
-        if result.status is PyTransformKitExecutionStatus.UNKNOWN_OUTCOME:
+        if result.status in {
+            PyTransformKitExecutionStatus.UNKNOWN_OUTCOME,
+            PyTransformKitExecutionStatus.REQUIRES_RECONCILIATION,
+        }:
             return TaskExecutionResult(
                 failure=_failure(
                     context=context,
@@ -323,7 +327,7 @@ class PyTransformKitWorkloadHandler:
                     retryability=Retryability.RETRYABLE_AFTER_RECONCILIATION,
                     uncertainty=OutcomeUncertainty.REQUIRES_RECONCILIATION,
                     message_summary=(
-                        result.message_summary or "PyTransformKit outcome is uncertain"
+                        result.message_summary or "PyTransformKit outcome requires reconciliation"
                     ),
                     provider_code=result.provider_code,
                     external_run=external_ref,
@@ -332,14 +336,26 @@ class PyTransformKitWorkloadHandler:
                 external_runs=(external_ref,),
             )
 
+        if result.status is PyTransformKitExecutionStatus.CANCELLED:
+            category = FailureCategory.EXTERNAL_PROVIDER
+            retryability = Retryability.NON_RETRYABLE
+        elif result.status is PyTransformKitExecutionStatus.TIMED_OUT:
+            category = FailureCategory.TIMEOUT
+            retryability = (
+                Retryability.RETRYABLE if result.retryable else Retryability.NON_RETRYABLE
+            )
+        else:
+            category = FailureCategory.EXTERNAL_PROVIDER
+            retryability = (
+                Retryability.RETRYABLE if result.retryable else Retryability.NON_RETRYABLE
+            )
+
         return TaskExecutionResult(
             failure=_failure(
                 context=context,
                 error_code=result.error_code or "PYTRANSFORMKIT-FAILED",
-                category=FailureCategory.EXTERNAL_PROVIDER,
-                retryability=(
-                    Retryability.RETRYABLE if result.retryable else Retryability.NON_RETRYABLE
-                ),
+                category=category,
+                retryability=retryability,
                 uncertainty=OutcomeUncertainty.KNOWN,
                 message_summary=result.message_summary or "PyTransformKit transformation failed",
                 provider_code=result.provider_code,
@@ -355,7 +371,7 @@ def pytransformkit_v2_workload_binding(
     workload: PyTransformKitWorkload,
     job: PyTransformKitExecutionJob,
 ) -> V2WorkloadBinding:
-    """Bind one transformation plan to the canonical V2 registered-workload path."""
+    """Bind one transformation plan to the V2 RegisteredWorkload path."""
 
     if not isinstance(workload, PyTransformKitWorkload):
         raise TypeError("workload must be a PyTransformKitWorkload")
@@ -371,33 +387,26 @@ def pytransformkit_v2_task(
     *,
     key: str,
     plan_ref: str,
+    engine: str,
     dependencies: tuple[str, ...] = (),
     parameters: tuple[tuple[str, str], ...] = (),
-    retry_owner: PyTransformKitRetryOwner = PyTransformKitRetryOwner.PYTRANSFORMKIT,
     retry_policy: RetryPolicy | None = None,
     credential_ref: str | None = None,
     executor_key: str = "inline",
 ) -> TaskDefinition:
-    """Create one canonical V2 task representing one atomic transformation plan."""
-
-    policy = retry_policy or RetryPolicy()
-    if retry_owner is PyTransformKitRetryOwner.PYTRANSFORMKIT and policy.max_attempts != 1:
-        raise PyTransformKitRetryOwnershipError(
-            retry_owner=retry_owner.value,
-            max_attempts=policy.max_attempts,
-        )
+    """Create one canonical task for one atomic PyTransformKit plan execution."""
 
     return TaskDefinition(
         key=key,
         workload=PyTransformKitWorkload(
             plan_ref=plan_ref,
+            engine=engine,
             parameters=parameters,
-            retry_owner=retry_owner,
             credential_ref=credential_ref,
             executor_key=executor_key,
         ),
         dependencies=dependencies,
-        retry_policy=policy,
+        retry_policy=retry_policy or RetryPolicy(),
     )
 
 
@@ -413,12 +422,13 @@ def v2_pytransformkit_integration_snapshot() -> dict[str, object]:
         "workload_base": "RegisteredWorkload",
         "binding_contract": "V2WorkloadBinding",
         "portable_dependency_handoff": True,
-        "resource_reference_output": True,
+        "resource_reference_shape": ("scheme", "locator", "media_type", "metadata"),
         "external_reference_contract": "ExternalRunRef",
+        "workload_retry_owner": "pyworkflowkit",
+        "provider_retry_owner": "pytransformkit",
         "unknown_outcome_requires_reconciliation": True,
         "raw_credentials_supported": False,
         "credential_reference_supported": True,
-        "implicit_retry_multiplication": False,
     }
 
 
@@ -442,10 +452,15 @@ def _external_ref(
 ) -> ExternalRunRef:
     metadata = {key: value for key, value in result.metadata if key != _CREDENTIAL_REF_PARAMETER}
     metadata["plan_ref"] = workload.plan_ref
-    metadata["retry_owner"] = workload.retry_owner.value
+    metadata["engine"] = result.engine_id or workload.engine
+    if result.plan_fingerprint is not None:
+        metadata["plan_fingerprint"] = result.plan_fingerprint
+    if result.resource is not None:
+        metadata["resource_scheme"] = result.resource.scheme
+        metadata["resource_locator"] = result.resource.locator
     return ExternalRunRef(
         provider="pytransformkit",
-        external_run_id=result.external_run_id,
+        external_run_id=result.transformation_execution_id,
         kind="transformation_execution",
         status_hint=result.status.value,
         status_locator=result.status_locator,
@@ -478,7 +493,7 @@ def _failure(
         task_run_id=str(context.task_run_id),
         task_attempt_id=str(context.attempt_id),
         external_run=external_run,
-        source_component="pyworkflowkit.integrations.pytransformkit.v2",
+        source_component="pyworkflowkit.integrations.pytransformkit",
         provider_code=provider_code,
         message_summary=message_summary,
         details=details,
@@ -521,7 +536,6 @@ __all__ = [
     "PyTransformKitExecutionResult",
     "PyTransformKitExecutionStatus",
     "PyTransformKitResourceReference",
-    "PyTransformKitRetryOwner",
     "PyTransformKitWorkload",
     "PyTransformKitWorkloadHandler",
     "V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION",

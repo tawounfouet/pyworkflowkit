@@ -435,18 +435,6 @@ class PyIngestKitRetryOwnershipError(IntegrationError):
         )
 
 
-class PyTransformKitRetryOwnershipError(IntegrationError):
-    """Raised when both runtimes would independently retry one transformation."""
-
-    def __init__(self, *, retry_owner: str, max_attempts: int) -> None:
-        self.retry_owner = retry_owner
-        self.max_attempts = max_attempts
-        super().__init__(
-            "PyTransformKit-owned retry requires PyWorkflowKit max_attempts=1; "
-            f"got max_attempts={max_attempts} with retry_owner='{retry_owner}'."
-        )
-
-
 class CapacityError(PyWorkflowKitError):
     """Base class for execution-capacity accounting errors."""
 
@@ -840,7 +828,6 @@ __all__ = [
     "PluginTypeMismatchError",
     "PyIngestKitAdapterError",
     "PyIngestKitRetryOwnershipError",
-    "PyTransformKitRetryOwnershipError",
     "PyWorkflowKitError",
     "ReconciliationError",
     "ReferenceInteroperabilityError",

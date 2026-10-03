@@ -2,10 +2,8 @@
 
 ## Status
 
-LOT-19 introduces the canonical V2 anti-corruption boundary between PyWorkflowKit and
-PyTransformKit.
-
-The integration is dependency-free:
+LOT-19 introduces the canonical dependency-free V2 anti-corruption boundary between
+PyWorkflowKit and PyTransformKit.
 
 ```text
 PyWorkflowKit
@@ -22,28 +20,53 @@ LOT-16 V2 workload-binding contract.
 PyWorkflowKit
     owns DAG ordering
     owns TaskRun / TaskAttempt identity
-    owns workflow retry/recovery
-    owns durable execution evidence
+    owns workload-level retry and recovery
+    owns durable orchestration evidence
 
 PyTransformKit
     owns transformation-plan semantics
     owns transformation execution
+    owns engine/provider retry
     owns transformation resource semantics
 ```
 
 One PyWorkflowKit task represents one complete PyTransformKit transformation plan.
+PyWorkflowKit does not reproduce transform operators, schemas, expressions, engines,
+provider retry internals or physical handles.
 
-PyWorkflowKit does not reproduce transform operators, expressions, schemas, providers or
-execution-engine internals.
+## Alignment with the sibling runtime
+
+LOT-19 mirrors the current public PyTransformKit runtime semantics without importing the
+package.
+
+The sibling exposes:
+
+```text
+TransformationExecutionId
+ExecutionStatus
+TransformationResult
+ResourceReference(
+    scheme,
+    locator,
+    media_type?,
+    metadata,
+)
+```
+
+and keeps workload/task retry outside TransformationRuntime ownership.
+
+LOT-19 therefore fixes the cross-framework retry boundary as:
+
+```text
+workload retry     -> PyWorkflowKit
+provider retry     -> PyTransformKit
+```
+
+There is no PyTransformKit-owned workflow retry mode.
 
 ## Portable workload declaration
 
-LOT-19 adds:
-
-```text
-PyTransformKitWorkload
-    is-a RegisteredWorkload
-```
+`PyTransformKitWorkload` is a specialized `RegisteredWorkload`.
 
 Its canonical registry key is:
 
@@ -51,23 +74,33 @@ Its canonical registry key is:
 pytransformkit:<plan_ref>
 ```
 
-and it exposes:
+The descriptor records:
+
+```text
+plan_ref
+engine
+parameters
+credential_ref?
+executor_key
+contract_version
+```
+
+and exposes:
 
 ```text
 integration_key = "pytransformkit"
 ```
 
-The existing planner therefore reports PyTransformKit as an explicit sibling
-requirement while existing V2 executors continue to resolve the workload through the
-standard registered-workload path.
+so the existing planner records the sibling requirement while existing executors continue
+to use the normal registered-workload resolution path.
 
 ## Input handoff
 
-Transformation inputs come exclusively from upstream
+Transformation inputs come from upstream
 `TaskExecutionContext.dependency_outputs`.
 
-Before calling the sibling wrapper, LOT-19 normalizes every dependency output through
-the canonical strict JSON portability rules:
+Every dependency output is normalized through the canonical strict JSON portability
+boundary before sibling execution:
 
 ```text
 dependency output
@@ -79,79 +112,95 @@ plain_json_value
 PyTransformKitExecutionJob.run(inputs=...)
 ```
 
-If an upstream output is process-local or otherwise non-portable, the transformation
-fails closed before any sibling execution starts.
+A process-local object therefore fails closed before the sibling wrapper is invoked.
 
-No pandas DataFrame, Polars DataFrame, ORM entity or arbitrary Python object is required
-to recover the workflow.
+No DataFrame, ORM entity, active provider handle or arbitrary Python object is required
+for restart/recovery.
 
-## ResourceReference anti-corruption DTO
+## ResourceReference boundary
 
-LOT-19 defines:
-
-```text
-PyTransformKitResourceReference
-```
-
-This is a PyWorkflowKit-owned boundary DTO, not a claim that PyWorkflowKit owns the
-sibling's internal resource model.
-
-Its portable representation contains:
+LOT-19 defines `PyTransformKitResourceReference` as a dependency-free mirror of the
+portable sibling shape:
 
 ```text
-kind = pytransformkit.resource_reference
-resource_id
-uri
-version?
+scheme
+locator
+media_type?
 metadata
 contract_version
 ```
 
-The V2 runtime persists this data-only representation as the task output checkpoint.
+Its checkpoint representation is:
+
+```text
+{
+  "kind": "pytransformkit.resource_reference",
+  "scheme": ...,
+  "locator": ...,
+  "media_type": ...,
+  "metadata": ...,
+  "contract_version": "1"
+}
+```
+
+This value is data-only and can cross persistence/process boundaries.
 
 ## Normalized transformation result
 
-The sibling wrapper returns:
+The sibling wrapper returns `PyTransformKitExecutionResult` with:
 
 ```text
-PyTransformKitExecutionResult
+transformation_execution_id
+status
+resource?
+engine_id?
+plan_fingerprint?
+status_locator?
+metadata
+error_code?
+provider_code?
+message_summary?
+retryable
 ```
 
-with one of:
+Supported terminal statuses mirror the sibling lifecycle:
 
 ```text
 SUCCEEDED
 FAILED
+CANCELLED
+TIMED_OUT
 UNKNOWN_OUTCOME
+REQUIRES_RECONCILIATION
 ```
 
-Every result has an `external_run_id`, projected into:
+The transformation execution identity is projected into:
 
 ```text
 ExternalRunRef(
     provider="pytransformkit",
     kind="transformation_execution",
-    ...
+    external_run_id=<TransformationExecutionId>,
 )
 ```
 
 ## Success mapping
 
 ```text
-PyTransformKitExecutionResult(SUCCEEDED)
+TransformationExecution SUCCEEDED
         ↓
 PyTransformKitResourceReference
         ↓
-portable output checkpoint
+portable TaskOutputCheckpoint
         +
 ExternalRunRef
 ```
 
 ## Confirmed failure mapping
 
+A known failed transformation maps to:
+
 ```text
-PyTransformKitExecutionResult(FAILED)
-        ↓
 FailureEvidence(
     category=EXTERNAL_PROVIDER,
     uncertainty=KNOWN,
@@ -159,65 +208,55 @@ FailureEvidence(
 )
 ```
 
-A confirmed retryable transformation failure may be retried by PyWorkflowKit when
-PyWorkflowKit is the declared retry owner.
+When retryable, the next TaskAttempt is created only by PyWorkflowKit's `RetryPolicy`.
 
-## Unknown outcome mapping
+## Timeout and cancellation
 
 ```text
-PyTransformKitExecutionResult(UNKNOWN_OUTCOME)
-        ↓
+TIMED_OUT
+    -> FailureCategory.TIMEOUT
+
+PyTransformKit CANCELLED
+    -> ExternalRunRef.status_hint = "cancelled"
+    -> known non-retryable EXTERNAL_PROVIDER failure
+```
+
+A sibling cancellation is not the same event as a PyWorkflowKit cancellation command.
+PyWorkflowKit reserves `TaskAttempt.CANCELLED` for its own
+`CANCELLATION_REQUESTED -> CANCELLED` protocol, so LOT-19 does not fabricate a local
+cancellation transition from an independently cancelled transformation.
+
+## Unknown outcome and reconciliation
+
+Both sibling uncertainty states:
+
+```text
+UNKNOWN_OUTCOME
+REQUIRES_RECONCILIATION
+```
+
+map to:
+
+```text
 FailureEvidence(
     category=UNKNOWN_OUTCOME,
     retryability=RETRYABLE_AFTER_RECONCILIATION,
     uncertainty=REQUIRES_RECONCILIATION
 )
-        ↓
-TaskAttempt.REQUIRES_RECONCILIATION
-TaskRun.UNKNOWN_OUTCOME
-WorkflowRun.UNKNOWN_OUTCOME
 ```
 
-No blind second attempt is created.
-
-## Retry ownership
-
-Exactly one runtime owns workload retry.
-
-### PyTransformKit-owned retry
-
-```text
-retry_owner = pytransformkit
-PyWorkflowKit RetryPolicy.max_attempts = 1
-```
-
-Configuring multiple PyWorkflowKit attempts raises
-`PyTransformKitRetryOwnershipError`.
-
-### PyWorkflowKit-owned retry
-
-```text
-retry_owner = pyworkflowkit
-```
-
-The sibling wrapper reports a structured confirmed failure and PyWorkflowKit owns the
-next-attempt decision.
+The workflow becomes `UNKNOWN_OUTCOME` and no blind TaskAttempt N+1 is allocated.
 
 ## Credentials
 
-The task declaration accepts only an opaque:
+The declaration accepts only an opaque `credential_ref`.
 
-```text
-credential_ref
-```
+Raw credentials are not part of the public integration contract, and the credential
+reference is excluded from durable `ExternalRunRef.metadata`.
 
-Raw credentials are not a supported boundary field.
+## Customer 360 acceptance
 
-The credential reference is excluded from durable `ExternalRunRef.metadata`.
-
-## Customer 360 executable acceptance
-
-LOT-19 completes the reserved cross-framework fixture:
+LOT-19 completes the first executable cross-framework graph:
 
 ```text
 ingest_customers ─────┐
@@ -225,53 +264,33 @@ ingest_customers ─────┐
 ingest_orders ─────────┘
 ```
 
-Ownership is:
+Ownership:
 
 ```text
-ingest_customers        → PyIngestKit
-ingest_orders           → PyIngestKit
-transform_customer_360  → PyTransformKit
-publish_mart            → PyIngestKit
+ingest_customers        -> PyIngestKit
+ingest_orders           -> PyIngestKit
+transform_customer_360  -> PyTransformKit
+publish_mart            -> PyIngestKit
 ```
 
-The handoffs are all durable JSON-portable values:
+The durable handoff is:
 
 ```text
-PyIngestKit dataset-version-shaped output
+PyIngestKit dataset-version-shaped JSON
         ↓
 PyTransformKit portable dependency inputs
         ↓
-PyTransformKitResourceReference
+ResourceReference(scheme, locator, media_type, metadata)
         ↓
 PyIngestKit publication task
 ```
 
-The acceptance test also verifies the durable external provider references for all four
-tasks.
-
-## Plugin binding
-
-LOT-19 consumes the LOT-16 contract:
-
-```text
-PyTransformKitWorkload
-        ↓
-pytransformkit_v2_workload_binding(...)
-        ↓
-V2WorkloadBinding
-        ↓
-registered V2 executor
-```
-
-No new executor abstraction is introduced.
+All four tasks retain attempt-scoped external-provider evidence.
 
 ## Compatibility
 
-LOT-19 is additive.
-
-No PyTransformKit symbol is promoted to the frozen package root.
-
-The base package remains importable without PyTransformKit installed.
+LOT-19 is additive. No PyTransformKit symbol is promoted to the frozen package root, and
+the base package remains importable without PyTransformKit installed.
 
 ## Contract snapshot
 
@@ -282,33 +301,32 @@ atomic transformation-plan boundary
 no core PyTransformKit dependency
 RegisteredWorkload execution path
 V2WorkloadBinding integration
-portable dependency handoff
-portable resource-reference output
-ExternalRunRef execution evidence
+strict portable dependency handoff
+real ResourceReference field shape
+TransformationExecutionId -> ExternalRunRef
+PyWorkflowKit workload retry ownership
+PyTransformKit provider retry ownership
 unknown-outcome reconciliation
 credential-reference-only posture
-single retry owner
 ```
 
 ## Exit criteria
 
-LOT-19 is complete when:
-
 ```text
 [ ] PyTransformKitWorkload exists
-[ ] workload is portable and registry-backed
 [ ] planner reports required integration "pytransformkit"
-[ ] PyTransformKitResourceReference is data-only and checkpointable
-[ ] dependency inputs are validated for portability before sibling execution
-[ ] V2 workload binding exists
-[ ] success returns resource reference + ExternalRunRef
+[ ] engine is explicit
+[ ] ResourceReference matches scheme/locator/media_type/metadata
+[ ] dependency inputs are portable before sibling execution
+[ ] success returns resource checkpoint + ExternalRunRef
+[ ] transformation_execution_id is persisted as external execution identity
 [ ] confirmed failure maps to KNOWN FailureEvidence
-[ ] retryable confirmed failure can be owned by PyWorkflowKit
-[ ] PyTransformKit-owned retry forbids multiple PyWorkflowKit attempts
-[ ] UNKNOWN_OUTCOME requires reconciliation and does not blind-retry
-[ ] wrapper exceptions fail closed
-[ ] credential_ref is not emitted in ExternalRunRef metadata
-[ ] Customer 360 cross-framework workflow succeeds end-to-end
+[ ] PyWorkflowKit owns workload retry
+[ ] PyTransformKit provider retry remains sibling-owned
+[ ] TIMED_OUT preserves timeout semantics and sibling CANCELLED remains external evidence
+[ ] UNKNOWN_OUTCOME/REQUIRES_RECONCILIATION do not blind-retry
+[ ] credential_ref is excluded from ExternalRunRef metadata
+[ ] Customer 360 succeeds end-to-end
 [ ] package root remains unchanged
 [ ] CI is green
 [ ] Release Qualification is green
