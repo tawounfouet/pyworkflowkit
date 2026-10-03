@@ -8,6 +8,7 @@ from importlib import import_module
 from pathlib import Path
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 from pyworkflowkit._architecture import (
     V2_CANONICAL_PUBLIC_NAMESPACES,
     V2_LEGACY_FACADES,
@@ -74,9 +75,11 @@ def test_v2_public_api_baseline_wraps_architecture_without_mutating_v1_freeze() 
     assert snapshot["target_release"] == V2_TARGET_RELEASE
     assert snapshot["architecture"] == v2_architecture_snapshot()
 
-    # LOT-00 is additive: the stable 1.1 root facade remains unchanged until
-    # later lots deliberately replace the root contract.
-    assert set(pyworkflowkit.__all__) == set(PUBLIC_API_SURFACES["pyworkflowkit"])
+    # LOT-22 deliberately promotes the live root to the frozen V2 allowlist.
+    # The historical 1.0/1.1 root remains available only through the explicit
+    # compatibility facade.
+    assert tuple(pyworkflowkit.__all__) == V2_ROOT_TARGET_ALLOWLIST
+    assert set(v1_root.__all__) == set(PUBLIC_API_SURFACES["pyworkflowkit"])
 
 
 def test_v2_semantic_namespaces_are_importable_and_explicit() -> None:
