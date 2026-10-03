@@ -6,7 +6,13 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from pyworkflowkit._compat.v1_root import RuntimeSettings, TaskHandle, WorkflowRuntime, task, workflow
+from pyworkflowkit._compat.v1_root import (
+    RuntimeSettings,
+    TaskHandle,
+    WorkflowRuntime,
+    task,
+    workflow,
+)
 
 
 @task
