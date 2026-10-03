@@ -45,6 +45,7 @@ from pyworkflowkit.persistence.contracts import (
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import (
+    JsonValue,
     RuntimeEvent,
     RuntimeEventType,
     TaskOutputCheckpoint,
@@ -574,7 +575,7 @@ class SQLiteMetadataStore:
                     task_key = task_row.task_key
                     event_type = RuntimeEventType.ATTEMPT_STATE_CHANGED
 
-                payload: dict[str, object] = {
+                payload: dict[str, JsonValue] = {
                     "entity_type": entity_type.value,
                     "entity_id": row.entity_id,
                 }
