@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pickle  # nosec B403 - trusted intra-runtime process transport only
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,6 +11,7 @@ from multiprocessing import get_all_start_methods, get_context
 from multiprocessing.connection import Connection
 from multiprocessing.process import BaseProcess
 from threading import RLock
+from typing import Protocol, cast
 
 from pyworkflowkit.diagnostics.failure import (
     FailureCategory,
@@ -48,7 +49,7 @@ class _ProcessFactory(Protocol):
     def __call__(
         self,
         *,
-        target: object,
+        target: Callable[..., object],
         args: tuple[object, ...],
         name: str,
     ) -> BaseProcess: ...
