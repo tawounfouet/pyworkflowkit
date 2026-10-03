@@ -171,9 +171,7 @@ def test_lot19_workload_is_portable_registered_workload_and_planner_integration(
     assert workload.credential_ref == "secretref://transform/customer360"
     assert task.portable is True
 
-    plan = WorkflowPlanner().compile(
-        WorkflowDefinition(name="lot19-plan", tasks=(ingest, task))
-    )
+    plan = WorkflowPlanner().compile(WorkflowDefinition(name="lot19-plan", tasks=(ingest, task)))
     assert plan.required_integrations == ("pytransformkit",)
     assert plan.task("transform").required_integrations == ("pytransformkit",)
     assert plan.task("transform").executor_requirement.workload_kind == "registered"
@@ -283,9 +281,7 @@ def test_lot19_success_receives_portable_dependency_outputs_and_persists_evidenc
     assert result.task("transform").output["uri"] == "resource://customer360/v1"
 
     transform_run = next(
-        item
-        for item in metadata.list_task_runs(result.run_id)
-        if item.task_key == "transform"
+        item for item in metadata.list_task_runs(result.run_id) if item.task_key == "transform"
     )
     attempt = metadata.list_task_attempts(transform_run.task_run_id)[0]
     refs = metadata.list_external_run_refs(attempt.attempt_id)
