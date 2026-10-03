@@ -27,12 +27,11 @@ from pyworkflowkit.diagnostics import (
     Retryability,
 )
 from pyworkflowkit.domain.ids import ExternalRunRefId, TaskId
+from pyworkflowkit.domain.values import ArtifactReference, TaskResult
 from pyworkflowkit.domain.values import (
-    ArtifactReference,
     ExternalRunRef as LegacyExternalRunRef,
-    RetryPolicy as LegacyRetryPolicy,
-    TaskResult,
 )
+from pyworkflowkit.domain.values import RetryPolicy as LegacyRetryPolicy
 from pyworkflowkit.errors import (
     PyIngestKitAdapterError,
     PyIngestKitRetryOwnershipError,
