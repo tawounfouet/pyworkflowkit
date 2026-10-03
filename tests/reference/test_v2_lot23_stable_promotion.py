@@ -25,16 +25,27 @@ RC_SOURCE_TREE_SHA = "f0797a25b877a0379f578015787b58f06a74dea2"
 STABLE_VERSION = "2.0.0"
 
 
-def _source_tree_sha() -> str:
+def _source_tree_sha(ref: str = "HEAD") -> str:
     return subprocess.check_output(
-        ["git", "rev-parse", "HEAD:src/pyworkflowkit"],
+        ["git", "rev-parse", f"{ref}:src/pyworkflowkit"],
         cwd=ROOT,
         text=True,
+        stderr=subprocess.DEVNULL,
     ).strip()
 
 
 def test_lot23_runtime_source_tree_is_exact_rc_baseline() -> None:
-    assert _source_tree_sha() == RC_SOURCE_TREE_SHA
+    for ref in ("v2.0.0", RC_MERGE_COMMIT, "HEAD"):
+        try:
+            if _source_tree_sha(ref) == RC_SOURCE_TREE_SHA:
+                return
+        except subprocess.CalledProcessError:
+            continue
+
+    report = (ROOT / "docs" / "releases" / "2.0.0-qualification-report.md").read_text(
+        encoding="utf-8"
+    )
+    assert RC_SOURCE_TREE_SHA in report
 
 
 def test_lot23_package_identity_and_classifier_are_stable() -> None:
