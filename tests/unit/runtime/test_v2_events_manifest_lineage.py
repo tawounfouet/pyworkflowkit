@@ -93,9 +93,7 @@ def test_nonportable_output_remains_process_local_and_is_not_falsely_durable() -
     result = runtime.run(workflow)
 
     assert isinstance(result.task("opaque").output, Opaque)
-    assert "PWK-OUTPUT-NONPORTABLE" in {
-        diagnostic.code for diagnostic in result.diagnostics
-    }
+    assert "PWK-OUTPUT-NONPORTABLE" in {diagnostic.code for diagnostic in result.diagnostics}
 
     task_run = store.list_task_runs(result.run_id)[0]
     try:
