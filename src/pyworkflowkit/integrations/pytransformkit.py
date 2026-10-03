@@ -190,8 +190,7 @@ class PyTransformKitWorkload(RegisteredWorkload):
             _require_text(credential_ref, field_name="credential_ref")
         if contract_version != V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION:
             raise ValueError(
-                "unsupported PyTransformKit V2 integration contract version "
-                f"{contract_version!r}"
+                f"unsupported PyTransformKit V2 integration contract version {contract_version!r}"
             )
 
         caller_parameters = _normalize_pairs(parameters, field_name="parameters")
