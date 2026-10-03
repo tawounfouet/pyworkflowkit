@@ -28,8 +28,9 @@ from pyworkflowkit.runtime import (
     WorkflowRunId,
 )
 from pyworkflowkit.serialization import BoundaryCodec
+from pyworkflowkit.states import WorkflowRunStatus
 
-FIXTURES = Path(__file__).parents[2] / "fixtures" / "v2" / "serialization"
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "v2" / "serialization"
 T0 = datetime(2026, 10, 3, 9, 0, tzinfo=UTC)
 
 
@@ -82,10 +83,7 @@ def _golden_values() -> dict[str, object]:
             workflow_version="1",
             definition_fingerprint="sha256:def",
             plan_fingerprint="sha256:plan",
-            status=__import__(
-                "pyworkflowkit.states",
-                fromlist=["WorkflowRunStatus"],
-            ).WorkflowRunStatus.SUCCEEDED,
+            status=WorkflowRunStatus.SUCCEEDED,
             created_at=T0.isoformat(),
             started_at=T0.isoformat(),
             ended_at=T0.isoformat(),
