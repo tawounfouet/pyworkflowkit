@@ -68,9 +68,7 @@ class RunManifestBuilder:
                     output=(checkpoint.output if checkpoint is not None else None),
                     output_digest=(checkpoint.digest if checkpoint is not None else None),
                     output_recorded_at=(
-                        checkpoint.recorded_at.isoformat()
-                        if checkpoint is not None
-                        else None
+                        checkpoint.recorded_at.isoformat() if checkpoint is not None else None
                     ),
                 )
             )
