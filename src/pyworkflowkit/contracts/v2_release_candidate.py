@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
+import json
+from typing import cast
 from importlib.metadata import PackageNotFoundError, version
 
 from pyworkflowkit._architecture import v2_architecture_snapshot
@@ -118,8 +119,10 @@ def v2_release_candidate_evidence_manifest() -> dict[str, object]:
             "migration": migration_contract_snapshot(),
         },
     }
-    # Detach the emitted proof from mutable objects owned by composed contract modules.
-    return deepcopy(payload)
+    # Emit a detached JSON-native proof: tuples and other serialization-friendly
+    # containers from component snapshots are normalized to their wire representation.
+    encoded = json.dumps(payload, allow_nan=False, sort_keys=True)
+    return cast(dict[str, object], json.loads(encoded))
 
 
 __all__ = [
