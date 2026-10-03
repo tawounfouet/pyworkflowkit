@@ -42,7 +42,11 @@ from pyworkflowkit.runtime._attempts import next_task_attempt
 from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
-from pyworkflowkit.runtime.evidence import RuntimeEvent, TaskOutputCheckpoint
+from pyworkflowkit.runtime.evidence import (
+    RuntimeEvent,
+    TaskOutputCheckpoint,
+    normalize_json_value,
+)
 from pyworkflowkit.runtime.identity import TaskAttemptId, WorkflowRunId
 from pyworkflowkit.runtime.reconciliation import (
     ExternalRunVerifier,
@@ -720,7 +724,7 @@ class WorkflowRuntime:
         try:
             checkpoint = TaskOutputCheckpoint(
                 task_run_id=task_run.task_run_id,
-                output=output,
+                output=normalize_json_value(output, path=f"task[{task_run.task_key}].output"),
                 recorded_at=self._now(),
             )
         except (TypeError, ValueError) as exc:
