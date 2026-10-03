@@ -471,7 +471,7 @@ def test_common_helpers_cover_direct_registered_failure_and_context_paths() -> N
         {},
     )
     assert unresolved is None
-    assert unresolved_params == {}
+    assert unresolved_params == {"mode": "full"}
 
     assert _common.resolve_invocation_arity(lambda: None) == 0
     assert _common.resolve_invocation_arity(lambda context: context) == 1
