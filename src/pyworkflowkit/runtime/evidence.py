@@ -46,8 +46,7 @@ def normalize_json_value(value: object, *, path: str = "value") -> JsonValue:
         return MappingProxyType(normalized)
     if isinstance(value, (list, tuple)):
         return tuple(
-            normalize_json_value(item, path=f"{path}[{index}]")
-            for index, item in enumerate(value)
+            normalize_json_value(item, path=f"{path}[{index}]") for index, item in enumerate(value)
         )
     raise TypeError(f"{path} contains unsupported value type {type(value).__name__}")
 
