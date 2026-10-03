@@ -290,6 +290,11 @@ class PyIngestKitWorkload(RegisteredWorkload):
             raise TypeError("retry_owner must be a PyIngestKitRetryOwner")
         if credential_ref is not None:
             _require_v2_text(credential_ref, field_name="credential_ref")
+        if contract_version != V2_PYINGESTKIT_INTEGRATION_CONTRACT_VERSION:
+            raise ValueError(
+                "unsupported PyIngestKit V2 integration contract version "
+                f"{contract_version!r}"
+            )
 
         caller_parameters = _normalize_v2_pairs(parameters, field_name="parameters")
         reserved = sorted(key for key, _ in caller_parameters if key in _V2_RESERVED_PARAMETERS)
