@@ -30,7 +30,11 @@ from pyworkflowkit.runtime import (
     WorkflowRun,
     WorkflowRunId,
 )
-from pyworkflowkit.runtime.evidence import normalize_json_value, plain_json_value
+from pyworkflowkit.runtime.evidence import (
+    normalize_json_value,
+    plain_json_value,
+    runtime_event_type_for_transition,
+)
 
 NOW = datetime(2026, 10, 3, 9, 0, tzinfo=UTC)
 
@@ -42,7 +46,8 @@ class ExampleEnum(StrEnum):
 def _event(**changes: object) -> RuntimeEvent:
     values: dict[str, object] = {
         "sequence": 1,
-        "event_type": RuntimeEventType.WORKFLOW_STATE_CHANGED,
+        "event_id": "W-1:event-1",
+        "event_type": RuntimeEventType.WORKFLOW_STARTED,
         "workflow_run_id": WorkflowRunId.parse("W-1"),
         "occurred_at": NOW,
         "from_status": "PENDING",
@@ -113,6 +118,57 @@ def test_json_normalization_rejects_opaque_objects() -> None:
         normalize_json_value(object())
 
 
+def test_semantic_event_mapping_distinguishes_start_resume_retry_and_initial_rows() -> None:
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="workflow_run",
+            from_status=None,
+            to_status="PENDING",
+        )
+        is None
+    )
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="workflow_run",
+            from_status="PENDING",
+            to_status="RUNNING",
+        )
+        is RuntimeEventType.WORKFLOW_STARTED
+    )
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="workflow_run",
+            from_status="UNKNOWN_OUTCOME",
+            to_status="RUNNING",
+        )
+        is RuntimeEventType.WORKFLOW_RESUMED
+    )
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="task_attempt",
+            from_status=None,
+            to_status="PENDING",
+            attempt_number=2,
+        )
+        is RuntimeEventType.TASK_RETRYING
+    )
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="task_attempt",
+            from_status=None,
+            to_status="PENDING",
+            attempt_number=1,
+        )
+        is None
+    )
+    with pytest.raises(ValueError, match="unsupported state entity type"):
+        runtime_event_type_for_transition(
+            entity_type="unknown",
+            from_status="A",
+            to_status="B",
+        )
+
+
 @pytest.mark.parametrize("sequence", [True, "1"])
 def test_runtime_event_requires_integer_sequence(sequence: object) -> None:
     with pytest.raises(TypeError, match="sequence must be an integer"):
@@ -124,9 +180,14 @@ def test_runtime_event_requires_positive_sequence() -> None:
         _event(sequence=0)
 
 
+def test_runtime_event_requires_non_empty_event_identity() -> None:
+    with pytest.raises(ValueError, match="event_id"):
+        _event(event_id="")
+
+
 def test_runtime_event_requires_typed_event_and_workflow_identity() -> None:
     with pytest.raises(TypeError, match="RuntimeEventType"):
-        _event(event_type="WORKFLOW_STATE_CHANGED")
+        _event(event_type="WORKFLOW_STARTED")
     with pytest.raises(TypeError, match="WorkflowRunId"):
         _event(workflow_run_id="W-1")
 
@@ -136,6 +197,15 @@ def test_runtime_event_requires_typed_optional_task_and_attempt_identity() -> No
         _event(task_run_id="TR-1")
     with pytest.raises(TypeError, match="attempt_id"):
         _event(attempt_id="TA-1")
+
+
+def test_runtime_event_validates_optional_task_key_and_attempt_number() -> None:
+    with pytest.raises(ValueError, match="task_key"):
+        _event(task_key="")
+    with pytest.raises(TypeError, match="attempt_number"):
+        _event(attempt_number=True)
+    with pytest.raises(ValueError, match="attempt_number"):
+        _event(attempt_number=0)
 
 
 def test_runtime_event_requires_timezone_aware_timestamp() -> None:
