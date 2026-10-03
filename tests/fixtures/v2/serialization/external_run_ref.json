@@ -1,0 +1,1 @@
+{"contract":"pyworkflowkit.external_run_ref","contract_version":"1","payload":{"causation_id":null,"contract_version":"1","correlation_id":null,"external_run_id":"remote-golden","kind":"job","metadata":[],"namespace":"pyworkflowkit.external_run","provider":"example","status_hint":null,"status_locator":null}}
