@@ -311,10 +311,7 @@ def validate_v2_plugin_instance(
         issues = (
             V2PluginContractIssue(
                 code=V2PluginContractIssueCode.INSTANCE_TYPE,
-                message=(
-                    f"{plugin_type.value} plugin instance does not satisfy "
-                    f"{expected_name}"
-                ),
+                message=(f"{plugin_type.value} plugin instance does not satisfy {expected_name}"),
             ),
         )
     return V2PluginInstanceContractReport(plugin_type=plugin_type, issues=issues)
@@ -430,9 +427,7 @@ class V2PluginCatalog:
             )
             for descriptor in registry.descriptors()
         ]
-        return tuple(
-            sorted(values, key=lambda item: (item.plugin_type.value, item.name))
-        )
+        return tuple(sorted(values, key=lambda item: (item.plugin_type.value, item.name)))
 
 
 def _erase_registry(registry: V2PluginRegistry[T]) -> V2PluginRegistry[object]:
@@ -543,9 +538,7 @@ class V2PluginDiscovery:
             )
 
         enabled_identities = {
-            (plugin_type, name)
-            for plugin_type, names in enabled.items()
-            for name in names
+            (plugin_type, name) for plugin_type, names in enabled.items() for name in names
         }
         results: list[V2PluginDiscoveryResult] = []
         for candidate in candidates:
@@ -611,8 +604,7 @@ def v2_plugin_contract_snapshot() -> dict[str, object]:
         "contract_version": V2_PLUGIN_CONTRACT_VERSION,
         "plugin_api_version": V2_PLUGIN_API_VERSION,
         "entry_point_groups": {
-            plugin_type.value: group
-            for plugin_type, group in V2_ENTRY_POINT_GROUPS.items()
+            plugin_type.value: group for plugin_type, group in V2_ENTRY_POINT_GROUPS.items()
         },
         "plugin_types": [plugin_type.value for plugin_type in PluginType],
         "executor_contract": "pyworkflowkit.executors.Executor",
