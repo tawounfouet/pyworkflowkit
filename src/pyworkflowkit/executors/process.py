@@ -344,30 +344,34 @@ class ProcessExecutor:
             )
 
         try:
-            ready = (
-                receive_connection.poll()
-                if remaining is None
-                else receive_connection.poll(remaining)
-            )
-            if ready:
+            if remaining is None:
                 try:
                     result = receive_connection.recv()
                 except EOFError:
                     return self._process_exit_failure(request, process, context.attempt_id)
-                if not isinstance(result, TaskExecutionResult):
-                    return failure_result(
+            else:
+                if not receive_connection.poll(remaining):
+                    self._terminate_process(process)
+                    return _known_timeout(
                         request,
-                        error_code="PWK-PROCESS-WORKER-CONTRACT",
-                        category=FailureCategory.CONTRACT_VIOLATION,
-                        retryability=Retryability.NON_RETRYABLE,
-                        uncertainty=OutcomeUncertainty.KNOWN,
-                        source_component="process_executor",
-                        summary="child process returned an invalid execution result",
+                        "child process exceeded its deadline and was terminated",
                     )
-                return result
+                try:
+                    result = receive_connection.recv()
+                except EOFError:
+                    return self._process_exit_failure(request, process, context.attempt_id)
 
-            self._terminate_process(process)
-            return _known_timeout(request, "child process exceeded its deadline and was terminated")
+            if not isinstance(result, TaskExecutionResult):
+                return failure_result(
+                    request,
+                    error_code="PWK-PROCESS-WORKER-CONTRACT",
+                    category=FailureCategory.CONTRACT_VIOLATION,
+                    retryability=Retryability.NON_RETRYABLE,
+                    uncertainty=OutcomeUncertainty.KNOWN,
+                    source_component="process_executor",
+                    summary="child process returned an invalid execution result",
+                )
+            return result
         finally:
             receive_connection.close()
             process.join()
