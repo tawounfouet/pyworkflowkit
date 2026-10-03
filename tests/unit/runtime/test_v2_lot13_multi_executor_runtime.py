@@ -7,6 +7,8 @@ import threading
 from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, WorkflowDefinition
 from pyworkflowkit.executors import ExecutorRegistry, InlineExecutor, ThreadExecutor
 from pyworkflowkit.persistence import InMemoryMetadataStore
+from pyworkflowkit.planning import WorkflowPlanner
+from pyworkflowkit.policies import TimeoutPolicy
 from pyworkflowkit.runtime import TaskExecutionContext, WorkflowRuntime
 from pyworkflowkit.states import WorkflowRunStatus
 
@@ -55,7 +57,7 @@ def test_workflow_runtime_routes_each_task_to_its_declared_executor() -> None:
     assert len(thread_names) == 1
     assert thread_names[0].startswith("pwk-route")
 
-    plan = runtime._planner.compile(workflow)  # internal proof of routing contract
+    plan = WorkflowPlanner().compile(workflow)
     assert plan.task("inline").executor_requirement.executor_key == "inline"
     assert plan.task("threaded").executor_requirement.executor_key == "thread"
 
@@ -120,8 +122,6 @@ def test_thread_timeout_becomes_unknown_outcome_without_second_attempt() -> None
         executor_registry=ExecutorRegistry((thread,)),
         metadata=store,
     )
-
-    from pyworkflowkit.policies import TimeoutPolicy
 
     workflow = WorkflowDefinition(
         name="soft-timeout",
