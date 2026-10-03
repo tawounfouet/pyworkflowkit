@@ -32,13 +32,49 @@ from pyworkflowkit.runtime.services import (
 )
 
 if TYPE_CHECKING:
+    from pyworkflowkit.runtime.reconciliation import (
+        ExternalRunObservation,
+        ExternalRunStatus,
+        ExternalRunVerifier,
+        ExternalRunVerifierRegistry,
+        ReconciliationDisposition,
+        ReconciliationReport,
+        ReconciliationService,
+        TaskReconciliation,
+    )
     from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
     from pyworkflowkit.runtime.workflow import WorkflowRuntime
 
 _LAZY_EXPORTS = {
     "CancellationResult": ("pyworkflowkit.runtime.results", "CancellationResult"),
+    "ExternalRunObservation": (
+        "pyworkflowkit.runtime.reconciliation",
+        "ExternalRunObservation",
+    ),
+    "ExternalRunStatus": ("pyworkflowkit.runtime.reconciliation", "ExternalRunStatus"),
+    "ExternalRunVerifier": ("pyworkflowkit.runtime.reconciliation", "ExternalRunVerifier"),
+    "ExternalRunVerifierRegistry": (
+        "pyworkflowkit.runtime.reconciliation",
+        "ExternalRunVerifierRegistry",
+    ),
+    "ReconciliationDisposition": (
+        "pyworkflowkit.runtime.reconciliation",
+        "ReconciliationDisposition",
+    ),
+    "ReconciliationReport": (
+        "pyworkflowkit.runtime.reconciliation",
+        "ReconciliationReport",
+    ),
+    "ReconciliationService": (
+        "pyworkflowkit.runtime.reconciliation",
+        "ReconciliationService",
+    ),
     "TaskOutcome": ("pyworkflowkit.runtime.results", "TaskOutcome"),
     "WorkflowResult": ("pyworkflowkit.runtime.results", "WorkflowResult"),
+    "TaskReconciliation": (
+        "pyworkflowkit.runtime.reconciliation",
+        "TaskReconciliation",
+    ),
     "WorkflowRuntime": ("pyworkflowkit.runtime.workflow", "WorkflowRuntime"),
 }
 
@@ -58,6 +94,13 @@ __all__ = [
     "CorrelationContext",
     "CorrelationId",
     "ExternalRunRef",
+    "ExternalRunObservation",
+    "ExternalRunStatus",
+    "ExternalRunVerifier",
+    "ExternalRunVerifierRegistry",
+    "ReconciliationDisposition",
+    "ReconciliationReport",
+    "ReconciliationService",
     "RuntimeEvent",
     "RetryWaiter",
     "RuntimeIdentityFactory",
@@ -66,6 +109,7 @@ __all__ = [
     "TaskAttempt",
     "TaskAttemptId",
     "TaskOutcome",
+    "TaskReconciliation",
     "TaskRun",
     "TaskRunId",
     "UuidRuntimeIdentityFactory",
