@@ -301,8 +301,12 @@ def _failure_result(
     )
 
 
-if not isinstance(ThreadExecutor(), Executor):
-    raise TypeError("ThreadExecutor must satisfy Executor")
+_protocol_probe = ThreadExecutor(max_workers=1)
+try:
+    if not isinstance(_protocol_probe, Executor):
+        raise TypeError("ThreadExecutor must satisfy Executor")
+finally:
+    _protocol_probe.shutdown()
 
 
 __all__ = ["ThreadExecutor"]
