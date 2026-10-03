@@ -43,8 +43,8 @@ def test_public_api_can_execute_workflow_end_to_end() -> None:
     assert lineage.run_id == str(run.run_id)
 
 
-def test_root_import_surface_is_intentional() -> None:
-    import pyworkflowkit
+def test_historical_root_import_surface_is_intentional() -> None:
+    import pyworkflowkit._compat.v1_root as v1_root
 
     expected = {
         "ArtifactId",
@@ -72,4 +72,4 @@ def test_root_import_surface_is_intentional() -> None:
         "__version__",
     }
 
-    assert set(pyworkflowkit.__all__) == expected
+    assert set(v1_root.__all__) == expected
