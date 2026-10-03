@@ -15,7 +15,6 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 
-from pyworkflowkit.authoring.workloads import WorkloadDescriptor
 from pyworkflowkit.errors import (
     DuplicatePluginError,
     PluginCompatibilityError,
