@@ -213,12 +213,18 @@ When retryable, the next TaskAttempt is created only by PyWorkflowKit's `RetryPo
 ## Timeout and cancellation
 
 ```text
-TIMED_OUT  -> FailureCategory.TIMEOUT
-CANCELLED  -> FailureCategory.CANCELLED
+TIMED_OUT
+    -> FailureCategory.TIMEOUT
+
+PyTransformKit CANCELLED
+    -> ExternalRunRef.status_hint = "cancelled"
+    -> known non-retryable EXTERNAL_PROVIDER failure
 ```
 
-The wrapper reports sibling/provider evidence; PyWorkflowKit remains the owner of task
-state transitions.
+A sibling cancellation is not the same event as a PyWorkflowKit cancellation command.
+PyWorkflowKit reserves `TaskAttempt.CANCELLED` for its own
+`CANCELLATION_REQUESTED -> CANCELLED` protocol, so LOT-19 does not fabricate a local
+cancellation transition from an independently cancelled transformation.
 
 ## Unknown outcome and reconciliation
 
@@ -317,7 +323,7 @@ credential-reference-only posture
 [ ] confirmed failure maps to KNOWN FailureEvidence
 [ ] PyWorkflowKit owns workload retry
 [ ] PyTransformKit provider retry remains sibling-owned
-[ ] TIMED_OUT and CANCELLED preserve failure categories
+[ ] TIMED_OUT preserves timeout semantics and sibling CANCELLED remains external evidence
 [ ] UNKNOWN_OUTCOME/REQUIRES_RECONCILIATION do not blind-retry
 [ ] credential_ref is excluded from ExternalRunRef metadata
 [ ] Customer 360 succeeds end-to-end
