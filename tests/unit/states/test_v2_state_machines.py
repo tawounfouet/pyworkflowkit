@@ -222,7 +222,6 @@ def test_transition_timestamps_must_be_timezone_aware() -> None:
         )
 
 
-
 def test_unknown_outcome_can_be_reconciled_to_known_timeout() -> None:
     run = _workflow()
     task = _task()
