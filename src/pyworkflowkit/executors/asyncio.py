@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import partial
 from inspect import isawaitable
 from threading import Event, RLock, Thread
 from typing import cast
@@ -321,12 +322,7 @@ class AsyncExecutor:
             execution.task = task
             cancel_now = execution.cancellation_requested
 
-        task.add_done_callback(
-            lambda completed, current_attempt=attempt_id: self._complete_execution(
-                current_attempt,
-                completed,
-            )
-        )
+        task.add_done_callback(partial(self._complete_execution, attempt_id))
         if cancel_now:
             task.cancel()
 
