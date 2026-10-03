@@ -13,7 +13,7 @@ from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
+from typing import Any, Generic, Protocol, TypeVar, cast, runtime_checkable
 
 from pyworkflowkit.errors import (
     DuplicatePluginError,
@@ -568,8 +568,8 @@ class V2PluginDiscovery:
                 entry_point_name=candidate.name,
                 entry_point_group=candidate.group,
             )
-            assert isinstance(registration, V2RegisteredPlugin)
-            catalog.registry_for(candidate.plugin_type).register(registration)
+            typed_registration = cast(V2RegisteredPlugin[object], registration)
+            catalog.registry_for(candidate.plugin_type).register(typed_registration)
             return V2PluginDiscoveryResult(
                 plugin=candidate,
                 status=V2PluginDiscoveryStatus.REGISTERED,
