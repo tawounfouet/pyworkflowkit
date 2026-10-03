@@ -1084,26 +1084,30 @@ control-plane concerns remain outside the core.
 ## Roadmap
 
 ```text
-0.1  Core sequential runtime
-0.2  Durable persistence and evidence
-0.3  Developer framework, CLI, plugins, PyIngestKit boundary
-0.4  Bounded concurrency, cancellation, timeout                 ✓ stable
-0.5  Process/async/subprocess executors and hardening            ✓ stable
-0.6  Recovery, reconciliation, resume, non-blocking retry         ✓ stable
+0.1  Core sequential runtime                                      ✓ stable
+0.2  Durable persistence and evidence                             ✓ stable
+0.3  Developer framework, CLI, plugins, PyIngestKit boundary      ✓ stable
+0.4  Bounded concurrency, cancellation, timeout                   ✓ stable
+0.5  Process/async/subprocess executors and hardening              ✓ stable
+0.6  Recovery, reconciliation, resume, non-blocking retry          ✓ stable
 0.7  Core compatibility contracts                                 ✓ stable
-0.8  Ecosystem/interoperability hardening                           ✓ stable
-0.9  1.0 release-candidate stabilization                            ← current development
-1.0  Stable embedded runtime
+0.8  Ecosystem/interoperability hardening                         ✓ stable
+0.9  1.0 release-candidate stabilization                          ✓ historical
+1.0  Stable embedded runtime                                      ✓ stable
+1.1  Developer experience and learning                            ✓ stable
+2.0  Canonical V2 architecture and runtime                        ✓ stable
+post-2.0
+     maintenance / compatible evolution planning                  ← current
 ```
 
-The 0.5 development sequence progressed through ProcessExecutor, AsyncExecutor,
-SubprocessExecutor, Observability Plugins, and Security Hardening before transverse
-qualification promoted the line to **0.5.0 stable**.
+**PyWorkflowKit 2.0.0 is the current stable release.** Its canonical runtime,
+persistence, executor, migration, plugin, and sibling-integration contracts are frozen by
+the V2 release qualification suite.
 
-The 0.7 and 0.8 lines are stable. **0.9.0a1 / RQ-01** froze the public facades,
-**0.9.0a2 / RQ-02** made compatibility policy executable, **0.9.0a3 / RQ-03** qualified
-strict external-consumer typing, and **0.9.0b1 / RQ-04** qualified the first-use journey.
-**0.9.0b2 / RQ-05** qualified package metadata, wheel/sdist contents, clean installs,
-published extras, and upgrade from stable `0.8.0`. **0.9.0rc1** exposed an Ecosystem SDK
-ceiling ending at `<1.0`; **0.9.0rc2** corrected that contract and passed the complete
-RQ-06 corpus. **1.0.0** promotes that same qualified implementation as stable.
+The post-2.0 baseline and version policy are maintained in
+`docs/V2_RELEASE_CLOSURE_AND_POST_2_0_ROADMAP.md`.
+
+The next product line is not implicitly opened by the stable release. Patch releases
+(`2.0.x`) are reserved for compatible maintenance; any `2.1.x` capability work must
+start from an explicit expression of need, requirements analysis, target architecture,
+and implementation roadmap.
