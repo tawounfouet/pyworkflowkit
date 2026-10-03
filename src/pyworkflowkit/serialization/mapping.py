@@ -26,11 +26,7 @@ from pyworkflowkit.serialization.schemas import (
 )
 
 BoundaryValue: TypeAlias = (
-    CorrelationContext
-    | WorkflowExecutionReference
-    | ExternalRunRef
-    | FailureEvidence
-    | Diagnostic
+    CorrelationContext | WorkflowExecutionReference | ExternalRunRef | FailureEvidence | Diagnostic
 )
 
 
@@ -189,9 +185,7 @@ def _external_run_ref_schema(value: ExternalRunRef) -> ExternalRunRefSchema:
         kind=value.kind,
         status_hint=value.status_hint,
         status_locator=value.status_locator,
-        correlation_id=(
-            str(value.correlation_id) if value.correlation_id is not None else None
-        ),
+        correlation_id=(str(value.correlation_id) if value.correlation_id is not None else None),
         causation_id=value.causation_id,
         metadata=_pairs_to_dict(value.metadata, field_name="metadata"),
         namespace=value.namespace,
