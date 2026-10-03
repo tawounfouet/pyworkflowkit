@@ -264,6 +264,7 @@ def _incompatible_contracts() -> dict[str, bool]:
     assert all(checks.values())
     return checks
 
+
 def main() -> None:
     payload = {
         "contract": "pyworkflowkit.customer360_beta",
