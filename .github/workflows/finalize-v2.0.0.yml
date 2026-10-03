@@ -1,0 +1,162 @@
+name: Finalize PyWorkflowKit 2.0.0
+
+on:
+  workflow_run:
+    workflows: ["Release Qualification"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: finalize-pyworkflowkit-v2.0.0
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Tag, requalify, and publish v2.0.0
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: v2.0.0
+      EXPECTED_VERSION: 2.0.0
+      EXPECTED_RUNTIME_TREE: f0797a25b877a0379f578015787b58f06a74dea2
+      TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact qualified main SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          fetch-depth: 0
+
+      - name: Verify stable release baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+
+          current_main=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          test "$current_main" = "$TARGET_SHA"
+
+          version=$(python scripts/verify_release_metadata.py --print-version)
+          test "$version" = "$EXPECTED_VERSION"
+
+          runtime_tree=$(git rev-parse "HEAD:src/pyworkflowkit")
+          test "$runtime_tree" = "$EXPECTED_RUNTIME_TREE"
+
+          test -f "docs/releases/2.0.0.md"
+          test -f "docs/releases/2.0.0-qualification-report.md"
+
+      - name: Check existing release state
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "release_exists=false" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/tmp/tag-ref 2>/dev/null; then
+            remote_sha=$(awk '{print $1}' /tmp/tag-ref)
+            test "$remote_sha" = "$TARGET_SHA"
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create stable tag
+        if: steps.state.outputs.release_exists != 'true' && steps.state.outputs.tag_exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$TARGET_SHA" -m "PyWorkflowKit $EXPECTED_VERSION"
+          git push origin "refs/tags/$TAG"
+
+      - name: Dispatch Release Qualification on stable tag
+        if: steps.state.outputs.release_exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run release-qualification.yml --ref "$TAG"
+
+      - name: Resolve tag qualification run
+        if: steps.state.outputs.release_exists != 'true'
+        id: tag_rq
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          run_id=""
+          for _ in $(seq 1 30); do
+            run_id=$(gh run list \
+              --workflow release-qualification.yml \
+              --event workflow_dispatch \
+              --commit "$TARGET_SHA" \
+              --limit 20 \
+              --json databaseId,createdAt \
+              --jq 'sort_by(.createdAt) | last | .databaseId // empty')
+
+            if [[ -n "$run_id" ]]; then
+              break
+            fi
+
+            sleep 5
+          done
+
+          if [[ -z "$run_id" ]]; then
+            echo "Unable to resolve the tag Release Qualification run." >&2
+            exit 1
+          fi
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag RQ run: $run_id"
+
+      - name: Require stable tag Release Qualification
+        if: steps.state.outputs.release_exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run watch "${{ steps.tag_rq.outputs.run_id }}" --exit-status
+
+      - name: Download qualified distribution artifacts
+        if: steps.state.outputs.release_exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh run download "${{ steps.tag_rq.outputs.run_id }}" \
+            --name pyworkflowkit-dist \
+            --dir dist
+
+          test -n "$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
+          test -n "$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          test -f dist/SHA256SUMS
+
+      - name: Publish GitHub Release
+        if: steps.state.outputs.release_exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh release create "$TAG" \
+            dist/*.whl \
+            dist/*.tar.gz \
+            dist/SHA256SUMS \
+            --verify-tag \
+            --title "$TAG" \
+            --notes-file docs/releases/2.0.0.md
