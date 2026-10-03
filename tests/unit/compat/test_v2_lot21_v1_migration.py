@@ -26,35 +26,22 @@ from pyworkflowkit._compat.v1_to_v2 import (
 )
 from pyworkflowkit.authoring import RegisteredWorkload
 from pyworkflowkit.diagnostics import FailureCategory
-from pyworkflowkit.domain.definitions import (
-    TaskDefinition as V1TaskDefinition,
-    WorkflowDefinition as V1WorkflowDefinition,
-)
-from pyworkflowkit.domain.enums import (
-    BackoffStrategy,
-    TaskAttemptStatus as V1TaskAttemptStatus,
-    TaskRunStatus as V1TaskRunStatus,
-    TimeoutMode,
-    WorkflowRunStatus as V1WorkflowRunStatus,
-)
-from pyworkflowkit.domain.ids import (
-    ExternalRunRefId,
-    TaskAttemptId as V1TaskAttemptId,
-    TaskId,
-    TaskRunId as V1TaskRunId,
-    WorkflowId,
-    WorkflowRunId as V1WorkflowRunId,
-)
-from pyworkflowkit.domain.runtime import (
-    TaskAttempt as V1TaskAttempt,
-    TaskRun as V1TaskRun,
-    WorkflowRun as V1WorkflowRun,
-)
-from pyworkflowkit.domain.values import (
-    ExternalRunRef as V1ExternalRunRef,
-    RetryPolicy as V1RetryPolicy,
-    WorkflowParameter,
-)
+from pyworkflowkit.domain.definitions import TaskDefinition as V1TaskDefinition
+from pyworkflowkit.domain.definitions import WorkflowDefinition as V1WorkflowDefinition
+from pyworkflowkit.domain.enums import BackoffStrategy, TimeoutMode
+from pyworkflowkit.domain.enums import TaskAttemptStatus as V1TaskAttemptStatus
+from pyworkflowkit.domain.enums import TaskRunStatus as V1TaskRunStatus
+from pyworkflowkit.domain.enums import WorkflowRunStatus as V1WorkflowRunStatus
+from pyworkflowkit.domain.ids import ExternalRunRefId, TaskId, WorkflowId
+from pyworkflowkit.domain.ids import TaskAttemptId as V1TaskAttemptId
+from pyworkflowkit.domain.ids import TaskRunId as V1TaskRunId
+from pyworkflowkit.domain.ids import WorkflowRunId as V1WorkflowRunId
+from pyworkflowkit.domain.runtime import TaskAttempt as V1TaskAttempt
+from pyworkflowkit.domain.runtime import TaskRun as V1TaskRun
+from pyworkflowkit.domain.runtime import WorkflowRun as V1WorkflowRun
+from pyworkflowkit.domain.values import WorkflowParameter
+from pyworkflowkit.domain.values import ExternalRunRef as V1ExternalRunRef
+from pyworkflowkit.domain.values import RetryPolicy as V1RetryPolicy
 from pyworkflowkit.runtime import CorrelationContext, CorrelationId
 from pyworkflowkit.states import (
     TaskAttemptStatus,
