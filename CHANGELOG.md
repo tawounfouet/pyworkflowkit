@@ -18,6 +18,44 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ### Security
 
+## 2.0.0rc1 - 2026-10-03
+
+Release candidate for the canonical PyWorkflowKit V2 architecture.
+
+### Added
+
+- Frozen V2 public namespace, state, identity, executor, MetadataStore, wire and sibling
+  integration compatibility baselines.
+- Explicit 1.1 → V2 fail-closed migration tooling and semantic metadata round-trip.
+- Customer 360 cross-framework qualification across PyIngestKit and PyTransformKit.
+- Deterministic 2.0 RC release evidence manifest with fixture SHA-256 fingerprints.
+- Built-artifact Customer 360 and migration qualification.
+
+### Changed
+
+- Package version advances from `1.1.0` to `2.0.0rc1`.
+- The package root cuts over from the frozen 1.1 facade to the narrow canonical V2 root.
+- Distribution status returns to Beta for the release-candidate line.
+- Post-RC development is restricted to blocker fixes that preserve the frozen contract.
+
+### Deprecated
+
+- Nothing new. Historical compatibility facades remain explicitly classified as
+  compatibility-only surfaces.
+
+### Removed
+
+- Ambiguous 1.x generic aliases from the package root.
+
+### Fixed
+
+- Nothing beyond blocker fixes accumulated through the V2 implementation line.
+
+### Security
+
+- The V2 RC preserves fail-closed serialization, subprocess policy, optional sibling
+  isolation and release security gates.
+
 ## 1.1.0 - 2026-09-28
 
 Stable Developer Experience & Learning release promoted from the fully qualified
