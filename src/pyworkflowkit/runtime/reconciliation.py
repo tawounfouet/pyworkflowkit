@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
@@ -550,14 +552,14 @@ class ReconciliationService:
             transitioned_at=at,
         )
 
-    def _now(self):
+    def _now(self) -> datetime:
         value = self._clock.now()
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("clock.now() must return a timezone-aware datetime")
         return value
 
 
-def _first_task_failure(task_runs: tuple[TaskRun, ...]) -> FailureEvidence | None:
+def _first_task_failure(task_runs: Sequence[TaskRun]) -> FailureEvidence | None:
     for task_run in task_runs:
         if task_run.failure is not None:
             return task_run.failure
