@@ -12,6 +12,20 @@ from pyworkflowkit.runtime.identity import TaskRunId, WorkflowRunId
 from pyworkflowkit.states import TaskRunStatus
 from pyworkflowkit.states.enums import TASK_RUN_TERMINAL_STATUSES
 
+_SCHEDULABLE_TASK_STATUSES = frozenset(
+    {
+        TaskRunStatus.PENDING,
+        TaskRunStatus.READY,
+        TaskRunStatus.BLOCKED,
+    }
+)
+_ACTIVE_TASK_STATUSES = frozenset(
+    {
+        TaskRunStatus.RUNNING,
+        TaskRunStatus.UNKNOWN_OUTCOME,
+    }
+)
+
 
 @dataclass(frozen=True, slots=True)
 class TaskInspection:
@@ -103,11 +117,12 @@ class RuntimeInspector:
                 checkpointed = True
                 checkpoint_count += 1
 
-            if task_run.status not in TASK_RUN_TERMINAL_STATUSES:
-                if all(
+            if task_run.status in _SCHEDULABLE_TASK_STATUSES:
+                dependencies_succeeded = all(
                     by_key[upstream].status is TaskRunStatus.SUCCEEDED
                     for upstream in entry.dependencies
-                ):
+                )
+                if dependencies_succeeded:
                     ready.append(entry.key)
                 else:
                     blocked.append(entry.key)
@@ -127,7 +142,10 @@ class RuntimeInspector:
         nonterminal = [
             task_run for task_run in task_runs if task_run.status not in TASK_RUN_TERMINAL_STATUSES
         ]
-        deadlocked = bool(nonterminal) and not ready
+        has_active_work = any(
+            task_run.status in _ACTIVE_TASK_STATUSES for task_run in nonterminal
+        )
+        deadlocked = bool(nonterminal) and not ready and not has_active_work
         reason = (
             "non-terminal tasks remain but no task has all dependencies in SUCCEEDED state"
             if deadlocked
