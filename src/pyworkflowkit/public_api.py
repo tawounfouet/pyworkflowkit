@@ -219,10 +219,5 @@ __all__ = [
     "PUBLIC_API_CONTRACT_VERSION",
     "PUBLIC_API_SURFACES",
     "PUBLIC_API_TARGET_RELEASE",
-    "V2_PUBLIC_API_CONTRACT_VERSION",
-    "V2_PUBLIC_API_TARGET_RELEASE",
-    "V2_ROOT_PUBLIC_SURFACE",
     "public_api_contract_snapshot",
-    "v2_public_api_baseline_snapshot",
-    "v2_root_public_api_snapshot",
 ]
