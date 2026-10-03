@@ -16,7 +16,6 @@ _SCHEDULABLE_TASK_STATUSES = frozenset(
     {
         TaskRunStatus.PENDING,
         TaskRunStatus.READY,
-        TaskRunStatus.BLOCKED,
     }
 )
 _ACTIVE_TASK_STATUSES = frozenset(
@@ -117,7 +116,9 @@ class RuntimeInspector:
                 checkpointed = True
                 checkpoint_count += 1
 
-            if task_run.status in _SCHEDULABLE_TASK_STATUSES:
+            if task_run.status is TaskRunStatus.BLOCKED:
+                blocked.append(entry.key)
+            elif task_run.status in _SCHEDULABLE_TASK_STATUSES:
                 dependencies_succeeded = all(
                     by_key[upstream].status is TaskRunStatus.SUCCEEDED
                     for upstream in entry.dependencies
