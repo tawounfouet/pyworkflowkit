@@ -449,6 +449,7 @@ def test_lot21_runtime_metadata_import_rejects_invented_external_attempt_ownersh
     with pytest.raises(ValueError, match="must not invent ExternalRunRef TaskAttempt ownership"):
         import_v1_runtime_metadata(json.dumps(payload, sort_keys=True, separators=(",", ":")))
 
+
 def test_lot21_snapshot_freezes_no_invention_migration_posture() -> None:
     snapshot = migration_contract_snapshot()
 
