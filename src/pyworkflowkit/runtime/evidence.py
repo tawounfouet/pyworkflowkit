@@ -108,14 +108,14 @@ def runtime_event_type_for_transition(
 def normalize_json_value(value: object, *, path: str = "value") -> JsonValue:
     """Normalize strict finite portable JSON into immutable domain values."""
 
+    if isinstance(value, Enum):
+        return normalize_json_value(value.value, path=path)
     if value is None or isinstance(value, (str, bool, int)):
         return value
     if isinstance(value, float):
         if not isfinite(value):
             raise ValueError(f"{path} must contain only finite JSON numbers")
         return value
-    if isinstance(value, Enum):
-        return normalize_json_value(value.value, path=path)
     if isinstance(value, Mapping):
         normalized: dict[str, JsonValue] = {}
         for key in sorted(value, key=str):
