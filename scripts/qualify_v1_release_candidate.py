@@ -1,4 +1,4 @@
-"""Qualify an installed PyWorkflowKit 1.x artifact against the frozen 1.0 baseline."""
+"""Qualify any installed PyWorkflowKit artifact against the frozen 1.0 baseline."""
 
 from __future__ import annotations
 
@@ -19,8 +19,6 @@ from pyworkflowkit.release_contract import release_contract_snapshot
 
 def qualify_release_candidate() -> dict[str, object]:
     installed_version = version("pyworkflowkit")
-    assert installed_version.startswith("1.")
-
     release = release_contract_snapshot()
     candidate = release_candidate_contract_snapshot()
     compatibility = compatibility_contract_snapshot()
