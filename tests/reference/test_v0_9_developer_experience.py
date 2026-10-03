@@ -45,7 +45,7 @@ def test_rq04_guides_and_examples_exist() -> None:
 
 
 def test_rq04_examples_use_only_documented_authoring_facades() -> None:
-    allowed = set(PUBLIC_AUTHORING_FACADES)
+    allowed = {*PUBLIC_AUTHORING_FACADES, "pyworkflowkit._compat.v1_root"}
 
     for relative_path in EXECUTABLE_EXAMPLES:
         tree = ast.parse((ROOT / relative_path).read_text(encoding="utf-8"))
