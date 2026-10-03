@@ -140,7 +140,6 @@ def test_wire_migration_registry_rejects_blank_identity_fields(
         )
 
 
-
 def test_boundary_codec_requires_explicit_registered_upcast() -> None:
     registry = WireMigrationRegistry()
     registry.register(
