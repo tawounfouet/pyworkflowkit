@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from types import TracebackType
 from typing import Self, assert_type
 
-from pyworkflowkit import TaskHandle, WorkflowBuilder, task, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, WorkflowBuilder, task, workflow
 from pyworkflowkit.control_plane import ControlPlaneProvider, WorkflowRuntimeProvider
 from pyworkflowkit.ecosystem import (
     ArtifactReference,
