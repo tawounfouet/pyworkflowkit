@@ -18,7 +18,7 @@ from pyworkflowkit.diagnostics.inspection import RuntimeInspection, RuntimeInspe
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.errors import ExecutorNotFoundError, RuntimeInvariantError
+from pyworkflowkit.errors import RuntimeInvariantError
 from pyworkflowkit.executors import (
     CancellableExecutor,
     CancellationCapability,
