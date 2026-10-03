@@ -239,9 +239,7 @@ def test_boundary_codec_rejects_malformed_unknown_future_and_oversized_payloads(
     with pytest.raises(WireContractError, match="invalid V2 wire envelope"):
         codec.decode("{not-json")
 
-    unknown = (
-        '{"contract":"unknown.contract","contract_version":"1","payload":{}}'
-    )
+    unknown = '{"contract":"unknown.contract","contract_version":"1","payload":{}}'
     with pytest.raises(WireContractMismatchError, match="unknown V2 wire contract"):
         codec.decode(unknown)
 
