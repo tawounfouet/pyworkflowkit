@@ -26,6 +26,7 @@ from pyworkflowkit.runtime import (
     RuntimeEventType,
     TaskAttemptId,
     TaskOutputCheckpoint,
+    TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
@@ -35,6 +36,7 @@ from pyworkflowkit.runtime.evidence import (
     plain_json_value,
     runtime_event_type_for_transition,
 )
+from pyworkflowkit.states import TaskRunStateMachine, TaskRunStatus
 
 NOW = datetime(2026, 10, 3, 9, 0, tzinfo=UTC)
 
@@ -337,6 +339,47 @@ def test_runtime_inspector_fails_closed_on_invalid_inputs_and_missing_tasks() ->
 
     with pytest.raises(RuntimeInvariantError, match="missing TaskRun"):
         inspector.inspect(plan, run.run_id)
+
+
+
+
+def test_runtime_inspector_does_not_report_active_task_as_ready_or_deadlocked() -> None:
+    store = InMemoryMetadataStore()
+    workflow = _workflow()
+    plan = WorkflowPlanner().compile(workflow)
+    run = _run_for_plan(
+        store,
+        definition_fingerprint=plan.definition_fingerprint,
+        plan_fingerprint=plan.fingerprint(),
+    )
+    task = TaskRun(
+        task_run_id=TaskRunId.parse("TR-ACTIVE"),
+        workflow_run_id=run.run_id,
+        task_key="task",
+        created_at=NOW,
+    )
+    store.create_task_run(task)
+
+    persisted = store.get_task_run(task.task_run_id)
+    machine = TaskRunStateMachine()
+    machine.transition(persisted, TaskRunStatus.READY, at=NOW)
+    store.update_task_run(
+        persisted,
+        expected_status=TaskRunStatus.PENDING,
+        transitioned_at=NOW,
+    )
+    machine.transition(persisted, TaskRunStatus.RUNNING, at=NOW)
+    store.update_task_run(
+        persisted,
+        expected_status=TaskRunStatus.READY,
+        transitioned_at=NOW,
+    )
+
+    inspection = RuntimeInspector(metadata=store).inspect(plan, run.run_id)
+
+    assert inspection.ready_task_keys == ()
+    assert inspection.blocked_task_keys == ()
+    assert inspection.deadlocked is False
 
 
 def test_runtime_inspector_rejects_plan_identity_mismatch() -> None:
