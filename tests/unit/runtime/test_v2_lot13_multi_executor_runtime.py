@@ -5,11 +5,16 @@ from __future__ import annotations
 import threading
 
 from pyworkflowkit.authoring import RegisteredWorkload, TaskDefinition, WorkflowDefinition
-from pyworkflowkit.executors import ExecutorRegistry, InlineExecutor, ThreadExecutor
+from pyworkflowkit.executors import (
+    ExecutorRegistry,
+    InlineExecutor,
+    TaskExecutionContext,
+    ThreadExecutor,
+)
 from pyworkflowkit.persistence import InMemoryMetadataStore
 from pyworkflowkit.planning import WorkflowPlanner
 from pyworkflowkit.policies import TimeoutPolicy
-from pyworkflowkit.runtime import TaskExecutionContext, WorkflowRuntime
+from pyworkflowkit.runtime import WorkflowRuntime
 from pyworkflowkit.states import WorkflowRunStatus
 
 
