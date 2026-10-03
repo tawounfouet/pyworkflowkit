@@ -41,7 +41,7 @@ from pyworkflowkit.integrations import (
     REFERENCE_INTEROPERABILITY_CONTRACT_VERSION,
 )
 from pyworkflowkit.migrations.contract import (
-    MIGRATION_HEAD_REVISION,
+    MIGRATION_HISTORY,
     PERSISTENCE_SCHEMA_CONTRACT_VERSION,
 )
 from pyworkflowkit.plugins import PLUGIN_API_VERSION
