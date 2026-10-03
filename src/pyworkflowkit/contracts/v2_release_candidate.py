@@ -98,9 +98,7 @@ def v2_release_candidate_evidence_manifest() -> dict[str, object]:
         "stable_protocols": {
             key: list(value) for key, value in sorted(V2_STABLE_PROTOCOLS.items())
         },
-        "required_qualification_families": list(
-            V2_RC_REQUIRED_QUALIFICATION_FAMILIES
-        ),
+        "required_qualification_families": list(V2_RC_REQUIRED_QUALIFICATION_FAMILIES),
         "contracts": {
             "architecture": v2_architecture_snapshot(),
             "root_api": v2_root_public_api_snapshot(),
