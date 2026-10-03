@@ -14,6 +14,7 @@ from pyworkflowkit.diagnostics.failure import (
     OutcomeUncertainty,
     Retryability,
 )
+from pyworkflowkit.diagnostics.inspection import RuntimeInspection, RuntimeInspector
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
@@ -467,6 +468,20 @@ class WorkflowRuntime:
             metadata=self._metadata,
             planner=self._planner,
         ).project(workflow, workflow_run_id)
+
+    def inspect(
+        self,
+        workflow: WorkflowDefinition | ExecutionPlan,
+        workflow_run_id: WorkflowRunId,
+    ) -> RuntimeInspection:
+        """Inspect one persisted execution against its canonical plan."""
+
+        if not isinstance(workflow_run_id, WorkflowRunId):
+            raise TypeError("workflow_run_id must be a WorkflowRunId")
+        return RuntimeInspector(
+            metadata=self._metadata,
+            planner=self._planner,
+        ).inspect(workflow, workflow_run_id)
 
     def recovery_assessment(self, workflow_run_id: WorkflowRunId) -> RecoveryAssessment:
         """Classify durable recovery evidence without mutating runtime state."""
