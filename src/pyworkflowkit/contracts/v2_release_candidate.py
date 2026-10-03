@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from importlib.metadata import PackageNotFoundError, version
 
 from pyworkflowkit._architecture import v2_architecture_snapshot
@@ -86,7 +87,7 @@ def _package_version() -> str:
 def v2_release_candidate_evidence_manifest() -> dict[str, object]:
     """Return the deterministic LOT-22 qualification and compatibility manifest."""
 
-    return {
+    payload = {
         "contract_version": V2_RELEASE_CANDIDATE_CONTRACT_VERSION,
         "candidate_version": V2_RELEASE_CANDIDATE_VERSION,
         "target_release": V2_RELEASE_CANDIDATE_TARGET_RELEASE,
@@ -117,6 +118,8 @@ def v2_release_candidate_evidence_manifest() -> dict[str, object]:
             "migration": migration_contract_snapshot(),
         },
     }
+    # Detach the emitted proof from mutable objects owned by composed contract modules.
+    return json.loads(json.dumps(payload, allow_nan=False, sort_keys=True))
 
 
 __all__ = [
