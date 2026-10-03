@@ -109,7 +109,6 @@ _TASK_RUN_TRANSITIONS: dict[TaskRunStatus, frozenset[TaskRunStatus]] = {
             TaskRunStatus.FAILED,
             TaskRunStatus.CANCELLED,
             TaskRunStatus.TIMED_OUT,
-            TaskRunStatus.TIMED_OUT,
             TaskRunStatus.UNKNOWN_OUTCOME,
         }
     ),
@@ -119,6 +118,7 @@ _TASK_RUN_TRANSITIONS: dict[TaskRunStatus, frozenset[TaskRunStatus]] = {
             TaskRunStatus.SUCCEEDED,
             TaskRunStatus.FAILED,
             TaskRunStatus.CANCELLED,
+            TaskRunStatus.TIMED_OUT,
         }
     ),
     TaskRunStatus.SUCCEEDED: frozenset(),
