@@ -147,6 +147,22 @@ def test_semantic_event_mapping_distinguishes_start_resume_retry_and_initial_row
     )
     assert (
         runtime_event_type_for_transition(
+            entity_type="task_run",
+            from_status="READY",
+            to_status="RUNNING",
+        )
+        is RuntimeEventType.TASK_STARTED
+    )
+    assert (
+        runtime_event_type_for_transition(
+            entity_type="task_run",
+            from_status="UNKNOWN_OUTCOME",
+            to_status="RUNNING",
+        )
+        is RuntimeEventType.TASK_RESUMED
+    )
+    assert (
+        runtime_event_type_for_transition(
             entity_type="task_attempt",
             from_status=None,
             to_status="PENDING",
