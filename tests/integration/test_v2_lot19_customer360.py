@@ -103,9 +103,7 @@ def test_lot19_customer360_cross_framework_happy_path() -> None:
         binding(transform, Customer360Transform()),
         binding(publish, MartPublication()),
     )
-    executor = InlineExecutor(
-        {item.registry_key: item.handler for item in bindings}
-    )
+    executor = InlineExecutor({item.registry_key: item.handler for item in bindings})
     metadata = InMemoryMetadataStore()
     definition = WorkflowDefinition(
         name="customer360",
@@ -173,9 +171,7 @@ def test_lot19_transform_handoff_is_durable_portable_checkpoint() -> None:
     )
     metadata = InMemoryMetadataStore()
     result = WorkflowRuntime(
-        executor=InlineExecutor(
-            {item.registry_key: item.handler for item in bindings}
-        ),
+        executor=InlineExecutor({item.registry_key: item.handler for item in bindings}),
         metadata=metadata,
     ).run(WorkflowDefinition(name="customer360-portable", tasks=(ingest, transform)))
 
