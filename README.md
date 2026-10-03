@@ -7,10 +7,10 @@ executing, persisting, inspecting, and evidencing generic dependency graphs of t
 Python workloads without requiring a scheduler, server, worker cluster, or orchestration
 platform.
 
-> **Current stable:** `1.1.0` — Developer Experience & Learning.
-> **Current release candidate:** `2.0.0rc1` — V2 architecture and runtime freeze.
-> **Historical runtime compatibility baseline:** `1.0.0`.
-> The 2.0 RC promotes the qualified V2 contracts to the package root while retaining
+> **Current stable:** `2.0.0` — V2 architecture and runtime contract.
+> **Promotion baseline:** `2.0.0rc1` — fully qualified LOT-22 release candidate.
+> **Historical 1.x compatibility baseline:** `1.1.0`.
+> PyWorkflowKit 2.0 keeps the canonical V2 contracts at the package root while retaining
 > explicit 1.x migration/compatibility surfaces.
 
 ## What the stable 1.0 release provides
