@@ -22,6 +22,7 @@ class RuntimeEventType(StrEnum):
     """Canonical semantic runtime facts derived from durable state evidence."""
 
     WORKFLOW_STARTED = "WORKFLOW_STARTED"
+    WORKFLOW_RESUMED = "WORKFLOW_RESUMED"
     WORKFLOW_SUCCEEDED = "WORKFLOW_SUCCEEDED"
     WORKFLOW_FAILED = "WORKFLOW_FAILED"
     WORKFLOW_CANCELLATION_REQUESTED = "WORKFLOW_CANCELLATION_REQUESTED"
@@ -42,7 +43,6 @@ class RuntimeEventType(StrEnum):
 
 
 _WORKFLOW_EVENT_BY_STATUS = {
-    "RUNNING": RuntimeEventType.WORKFLOW_STARTED,
     "SUCCEEDED": RuntimeEventType.WORKFLOW_SUCCEEDED,
     "FAILED": RuntimeEventType.WORKFLOW_FAILED,
     "CANCELLATION_REQUESTED": RuntimeEventType.WORKFLOW_CANCELLATION_REQUESTED,
@@ -81,6 +81,10 @@ def runtime_event_type_for_transition(
     if entity_type == "workflow_run":
         if from_status is None:
             return None
+        if to_status == "RUNNING":
+            if from_status == "PENDING":
+                return RuntimeEventType.WORKFLOW_STARTED
+            return RuntimeEventType.WORKFLOW_RESUMED
         return _WORKFLOW_EVENT_BY_STATUS.get(to_status)
 
     if entity_type == "task_run":
