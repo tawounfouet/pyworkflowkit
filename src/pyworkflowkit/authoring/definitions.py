@@ -6,7 +6,9 @@ import hashlib
 import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, cast, overload
+
+from typing_extensions import TypeVar
 
 from pyworkflowkit.authoring._values import (
     FrozenJsonValue,
