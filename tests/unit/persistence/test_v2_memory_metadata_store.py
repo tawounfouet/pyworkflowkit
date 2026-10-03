@@ -43,8 +43,8 @@ def _workflow() -> WorkflowRun:
 def test_metadata_declares_memory_capabilities_truthfully() -> None:
     metadata = InMemoryMetadataStore().metadata()
 
-    assert metadata.contract_version == "1"
-    assert metadata.schema_version == "1"
+    assert metadata.contract_version == "2"
+    assert metadata.schema_version == "2"
     assert metadata.durable is False
     assert metadata.supports_concurrent_writers is True
     assert metadata.supports_atomic_batch is False
