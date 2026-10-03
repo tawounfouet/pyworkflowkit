@@ -337,7 +337,7 @@ class PyTransformKitWorkloadHandler:
             )
 
         if result.status is PyTransformKitExecutionStatus.CANCELLED:
-            category = FailureCategory.CANCELLED
+            category = FailureCategory.EXTERNAL_PROVIDER
             retryability = Retryability.NON_RETRYABLE
         elif result.status is PyTransformKitExecutionStatus.TIMED_OUT:
             category = FailureCategory.TIMEOUT
