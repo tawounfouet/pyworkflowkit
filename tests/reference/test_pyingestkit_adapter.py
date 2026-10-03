@@ -1,6 +1,6 @@
 """M24 PyIngestKit adapter acceptance coverage."""
 
-from pyworkflowkit import TaskHandle, WorkflowRuntime, workflow
+from pyworkflowkit._compat.v1_root import TaskHandle, WorkflowRuntime, workflow
 from pyworkflowkit.integrations.pyingestkit import (
     PyIngestKitRunResult,
     pyingestkit_task,
