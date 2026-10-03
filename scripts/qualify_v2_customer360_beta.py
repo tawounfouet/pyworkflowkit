@@ -215,7 +215,6 @@ def _security_negative() -> dict[str, object]:
     }
 
 
-
 def _incompatible_contracts() -> dict[str, bool]:
     checks: dict[str, bool] = {}
 
