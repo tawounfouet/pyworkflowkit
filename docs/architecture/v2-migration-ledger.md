@@ -39,7 +39,7 @@ REMOVED
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
 | Alembic 0004 V2 runtime metadata | ADD | persistence migrations | 10 | IMPLEMENTED |
 | Alembic 0005 V2 task outputs | ADD | persistence migrations | 12 | IMPLEMENTED |
-| `contracts.serialization` | MOVE + REBUILD | serialization | 15 | PLANNED |
+| `contracts.serialization` | MOVE + REBUILD | serialization | 15 | IMPLEMENTED |
 | lineage modules | MOVE + ADAPT | lineage | 12 | IMPLEMENTED |
 | `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
 | `plugins` | KEEP + ADAPT | plugins | 16 | PLANNED |
@@ -535,3 +535,48 @@ explicit and do not claim operating-system sandboxing.
 
 LOT-14 does not add concurrent DAG scheduling, distributed workers, containers, broker
 execution or remote worker protocols.
+
+
+
+## LOT-15 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| StrictBoundarySchema | pyworkflowkit.serialization | IMPLEMENTED |
+| WireEnvelopeSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| CorrelationContextSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| WorkflowExecutionReferenceSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| ExternalRunRefSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| FailureEvidenceSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| DiagnosticSchema | pyworkflowkit.serialization | IMPLEMENTED |
+| BoundaryWireCodec | pyworkflowkit.serialization | IMPLEMENTED |
+| BoundaryUpcasterRegistry | pyworkflowkit.serialization | IMPLEMENTED |
+| WireContractError | pyworkflowkit.serialization | IMPLEMENTED |
+| static contract registry | pyworkflowkit.serialization | IMPLEMENTED |
+| canonical sorted compact JSON | BoundaryWireCodec | IMPLEMENTED |
+| strict duplicate-key rejection | BoundaryWireCodec | IMPLEMENTED |
+| non-finite number rejection | BoundaryWireCodec | IMPLEMENTED |
+| UTF-8 validation | BoundaryWireCodec | IMPLEMENTED |
+| 1 MiB default payload limit | BoundaryWireCodec | IMPLEMENTED |
+| depth-32 default nesting limit | BoundaryWireCodec | IMPLEMENTED |
+| bounded explicit upcasting | BoundaryUpcasterRegistry | IMPLEMENTED |
+| non-executable deserialization | serialization | IMPLEMENTED |
+| explicit V2 dataclass ↔ schema mappings | serialization.mapping | IMPLEMENTED |
+| five golden v1 fixtures | tests/fixtures/v2_serialization | IMPLEMENTED |
+| LOT-15 reference acceptance | tests/reference | IMPLEMENTED |
+
+LOT-15 finalizes the five boundary contract identities introduced in LOT-01 without
+changing their published contract_version=1 values.
+
+The V2 wire envelope is data-only and contains contract, contract_version and payload.
+Deserialization cannot select import paths, classes or callables from wire data.
+
+Canonical V2 decoding rejects unknown fields, duplicate JSON keys, non-finite values,
+invalid UTF-8, unsupported versions without an explicit upcaster, oversized payloads and
+excessive nesting.
+
+The qualified pyworkflowkit.serialization SchemaCodec/StrictSchema names now resolve to
+the V2 BoundaryWireCodec/StrictBoundarySchema implementation. The frozen
+pyworkflowkit.contracts.serialization 1.1 implementation remains unchanged.
+
+LOT-16 owns plugin migration.
