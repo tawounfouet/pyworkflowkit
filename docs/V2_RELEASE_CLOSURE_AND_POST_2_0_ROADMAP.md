@@ -299,6 +299,30 @@ maintenance backlog classification
 The 2.1 line must therefore begin with product and contract analysis, not directly with
 implementation.
 
+## LOT-24 qualification evidence
+
+The first complete LOT-24 qualification after correcting README distribution portability
+completed on:
+
+```text
+qualified HEAD          18d228b3d6fc740dd60102655ef571d1cbb2e10a
+CI run                  37150187503
+CI                      24/24 ✅
+Release Qualification   37150187490
+RQ                      32/32 ✅
+V2 RC lineage gate          ✅
+V2 stable promotion gate    ✅
+Final release gate          ✅
+```
+
+The only defect found during qualification was a relative Markdown link added to the
+package README. The existing distribution contract correctly rejected that link because
+the README is also package metadata. The link was replaced with a portable textual path;
+the packaging gate then passed.
+
+This evidence-recording commit remains documentation-only. The complete blocking matrix
+must rerun green on the final PR HEAD before merge.
+
 ## LOT-24 acceptance criteria
 
 LOT-24 is complete when all of the following are true:
@@ -312,8 +336,8 @@ LOT-24 is complete when all of the following are true:
 - [x] the one-shot V2 finalization workflow is removed.
 - [x] README no longer claims that 0.9 is the current development line.
 - [x] no runtime source is changed by LOT-24.
-- [ ] LOT-24 PR CI is green.
-- [ ] LOT-24 PR Release Qualification is green.
+- [x] LOT-24 PR CI is green.
+- [x] LOT-24 PR Release Qualification is green.
 
 Once the two repository gates above are green and the PR is merged, the V2 release
 construction phase is considered administratively closed.
