@@ -82,9 +82,7 @@ def _task(
 
 
 def test_lot21_migrates_explicit_v1_task_to_registry_backed_v2_task() -> None:
-    migrated = migrate_task_definition(
-        _task(retry_categories=frozenset({"transient"}))
-    )
+    migrated = migrate_task_definition(_task(retry_categories=frozenset({"transient"})))
 
     assert migrated.key == "transform"
     assert migrated.dependencies == ("ingest",)
@@ -93,9 +91,7 @@ def test_lot21_migrates_explicit_v1_task_to_registry_backed_v2_task() -> None:
     assert migrated.workload.executor_key == "inline"
     assert migrated.retry_policy.max_attempts == 3
     assert migrated.retry_policy.initial_delay_seconds == 2.0
-    assert migrated.retry_policy.retryable_failure_categories == {
-        FailureCategory.TRANSIENT
-    }
+    assert migrated.retry_policy.retryable_failure_categories == {FailureCategory.TRANSIENT}
     assert migrated.timeout_policy.execution_timeout is None
     assert migrated.metadata["migration.legacy_task_id"] == "transform"
     assert migrated.metadata["migration.legacy_executor_key"] == "local"
@@ -156,9 +152,7 @@ def test_lot21_task_migration_fails_closed_for_ambiguous_semantics(
     code: str,
     disposition: MigrationDisposition,
 ) -> None:
-    with pytest.raises(
-        (V1MigrationEvidenceError, V1MigrationUnsupportedError)
-    ) as caught:
+    with pytest.raises((V1MigrationEvidenceError, V1MigrationUnsupportedError)) as caught:
         migrate_task_definition(task)
 
     assert caught.value.issue.code == code
@@ -378,7 +372,6 @@ def test_lot21_external_tracking_rejects_nonportable_metadata() -> None:
     assert caught.value.issue.code == "PWK-MIG-V1-EXTERNAL-METADATA"
 
 
-
 def test_lot21_runtime_metadata_semantic_export_import_roundtrip_preserves_known_facts() -> None:
     workflow = V1WorkflowRun(
         run_id=V1WorkflowRunId("W-EXPORT"),
@@ -454,9 +447,7 @@ def test_lot21_runtime_metadata_import_rejects_invented_external_attempt_ownersh
     payload["external_run_attempt_ownership"] = {"ER-42": "TA-42"}
 
     with pytest.raises(ValueError, match="must not invent ExternalRunRef TaskAttempt ownership"):
-        import_v1_runtime_metadata(
-            json.dumps(payload, sort_keys=True, separators=(",", ":"))
-        )
+        import_v1_runtime_metadata(json.dumps(payload, sort_keys=True, separators=(",", ":")))
 
 def test_lot21_snapshot_freezes_no_invention_migration_posture() -> None:
     snapshot = migration_contract_snapshot()
