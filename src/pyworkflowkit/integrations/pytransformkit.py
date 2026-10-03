@@ -295,8 +295,7 @@ class PyTransformKitWorkloadHandler:
                     retryability=Retryability.NON_RETRYABLE,
                     uncertainty=OutcomeUncertainty.KNOWN,
                     message_summary=(
-                        "PyTransformKitExecutionJob.run() must return "
-                        "PyTransformKitExecutionResult"
+                        "PyTransformKitExecutionJob.run() must return PyTransformKitExecutionResult"
                     ),
                     details=(("plan_ref", self.workload.plan_ref),),
                 )
@@ -451,9 +450,7 @@ def _external_ref(
     result: PyTransformKitExecutionResult,
     context: TaskExecutionContext,
 ) -> ExternalRunRef:
-    metadata = {
-        key: value for key, value in result.metadata if key != _CREDENTIAL_REF_PARAMETER
-    }
+    metadata = {key: value for key, value in result.metadata if key != _CREDENTIAL_REF_PARAMETER}
     metadata["plan_ref"] = workload.plan_ref
     metadata["engine"] = result.engine_id or workload.engine
     if result.plan_fingerprint is not None:
