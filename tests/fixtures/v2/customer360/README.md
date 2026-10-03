@@ -16,9 +16,9 @@ ingest_orders ──────┘
 
 ## Ownership
 
-- PyWorkflowKit owns dependency ordering, TaskRun/TaskAttempt identities, retry and recovery.
+- PyWorkflowKit owns dependency ordering, TaskRun/TaskAttempt identities, workload retry and recovery.
 - PyIngestKit owns both ingestion workloads and final publication semantics.
-- PyTransformKit owns the transformation plan and transformation execution.
+- PyTransformKit owns the transformation plan, transformation execution and provider-level retry.
 
 ## Durable handoff
 
@@ -29,7 +29,7 @@ ingest task
     → DatasetVersionReference
 
 transform task
-    → ResourceReference
+    → ResourceReference(scheme, locator, media_type, metadata)
 
 publish task
     → PyIngestKit-owned publication result/reference
