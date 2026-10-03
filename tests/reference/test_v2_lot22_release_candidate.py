@@ -93,10 +93,7 @@ def test_lot22_execution_identities_are_distinct_and_frozen() -> None:
 
 def test_lot22_protocol_member_sets_are_frozen() -> None:
     assert V2_STABLE_PROTOCOLS["Executor"] == V2_EXECUTOR_PROTOCOL_METHODS
-    assert (
-        V2_STABLE_PROTOCOLS["CancellableExecutor"]
-        == V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS
-    )
+    assert V2_STABLE_PROTOCOLS["CancellableExecutor"] == V2_CANCELLABLE_EXECUTOR_PROTOCOL_METHODS
     assert V2_STABLE_PROTOCOLS["MetadataStore"] == V2_METADATA_STORE_METHODS
     assert V2_STABLE_PROTOCOLS["WorkloadDescriptor"] == (
         "workload_kind",
