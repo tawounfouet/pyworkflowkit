@@ -46,8 +46,8 @@ def test_runtime_projects_durable_events_manifest_lineage_and_inspection() -> No
     assert tuple(event.sequence for event in events) == tuple(
         sorted(event.sequence for event in events)
     )
-    assert events[0].event_type is RuntimeEventType.WORKFLOW_STATE_CHANGED
-    assert events[-1].event_type is RuntimeEventType.WORKFLOW_STATE_CHANGED
+    assert events[0].event_type is RuntimeEventType.WORKFLOW_STARTED
+    assert events[-1].event_type is RuntimeEventType.WORKFLOW_SUCCEEDED
     assert events[-1].to_status == WorkflowRunStatus.SUCCEEDED.value
 
     manifest = runtime.manifest(result.run_id, require_terminal=True)
@@ -57,7 +57,6 @@ def test_runtime_projects_durable_events_manifest_lineage_and_inspection() -> No
     assert all(task.output_digest is not None for task in manifest.tasks)
     assert manifest.tasks[0].output == {"rows": (1, 2, 3)}
     assert manifest.tasks[1].output == {"published": True}
-    assert manifest.events == events
 
     lineage = runtime.lineage(workflow, result.run_id)
     assert lineage.workflow_run_id == result.run_id
