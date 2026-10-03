@@ -1105,7 +1105,7 @@ persistence, executor, migration, plugin, and sibling-integration contracts are 
 the V2 release qualification suite.
 
 The post-2.0 baseline and version policy are maintained in
-[`docs/V2_RELEASE_CLOSURE_AND_POST_2_0_ROADMAP.md`](docs/V2_RELEASE_CLOSURE_AND_POST_2_0_ROADMAP.md).
+`docs/V2_RELEASE_CLOSURE_AND_POST_2_0_ROADMAP.md`.
 
 The next product line is not implicitly opened by the stable release. Patch releases
 (`2.0.x`) are reserved for compatible maintenance; any `2.1.x` capability work must
