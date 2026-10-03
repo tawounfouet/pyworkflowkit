@@ -38,7 +38,13 @@ DEFAULT_MAX_PAYLOAD_BYTES = 1_048_576
 DEFAULT_MAX_NESTING_DEPTH = 32
 
 SchemaType: TypeAlias = type[StrictBoundarySchema]
-BoundaryType: TypeAlias = type[BoundaryValue]
+BoundaryType: TypeAlias = (
+    type[CorrelationContext]
+    | type[WorkflowExecutionReference]
+    | type[ExternalRunRef]
+    | type[FailureEvidence]
+    | type[Diagnostic]
+)
 Upcaster: TypeAlias = Callable[[Mapping[str, object]], Mapping[str, object]]
 BoundaryT = TypeVar("BoundaryT", bound=BoundaryValue)
 
