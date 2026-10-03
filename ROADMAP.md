@@ -122,8 +122,8 @@ flowchart TD
 
 | Phase | Lot | Intitulé & Périmètre | Document Cadre / Plan | Statut |
 | :--- | :--- | :--- | :--- | :---: |
-| **Phase 1** | **LOT-29** | Socle CLI, Sécurité des chemins, `pwk version` & `doctor` | [`01_PLAN_LOT29_CLI_FOUNDATIONS.md`](docs/plans/01_PLAN_LOT29_CLI_FOUNDATIONS.md) | ⏳ Prêt |
-| | **LOT-30** | Services d'inspection (`pwk validate`, `plan`, `inspect`) | [`02_PLAN_LOT30_CLI_INSPECTION_SERVICES.md`](docs/plans/02_PLAN_LOT30_CLI_INSPECTION_SERVICES.md) | ⏳ En attente |
+| **Phase 1** | **LOT-29** | Socle CLI, Sécurité des chemins, `pwk version` & `doctor` | [`01_PLAN_LOT29_CLI_FOUNDATIONS.md`](docs/plans/01_PLAN_LOT29_CLI_FOUNDATIONS.md) | ✅ Terminé (PR #110) |
+| | **LOT-30** | Services d'inspection (`pwk validate`, `plan`, `inspect`) | [`02_PLAN_LOT30_CLI_INSPECTION_SERVICES.md`](docs/plans/02_PLAN_LOT30_CLI_INSPECTION_SERVICES.md) | 🚀 En cours |
 | | **LOT-31** | Commande `pwk run` V2, simulation `--dry-run`, contrat JSON | [`03_PLAN_LOT31_CLI_RUN_AND_CONTRACT_FREEZE.md`](docs/plans/03_PLAN_LOT31_CLI_RUN_AND_CONTRACT_FREEZE.md) | ⏳ En attente |
 | **Phase 2** | **LOT-32** | Ergonomie d'Authoring (`task_a >> task_b`), validation statique | [`04_PLAN_LOT32_AUTHORING_ERGONOMICS.md`](docs/plans/04_PLAN_LOT32_AUTHORING_ERGONOMICS.md) | ⏳ En attente |
 | | **LOT-33** | Reprise sélective au point d'échec (`resume_run`) | [`05_PLAN_LOT33_SELECTIVE_RESUME.md`](docs/plans/05_PLAN_LOT33_SELECTIVE_RESUME.md) | ⏳ En attente |
