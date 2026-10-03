@@ -6,9 +6,9 @@ from pyworkflowkit.cli.commands.legacy import (
     events_command,
     manifest_command,
     plugins_command,
-    run_command,
 )
 from pyworkflowkit.cli.commands.plan import plan_command
+from pyworkflowkit.cli.commands.run import run_command
 from pyworkflowkit.cli.commands.validate import validate_command
 from pyworkflowkit.cli.commands.version import version_command
 
