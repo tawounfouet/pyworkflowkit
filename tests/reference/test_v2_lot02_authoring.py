@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pyworkflowkit
+import pyworkflowkit._compat.v1_root as v1_root
 import pyworkflowkit.authoring as authoring
 from pyworkflowkit.authoring import (
     RegisteredWorkload,
@@ -48,9 +49,11 @@ def test_lot02_authoring_is_canonical_v2_not_legacy_definition_shape() -> None:
     assert not hasattr(task, "handler_ref")
 
 
-def test_frozen_1_1_root_still_exports_legacy_definitions() -> None:
-    assert pyworkflowkit.TaskDefinition is LegacyTaskDefinition
-    assert pyworkflowkit.WorkflowDefinition is LegacyWorkflowDefinition
+def test_frozen_1_1_root_is_preserved_through_explicit_compatibility_facade() -> None:
+    assert v1_root.TaskDefinition is LegacyTaskDefinition
+    assert v1_root.WorkflowDefinition is LegacyWorkflowDefinition
+    assert pyworkflowkit.TaskDefinition is TaskDefinition
+    assert pyworkflowkit.WorkflowDefinition is WorkflowDefinition
 
 
 def test_no_public_graph_is_required_for_v2_authoring() -> None:
