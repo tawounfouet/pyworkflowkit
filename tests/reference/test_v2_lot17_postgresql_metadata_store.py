@@ -6,9 +6,9 @@ import pyworkflowkit
 import pyworkflowkit.persistence as persistence
 from pyworkflowkit.migrations import MIGRATION_HEAD_REVISION, MIGRATION_HISTORY
 from pyworkflowkit.persistence import (
+    V2_METADATA_STORE_METHODS,
     PostgreSQLMetadataStore,
     PostgreSQLSettings,
-    V2_METADATA_STORE_METHODS,
 )
 
 
