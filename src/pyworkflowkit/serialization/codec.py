@@ -141,16 +141,13 @@ class BoundaryUpcasterRegistry:
             if current_version == to_version:
                 return current_payload
             if current_version in seen:
-                raise WireContractError(
-                    f"upcaster cycle detected for contract {contract!r}"
-                )
+                raise WireContractError(f"upcaster cycle detected for contract {contract!r}")
             seen.add(current_version)
 
             step = self._steps.get((contract, current_version))
             if step is None:
                 raise WireContractError(
-                    f"no upcaster from {contract!r} version {current_version!r} "
-                    f"to {to_version!r}"
+                    f"no upcaster from {contract!r} version {current_version!r} to {to_version!r}"
                 )
             next_version, upcaster = step
             migrated = upcaster(MappingProxyType(dict(current_payload)))
@@ -159,9 +156,7 @@ class BoundaryUpcasterRegistry:
             current_payload = dict(migrated)
             current_version = next_version
 
-        raise WireContractError(
-            f"upcaster chain for contract {contract!r} exceeds 32 steps"
-        )
+        raise WireContractError(f"upcaster chain for contract {contract!r} exceeds 32 steps")
 
 
 class BoundaryWireCodec:
@@ -202,9 +197,7 @@ class BoundaryWireCodec:
     def encode(self, value: BoundaryValue) -> str:
         spec = _SPECS_BY_TYPE.get(type(value))
         if spec is None:
-            raise WireContractError(
-                f"unsupported boundary value type {type(value).__name__!r}"
-            )
+            raise WireContractError(f"unsupported boundary value type {type(value).__name__!r}")
 
         domain_version = getattr(value, "contract_version", spec.descriptor.contract_version)
         if domain_version != spec.descriptor.contract_version:
@@ -244,9 +237,7 @@ class BoundaryWireCodec:
 
         spec = _SPECS_BY_CONTRACT.get(envelope.contract)
         if spec is None:
-            raise WireContractError(
-                f"unknown boundary contract {envelope.contract!r}"
-            )
+            raise WireContractError(f"unknown boundary contract {envelope.contract!r}")
 
         body = dict(envelope.payload)
         if envelope.contract_version != spec.descriptor.contract_version:
@@ -261,9 +252,7 @@ class BoundaryWireCodec:
         try:
             schema = spec.schema_type.model_validate(body)
         except ValidationError as exc:
-            raise WireContractError(
-                f"invalid {spec.descriptor.contract!r} payload: {exc}"
-            ) from exc
+            raise WireContractError(f"invalid {spec.descriptor.contract!r} payload: {exc}") from exc
 
         value = value_from_schema(schema)
         declared_version = getattr(
@@ -294,9 +283,7 @@ class BoundaryWireCodec:
 
     def _validate_size(self, payload: bytes) -> None:
         if len(payload) > self._max_payload_bytes:
-            raise WireContractError(
-                f"wire payload exceeds {self._max_payload_bytes} byte limit"
-            )
+            raise WireContractError(f"wire payload exceeds {self._max_payload_bytes} byte limit")
 
 
 def boundary_contract_specs() -> Mapping[str, BoundaryContractSpec]:
@@ -348,9 +335,7 @@ def _reject_nonfinite_constant(value: str) -> object:
 
 def _validate_nesting(value: object, *, max_depth: int, depth: int = 1) -> None:
     if depth > max_depth:
-        raise WireContractError(
-            f"wire payload exceeds maximum nesting depth {max_depth}"
-        )
+        raise WireContractError(f"wire payload exceeds maximum nesting depth {max_depth}")
     if isinstance(value, Mapping):
         for nested in value.values():
             _validate_nesting(nested, max_depth=max_depth, depth=depth + 1)
