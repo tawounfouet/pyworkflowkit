@@ -45,7 +45,6 @@ from pyworkflowkit.persistence.contracts import (
 )
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import (
-    JsonValue,
     RuntimeEvent,
     TaskOutputCheckpoint,
     runtime_event_type_for_transition,
