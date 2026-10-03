@@ -70,6 +70,7 @@ _WORKFLOW_TRANSITIONS: dict[WorkflowRunStatus, frozenset[WorkflowRunStatus]] = {
             WorkflowRunStatus.SUCCEEDED,
             WorkflowRunStatus.FAILED,
             WorkflowRunStatus.CANCELLED,
+            WorkflowRunStatus.TIMED_OUT,
         }
     ),
     WorkflowRunStatus.SUCCEEDED: frozenset(),
@@ -117,6 +118,7 @@ _TASK_RUN_TRANSITIONS: dict[TaskRunStatus, frozenset[TaskRunStatus]] = {
             TaskRunStatus.SUCCEEDED,
             TaskRunStatus.FAILED,
             TaskRunStatus.CANCELLED,
+            TaskRunStatus.TIMED_OUT,
         }
     ),
     TaskRunStatus.SUCCEEDED: frozenset(),

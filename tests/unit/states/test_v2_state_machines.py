@@ -220,3 +220,23 @@ def test_transition_timestamps_must_be_timezone_aware() -> None:
             WorkflowRunStatus.RUNNING,
             at=naive,
         )
+
+
+def test_unknown_outcome_can_be_reconciled_to_known_timeout() -> None:
+    run = _workflow()
+    task = _task()
+
+    workflow_machine = WorkflowRunStateMachine()
+    task_machine = TaskRunStateMachine()
+
+    workflow_machine.transition(run, WorkflowRunStatus.RUNNING, at=T1)
+    workflow_machine.transition(run, WorkflowRunStatus.UNKNOWN_OUTCOME, at=T2)
+    workflow_machine.transition(run, WorkflowRunStatus.TIMED_OUT, at=T3)
+
+    task_machine.transition(task, TaskRunStatus.READY, at=T1)
+    task_machine.transition(task, TaskRunStatus.RUNNING, at=T2)
+    task_machine.transition(task, TaskRunStatus.UNKNOWN_OUTCOME, at=T3)
+    task_machine.transition(task, TaskRunStatus.TIMED_OUT, at=T4)
+
+    assert run.status is WorkflowRunStatus.TIMED_OUT
+    assert task.status is TaskRunStatus.TIMED_OUT

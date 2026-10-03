@@ -360,3 +360,46 @@ tables, allowing both persistence models to coexist during the 1.1 → 2.0 migra
 SQLite now provides durable evidence for UNKNOWN_OUTCOME and
 REQUIRES_RECONCILIATION. LOT-11 can therefore perform recovery and external
 reconciliation from evidence loaded after process restart.
+
+
+
+## LOT-11 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| RecoveryDisposition | pyworkflowkit.diagnostics | IMPLEMENTED |
+| TaskRecoveryAssessment | pyworkflowkit.diagnostics | IMPLEMENTED |
+| RecoveryAssessment | pyworkflowkit.diagnostics | IMPLEMENTED |
+| RecoveryInspector | pyworkflowkit.diagnostics | IMPLEMENTED |
+| ExternalRunStatus | pyworkflowkit.runtime | IMPLEMENTED |
+| ExternalRunVerifier | pyworkflowkit.runtime | IMPLEMENTED |
+| ExternalRunVerifierRegistry | pyworkflowkit.runtime | IMPLEMENTED |
+| ExternalRunObservation | pyworkflowkit.runtime | IMPLEMENTED |
+| ReconciliationDisposition | pyworkflowkit.runtime | IMPLEMENTED |
+| TaskReconciliation | pyworkflowkit.runtime | IMPLEMENTED |
+| ReconciliationReport | pyworkflowkit.runtime | IMPLEMENTED |
+| ReconciliationService | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.recovery_assessment | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.recovery_candidates | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.register_external_run_verifier | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.reconcile_run | pyworkflowkit.runtime | IMPLEMENTED |
+| same-attempt provider reconciliation | runtime/state machines | IMPLEMENTED |
+| terminal-attempt local repair | runtime/state machines | IMPLEMENTED |
+| secret-safe verifier failures | runtime reconciliation | IMPLEMENTED |
+| SQLite restart reconciliation | tests/integration | IMPLEMENTED |
+| no-blind-retry acceptance | tests/unit + integration | IMPLEMENTED |
+
+LOT-11 does not introduce a new persistence schema revision. It consumes the durable
+runtime evidence introduced by LOT-10.
+
+Provider truth is queried only through explicitly registered verifiers. Missing,
+conflicting, NOT_FOUND, UNKNOWN, or verifier-failure evidence remains manual rather than
+being converted into an invented task outcome.
+
+A conclusive provider status is applied to the exact TaskAttempt that owns the
+ExternalRunRef. LOT-11 never creates Attempt N+1.
+
+When reconciliation resolves the ambiguous task but downstream work remains, an
+UNKNOWN_OUTCOME WorkflowRun returns to RUNNING. Automatic workflow resume remains outside
+LOT-11. LOT-12 owns the richer V2 event, manifest, lineage, inspection, and durable-output
+evidence model.
