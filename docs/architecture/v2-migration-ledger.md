@@ -44,11 +44,11 @@ REMOVED
 | `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
 | `plugins` | KEEP + ADAPT | plugins.v2 | 16 | IMPLEMENTED |
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
-| `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
+| `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | IMPLEMENTED |
 | PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | IMPLEMENTED |
 | PyTransformKit integration | NEW | integrations.pytransformkit | 19 | IMPLEMENTED |
 | cross-framework retry/recovery conformance | ADD | integrations + runtime + persistence | 20 | IMPLEMENTED |
-| `compatibility.py` | MOVE/SHIM | _compat | 21 | PLANNED |
+| `compatibility.py` | KEEP LEGACY + EXPLICIT MIGRATION TOOL | compatibility + _compat | 21 | IMPLEMENTED |
 
 ## Rewrite hotspots
 
@@ -739,3 +739,51 @@ not replayed when only publication truth was uncertain.
 
 LOT-21 owns V1 migration evidence, compatibility-shim decisions, incompatible sibling
 version handling, full Customer 360 beta/lineage qualification, and the 2.0.0b2 gate.
+
+
+## LOT-21 delivered migration and beta contracts
+
+| Contract / evidence | Canonical owner | Status |
+|---|---|---|
+| explicit V1 WorkflowDefinition migration | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| explicit V1 TaskDefinition migration | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| local -> inline executor migration decision | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| no generic V1/V2 aliases | compatibility decision log | IMPLEMENTED |
+| HARD-timeout fail-closed migration | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| workflow-parameter fail-closed migration | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| WorkflowRun evidence context requirement | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| TaskRun identity/status projection | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| TaskAttempt identity + legacy evidence projection | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| explicit ExternalRunRef kind migration | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| strict V1 semantic metadata export/import | pyworkflowkit._compat.v1_to_v2 | IMPLEMENTED |
+| ambiguous external attempt ownership remains null | V1RuntimeMetadataSnapshot | IMPLEMENTED |
+| decorator materialize-then-migrate decision | LOT-21 decision log | IMPLEMENTED |
+| recovery migration fail-closed decision | LOT-21 decision log | IMPLEMENTED |
+| Customer 360 installed-artifact beta script | scripts/qualify_v2_customer360_beta.py | IMPLEMENTED |
+| Customer 360 lineage traversal | installed-artifact beta gate | IMPLEMENTED |
+| Customer 360 security negative | installed-artifact beta gate | IMPLEMENTED |
+| wheel/sdist beta execution | release qualification | IMPLEMENTED |
+| incompatible PyIngestKit workload/result contracts | integrations.pyingestkit + beta gate | IMPLEMENTED |
+| incompatible PyTransformKit workload/result contracts | integrations.pytransformkit + beta gate | IMPLEMENTED |
+| ecosystem retained only as compatibility/legacy facade | _architecture + architecture tests | IMPLEMENTED |
+
+LOT-21 keeps the frozen 1.x compatibility facade in place and adds migration behavior only
+under pyworkflowkit._compat. Canonical V2 modules remain forbidden from importing that
+namespace. The historical `pyworkflowkit.ecosystem` surface remains available for
+compatibility, but V2 architecture metadata classifies it as a legacy compatibility
+facade rather than a canonical V2 namespace.
+
+Both sibling adapters now reject unsupported integration contract versions at descriptor
+construction and boundary-result validation. LOT-21 therefore closes incompatible
+sibling handling without importing or inspecting sibling package internals.
+
+Runtime migration does not synthesize definition/plan fingerprints, CorrelationContext,
+TaskAttempt creation timestamps, retryability, failure categories, reconciliation truth,
+or ExternalRunRef attempt ownership. Missing evidence is an explicit migration failure or
+is preserved as legacy-only evidence.
+
+The Customer 360 beta gate composes LOT-19 happy-path behavior and LOT-20
+retry/recovery/uncertainty behavior with lineage traversal, security-negative acceptance
+and execution from installed wheel/sdist artifacts.
+
+LOT-22 owns the 2.0 release-candidate freeze and final release qualification.

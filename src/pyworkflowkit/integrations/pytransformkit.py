@@ -188,6 +188,10 @@ class PyTransformKitWorkload(RegisteredWorkload):
         _require_text(engine, field_name="engine")
         if credential_ref is not None:
             _require_text(credential_ref, field_name="credential_ref")
+        if contract_version != V2_PYTRANSFORMKIT_INTEGRATION_CONTRACT_VERSION:
+            raise ValueError(
+                f"unsupported PyTransformKit V2 integration contract version {contract_version!r}"
+            )
 
         caller_parameters = _normalize_pairs(parameters, field_name="parameters")
         reserved = sorted(key for key, _ in caller_parameters if key in _RESERVED_PARAMETERS)
