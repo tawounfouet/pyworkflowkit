@@ -194,16 +194,14 @@ class BoundaryCodec:
         value = self.decode(payload)
         if not isinstance(value, expected_type):
             raise WireContractMismatchError(
-                f"wire payload decoded as {type(value).__name__}, "
-                f"expected {expected_type.__name__}"
+                f"wire payload decoded as {type(value).__name__}, expected {expected_type.__name__}"
             )
         return value
 
     def _enforce_size(self, payload: bytes) -> None:
         if len(payload) > self._max_payload_bytes:
             raise WirePayloadTooLargeError(
-                f"wire payload has {len(payload)} bytes; "
-                f"limit is {self._max_payload_bytes}"
+                f"wire payload has {len(payload)} bytes; limit is {self._max_payload_bytes}"
             )
 
 
@@ -262,8 +260,7 @@ def _value_from_envelope(
         raise WireContractMismatchError("wire contract identity changed during migration")
     if envelope.contract_version != descriptor.contract_version:
         raise UnsupportedWireVersionError(
-            f"unsupported wire version {envelope.contract_version!r} "
-            f"for {envelope.contract!r}"
+            f"unsupported wire version {envelope.contract_version!r} for {envelope.contract!r}"
         )
 
     payload = cast(dict[str, object], envelope.payload)
@@ -287,17 +284,13 @@ def _value_from_envelope(
     if contract_key == "diagnostic":
         return diagnostic_from_schema(SchemaCodec.from_dict(DiagnosticSchema, payload))
     if contract_key == "runtime_event":
-        return runtime_event_from_schema(
-            SchemaCodec.from_dict(RuntimeEventSchema, payload)
-        )
+        return runtime_event_from_schema(SchemaCodec.from_dict(RuntimeEventSchema, payload))
     if contract_key == "task_output_checkpoint":
         return task_output_checkpoint_from_schema(
             SchemaCodec.from_dict(TaskOutputCheckpointSchema, payload)
         )
     if contract_key == "run_manifest":
-        return run_manifest_from_schema(
-            SchemaCodec.from_dict(RunManifestSchema, payload)
-        )
+        return run_manifest_from_schema(SchemaCodec.from_dict(RunManifestSchema, payload))
 
     raise WireContractMismatchError(f"unsupported V2 wire contract key {contract_key!r}")
 
