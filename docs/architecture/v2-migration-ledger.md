@@ -38,9 +38,10 @@ REMOVED
 | SQLAlchemy models/mapping | MOVE + INTERNALIZE | persistence._sqlalchemy | 10/17 | IN_PROGRESS |
 | Alembic 0001–0003 | KEEP IMMUTABLE | persistence migrations | 10/17 | QUALIFIED BASELINE |
 | Alembic 0004 V2 runtime metadata | ADD | persistence migrations | 10 | IMPLEMENTED |
+| Alembic 0005 V2 task outputs | ADD | persistence migrations | 12 | IMPLEMENTED |
 | `contracts.serialization` | MOVE + REBUILD | serialization | 15 | PLANNED |
-| lineage modules | MOVE | lineage | 12 | PLANNED |
-| `application.inspection` | MOVE | diagnostics | 11/12 | PLANNED |
+| lineage modules | MOVE + ADAPT | lineage | 12 | IMPLEMENTED |
+| `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
 | `plugins` | KEEP + ADAPT | plugins | 16 | PLANNED |
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
 | `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
@@ -403,3 +404,48 @@ When reconciliation resolves the ambiguous task but downstream work remains, an
 UNKNOWN_OUTCOME WorkflowRun returns to RUNNING. Automatic workflow resume remains outside
 LOT-11. LOT-12 owns the richer V2 event, manifest, lineage, inspection, and durable-output
 evidence model.
+
+
+
+## LOT-12 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| RuntimeEvent | pyworkflowkit.runtime | IMPLEMENTED |
+| RuntimeEventType | pyworkflowkit.runtime | IMPLEMENTED |
+| TaskOutputCheckpoint | pyworkflowkit.runtime | IMPLEMENTED |
+| canonical JSON output digest | runtime evidence | IMPLEMENTED |
+| MetadataStore contract v2 | pyworkflowkit.persistence | IMPLEMENTED |
+| list_runtime_events | MetadataStore | IMPLEMENTED |
+| set/get_task_output_checkpoint | MetadataStore | IMPLEMENTED |
+| InMemory output checkpoint store | pyworkflowkit.persistence | IMPLEMENTED |
+| SQLite durable output checkpoint store | pyworkflowkit.persistence | IMPLEMENTED |
+| Alembic 0005_v2_task_output_checkpoints | pyworkflowkit.migrations | IMPLEMENTED |
+| RunManifest | pyworkflowkit.lineage | IMPLEMENTED |
+| RunManifestBuilder | pyworkflowkit.lineage | IMPLEMENTED |
+| V2 manifest schema version 2 | pyworkflowkit.lineage | IMPLEMENTED |
+| ExecutionLineage | pyworkflowkit.lineage | IMPLEMENTED |
+| ExecutionLineageProjector | pyworkflowkit.lineage | IMPLEMENTED |
+| RuntimeInspection | pyworkflowkit.diagnostics | IMPLEMENTED |
+| RuntimeInspector | pyworkflowkit.diagnostics | IMPLEMENTED |
+| WorkflowRuntime.events | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.manifest | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.lineage | pyworkflowkit.runtime | IMPLEMENTED |
+| WorkflowRuntime.inspect | pyworkflowkit.runtime | IMPLEMENTED |
+| non-portable output diagnostic | WorkflowResult.diagnostics | IMPLEMENTED |
+| SQLite restart evidence equivalence | tests/integration | IMPLEMENTED |
+
+RuntimeEvent is a deterministic projection of append-only StateTransitionRecord evidence.
+LOT-12 deliberately does not create a second runtime-event table, so state persistence and
+event evidence cannot diverge after a partial commit.
+
+Only strict portable JSON outputs become TaskOutputCheckpoint values. Opaque Python values
+remain caller-visible process-local output and produce PWK-OUTPUT-NONPORTABLE rather than
+being pickled or represented as durable state.
+
+Manifest, lineage and runtime inspection are read-only projections. RunManifest schema
+version 2 is a qualified V2 contract and does not mutate the frozen legacy 1.1 manifest
+schema version 1.
+
+Migration 0005 extends the published migration history append-only. It adds only
+v2_task_output_checkpoints; revisions 0001 through 0004 remain immutable.
