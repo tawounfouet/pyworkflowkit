@@ -221,12 +221,63 @@ def _security_negative() -> dict[str, object]:
     }
 
 
+
+def _incompatible_contracts() -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+
+    for name, factory in (
+        (
+            "pyingestkit_workload",
+            lambda: PyIngestKitWorkload(
+                job_ref="beta.incompatible",
+                contract_version="999",
+            ),
+        ),
+        (
+            "pytransformkit_workload",
+            lambda: PyTransformKitWorkload(
+                plan_ref="beta.incompatible",
+                engine="polars",
+                contract_version="999",
+            ),
+        ),
+        (
+            "pyingestkit_result",
+            lambda: PyIngestKitExecutionResult(
+                external_run_id="I-INCOMPATIBLE",
+                status=PyIngestKitExecutionStatus.FAILED,
+                error_code="PIK-INCOMPATIBLE",
+                contract_version="999",
+            ),
+        ),
+        (
+            "pytransformkit_result",
+            lambda: PyTransformKitExecutionResult(
+                transformation_execution_id="T-INCOMPATIBLE",
+                status=PyTransformKitExecutionStatus.FAILED,
+                error_code="PTK-INCOMPATIBLE",
+                contract_version="999",
+            ),
+        ),
+    ):
+        try:
+            factory()
+        except ValueError:
+            checks[name] = True
+        else:
+            checks[name] = False
+
+    assert all(checks.values())
+    return checks
+
+
 def main() -> None:
     payload = {
         "contract": "pyworkflowkit.customer360_beta",
         "contract_version": "1",
         "happy_path": _happy_path(),
         "security_negative": _security_negative(),
+        "incompatible_contracts": _incompatible_contracts(),
     }
     print(json.dumps(payload, sort_keys=True))
 
