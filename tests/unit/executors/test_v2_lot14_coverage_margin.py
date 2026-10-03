@@ -6,7 +6,6 @@ import asyncio
 import os
 import stat
 import sys
-import tempfile
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -30,7 +29,6 @@ from pyworkflowkit.executors import (
     TaskExecutionResult,
 )
 from pyworkflowkit.executors import _common
-from pyworkflowkit.executors import asyncio as async_module
 from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
@@ -89,6 +87,10 @@ def _raise_runtime() -> None:
 
 def _process_result() -> TaskExecutionResult:
     return TaskExecutionResult(output={"ok": True})
+
+
+def _sleep_process() -> None:
+    time.sleep(0.5)
 
 
 def _exit_without_result() -> None:
@@ -247,25 +249,33 @@ def test_process_capacity_and_shutdown_rejection() -> None:
     first = _request(
         attempt="P-capacity-1",
         executor_key="process",
-        workload=time.sleep,
+        workload=_sleep_process,
     )
-    # time.sleep accepts one argument only; bind it through a registered wrapper.
-    executor = ProcessExecutor(
-        {"slow": lambda: time.sleep(0.4)},  # deliberately unpicklable registration
-        max_workers=1,
+    second = _request(
+        attempt="P-capacity-2",
+        executor_key="process",
+        workload=_process_result,
     )
-    # The lambda itself fails serialization and therefore cannot occupy capacity.
-    rejected = executor.execute(
-        TaskExecutionRequest(
-            task_key="slow",
-            workload=RegisteredWorkload("slow", executor_key="process"),
-            executor_key="process",
-            context=first.context,
-        )
+    executor = ProcessExecutor(max_workers=1)
+    holder: list[TaskExecutionResult] = []
+    worker = threading.Thread(
+        target=lambda: holder.append(executor.execute(first)),
+        daemon=True,
     )
-    assert rejected.failure is not None
-    assert rejected.failure.error_code == "PWK-PROCESS-SERIALIZATION"
+    worker.start()
+    time.sleep(0.1)
+    try:
+        saturated = executor.execute(second)
+        executor.cancel(_cancel(first))
+        worker.join(timeout=3)
+    finally:
+        executor.shutdown(wait=False)
 
+    assert saturated.failure is not None
+    assert saturated.failure.error_code == "PWK-PROCESS-CAPACITY"
+    assert holder
+
+    executor = ProcessExecutor(max_workers=1)
     executor.shutdown()
     with pytest.raises(ExecutorShutdownError):
         executor.execute(
