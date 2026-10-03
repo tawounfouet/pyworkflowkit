@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing import get_all_start_methods, get_context
 from multiprocessing.connection import Connection
-from multiprocessing.context import BaseContext
 from multiprocessing.process import BaseProcess
 from threading import RLock
 
@@ -43,6 +42,22 @@ from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
 
 _PROCESS_EXECUTOR_ID = "process"
+
+
+class _ProcessFactory(Protocol):
+    def __call__(
+        self,
+        *,
+        target: object,
+        args: tuple[object, ...],
+        name: str,
+    ) -> BaseProcess: ...
+
+
+class _ProcessContext(Protocol):
+    Process: _ProcessFactory
+
+    def Pipe(self, duplex: bool = True) -> tuple[Connection, Connection]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,7 +206,7 @@ class ProcessExecutor:
             self.register(key, handler)
 
         self._max_workers = max_workers
-        self._context: BaseContext = get_context(start_method)
+        self._context = cast(_ProcessContext, get_context(start_method))
         self._terminate_grace_seconds = float(terminate_grace_seconds)
         self._active: dict[TaskAttemptId, _ActiveProcess] = {}
         self._shutdown = False
