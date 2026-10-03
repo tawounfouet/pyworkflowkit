@@ -28,15 +28,10 @@ def test_lot13_thread_executor_descriptor_is_frozen() -> None:
             "registered",
         )
         assert descriptor.supports_execution_timeout is True
-        assert (
-            descriptor.cancellation_capability
-            is executors.CancellationCapability.UNSUPPORTED
-        )
+        assert descriptor.cancellation_capability is executors.CancellationCapability.UNSUPPORTED
         assert descriptor.performs_implicit_workload_retry is False
         assert descriptor.execution_modes == ("worker_thread",)
-        assert "deadline_does_not_stop_running_thread" in (
-            descriptor.portability_constraints
-        )
+        assert "deadline_does_not_stop_running_thread" in (descriptor.portability_constraints)
     finally:
         executor.shutdown()
 
