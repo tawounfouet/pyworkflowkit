@@ -41,7 +41,7 @@ def _external_ref() -> ExternalRunRef:
         kind="transformation_execution",
         status_hint="running",
         correlation_id=CorrelationId.parse("C-42"),
-        metadata=(("region", "eu"), ("job", "daily")),
+        metadata=(("job", "daily"), ("region", "eu")),
     )
 
 
