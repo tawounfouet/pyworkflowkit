@@ -42,7 +42,7 @@ REMOVED
 | `contracts.serialization` | MOVE + REBUILD | serialization | 15 | IMPLEMENTED |
 | lineage modules | MOVE + ADAPT | lineage | 12 | IMPLEMENTED |
 | `application.inspection` | MOVE + ADAPT | diagnostics | 11/12 | IMPLEMENTED |
-| `plugins` | KEEP + ADAPT | plugins | 16 | PLANNED |
+| `plugins` | KEEP + ADAPT | plugins.v2 | 16 | IMPLEMENTED |
 | `control_plane` | KEEP PROVISIONAL | control_plane | later | DEFERRED |
 | `ecosystem` | DEPRECATE AS CANONICAL | compatibility | 21 | PLANNED |
 | PyIngestKit integration | EXPAND | integrations.pyingestkit | 18 | PLANNED |
@@ -580,3 +580,31 @@ the V2 BoundaryWireCodec/StrictBoundarySchema implementation. The frozen
 pyworkflowkit.contracts.serialization 1.1 implementation remains unchanged.
 
 LOT-16 owns plugin migration.
+
+## LOT-16 delivered contracts
+
+| Contract | Canonical V2 path | Status |
+|---|---|---|
+| V2PluginDescriptor | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2RegisteredPlugin | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2PluginRegistry | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2PluginCatalog | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2PluginDiscovery | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2WorkloadBinding | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2RuntimeEventSink | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2 plugin contract reports | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2 contract snapshot | pyworkflowkit.plugins.v2 | IMPLEMENTED |
+| V2-only entry-point groups | pyworkflowkit.v2.* | IMPLEMENTED |
+| V1/V2 fail-closed separation | plugins | IMPLEMENTED |
+| LOT-16 unit qualification | tests/unit/plugins | IMPLEMENTED |
+| LOT-16 reference acceptance | tests/reference | IMPLEMENTED |
+
+LOT-16 keeps the published plugin API v1 unchanged and introduces an additive API v2
+under pyworkflowkit.plugins.v2.
+
+V2 plugin instances are validated against the canonical V2 Executor and MetadataStore
+contracts. Workload plugins expose explicit registry-key-to-handler bindings and event
+plugins consume canonical V2 RuntimeEvent values.
+
+Discovery remains metadata-first and activation remains explicit. V1 entry-point groups
+and V2 entry-point groups are disjoint, and no implicit V1-to-V2 bridge is provided.
