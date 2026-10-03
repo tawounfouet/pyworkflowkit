@@ -12,6 +12,8 @@ from pyworkflowkit._compat.v1_to_v2 import (
     V1MigrationEvidenceError,
     V1MigrationUnsupportedError,
     WorkflowRunMigrationContext,
+    export_v1_runtime_metadata,
+    import_v1_runtime_metadata,
     migrate_external_run_ref,
     migrate_task_attempt,
     migrate_task_definition,
@@ -323,6 +325,88 @@ def test_lot21_external_tracking_rejects_nonportable_metadata() -> None:
     assert caught.value.issue.code == "PWK-MIG-V1-EXTERNAL-METADATA"
 
 
+
+def test_lot21_runtime_metadata_semantic_export_import_roundtrip_preserves_known_facts() -> None:
+    workflow = V1WorkflowRun(
+        run_id=V1WorkflowRunId("W-EXPORT"),
+        workflow_id=WorkflowId("customer360"),
+        workflow_version="7",
+        status=V1WorkflowRunStatus.FAILED,
+        parameters={"region": "eu", "limit": 10},
+        created_at=T0,
+        started_at=T1,
+        finished_at=T2,
+    )
+    task_run = V1TaskRun(
+        task_run_id=V1TaskRunId("TR-EXPORT"),
+        run_id=workflow.run_id,
+        task_id=TaskId("publish"),
+        status=V1TaskRunStatus.FAILED,
+        created_at=T0,
+        started_at=T1,
+        finished_at=T2,
+    )
+    attempt = V1TaskAttempt(
+        attempt_id=V1TaskAttemptId("TA-EXPORT"),
+        task_run_id=task_run.task_run_id,
+        attempt_number=2,
+        status=V1TaskAttemptStatus.FAILED,
+        started_at=T1,
+        finished_at=T2,
+        error_type="LegacyError",
+        error_message="publish failed",
+        error_category="provider",
+        retry_eligible_at=T2,
+        error_metadata={"provider_code": 503, "retryable": True},
+    )
+    external = V1ExternalRunRef(
+        external_ref_id=ExternalRunRefId("ER-EXPORT"),
+        provider="legacy-provider",
+        external_run_id="REMOTE-EXPORT",
+        uri="https://legacy.invalid/runs/REMOTE-EXPORT",
+        metadata={"region": "eu"},
+    )
+
+    exported = export_v1_runtime_metadata(
+        workflow_run=workflow,
+        task_runs=(task_run,),
+        task_attempts=(attempt,),
+        external_runs=(external,),
+    )
+    payload = exported.to_json()
+    restored = import_v1_runtime_metadata(payload)
+
+    assert restored.to_json() == payload
+    assert restored.workflow_run.parameters == {"region": "eu", "limit": 10}
+    assert restored.task_attempts[0].retry_eligible_at == T2
+    assert restored.task_attempts[0].error_metadata["provider_code"] == 503
+    assert restored.external_runs[0].uri == external.uri
+    assert restored.to_payload()["external_run_attempt_ownership"] is None
+
+
+def test_lot21_runtime_metadata_import_rejects_invented_external_attempt_ownership() -> None:
+    workflow = V1WorkflowRun(
+        run_id=V1WorkflowRunId("W-EXPORT"),
+        workflow_id=WorkflowId("customer360"),
+        workflow_version="7",
+        status=V1WorkflowRunStatus.PENDING,
+        created_at=T0,
+    )
+    exported = export_v1_runtime_metadata(
+        workflow_run=workflow,
+        task_runs=(),
+        task_attempts=(),
+    )
+    payload = exported.to_payload()
+    payload["external_run_attempt_ownership"] = {"ER-42": "TA-42"}
+
+    import json
+
+    with pytest.raises(ValueError, match="must not invent ExternalRunRef TaskAttempt ownership"):
+        import_v1_runtime_metadata(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        )
+
 def test_lot21_snapshot_freezes_no_invention_migration_posture() -> None:
     snapshot = migration_contract_snapshot()
 
@@ -334,4 +418,6 @@ def test_lot21_snapshot_freezes_no_invention_migration_posture() -> None:
     assert snapshot["workflow_run_requires_external_correlation"] is True
     assert snapshot["task_attempt_requires_external_created_at"] is True
     assert snapshot["external_run_kind_requires_explicit_input"] is True
+    assert snapshot["semantic_metadata_export_import"] is True
+    assert snapshot["semantic_metadata_external_attempt_ownership"] is None
     assert snapshot["ambiguous_external_attempt_ownership_invented"] is False
