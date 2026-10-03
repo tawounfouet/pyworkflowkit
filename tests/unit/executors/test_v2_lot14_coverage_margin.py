@@ -27,8 +27,8 @@ from pyworkflowkit.executors import (
     TaskExecutionContext,
     TaskExecutionRequest,
     TaskExecutionResult,
+    _common,
 )
-from pyworkflowkit.executors import _common
 from pyworkflowkit.runtime import (
     CorrelationContext,
     CorrelationId,
