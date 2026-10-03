@@ -1,20 +1,75 @@
-"""V2 serialization namespace baseline.
+"""Canonical PyWorkflowKit V2 strict serialization surface."""
 
-LOT-01 freezes portable boundary contract identities. LOT-15 introduces the
-final versioned codecs and golden wire fixtures.
-"""
-
-from pyworkflowkit.contracts.serialization import SchemaCodec, StrictSchema
+from pyworkflowkit.serialization.codec import (
+    DEFAULT_MAX_WIRE_BYTES,
+    BoundaryCodec,
+    BoundaryValue,
+    SchemaCodec,
+    WireContractError,
+    WireContractMismatchError,
+    WirePayloadTooLargeError,
+    canonical_json,
+)
 from pyworkflowkit.serialization.contracts import (
     V2_BOUNDARY_WIRE_CONTRACTS,
     WireContractDescriptor,
     v2_boundary_wire_contract_snapshot,
 )
+from pyworkflowkit.serialization.migration import (
+    DuplicateWireMigrationError,
+    UnsupportedWireVersionError,
+    WireMigrationError,
+    WireMigrationRegistry,
+    WireMigrator,
+    WirePayload,
+)
+from pyworkflowkit.serialization.schemas import (
+    CorrelationContextSchema,
+    DiagnosticSchema,
+    ExternalRunRefSchema,
+    FailureEvidenceSchema,
+    ManifestAttemptSchema,
+    ManifestTaskRunSchema,
+    RunManifestSchema,
+    RuntimeEventSchema,
+    StrictSchema,
+    TaskOutputCheckpointSchema,
+    WireEnvelope,
+    WorkflowExecutionReferenceSchema,
+    canonical_timestamp,
+    portable_json_value,
+)
 
 __all__ = [
+    "BoundaryCodec",
+    "BoundaryValue",
+    "CorrelationContextSchema",
+    "DEFAULT_MAX_WIRE_BYTES",
+    "DiagnosticSchema",
+    "DuplicateWireMigrationError",
+    "ExternalRunRefSchema",
+    "FailureEvidenceSchema",
+    "ManifestAttemptSchema",
+    "ManifestTaskRunSchema",
+    "RunManifestSchema",
+    "RuntimeEventSchema",
     "SchemaCodec",
     "StrictSchema",
+    "TaskOutputCheckpointSchema",
+    "UnsupportedWireVersionError",
     "V2_BOUNDARY_WIRE_CONTRACTS",
     "WireContractDescriptor",
+    "WireContractError",
+    "WireContractMismatchError",
+    "WireEnvelope",
+    "WireMigrationError",
+    "WireMigrationRegistry",
+    "WireMigrator",
+    "WirePayload",
+    "WirePayloadTooLargeError",
+    "WorkflowExecutionReferenceSchema",
+    "canonical_json",
+    "canonical_timestamp",
+    "portable_json_value",
     "v2_boundary_wire_contract_snapshot",
 ]
