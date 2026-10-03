@@ -31,6 +31,7 @@ def test_executor_contract_snapshot_is_machine_readable() -> None:
     assert snapshot["contract_version"] == V2_EXECUTOR_CONTRACT_VERSION
     assert snapshot["protocol_members"] == list(V2_EXECUTOR_PROTOCOL_METHODS)
     assert tuple(executors.__all__) == (
+        "AsyncExecutor",
         "CancellationCapability",
         "CancellationStatus",
         "CancellableExecutor",
@@ -38,6 +39,11 @@ def test_executor_contract_snapshot_is_machine_readable() -> None:
         "ExecutorDescriptor",
         "ExecutorRegistry",
         "InlineExecutor",
+        "ProcessExecutor",
+        "SubprocessCommand",
+        "SubprocessExecutor",
+        "SubprocessResult",
+        "SubprocessSecurityPolicy",
         "TaskCancellationRequest",
         "TaskCancellationResult",
         "TaskExecutionContext",
