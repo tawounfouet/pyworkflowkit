@@ -116,9 +116,7 @@ def external_run_ref_to_schema(value: ExternalRunRef) -> ExternalRunRefSchema:
         kind=value.kind,
         status_hint=value.status_hint,
         status_locator=value.status_locator,
-        correlation_id=(
-            str(value.correlation_id) if value.correlation_id is not None else None
-        ),
+        correlation_id=(str(value.correlation_id) if value.correlation_id is not None else None),
         causation_id=value.causation_id,
         metadata=value.metadata,
         namespace=value.namespace,
@@ -134,9 +132,7 @@ def external_run_ref_from_schema(value: ExternalRunRefSchema) -> ExternalRunRef:
         status_hint=value.status_hint,
         status_locator=value.status_locator,
         correlation_id=(
-            CorrelationId.parse(value.correlation_id)
-            if value.correlation_id is not None
-            else None
+            CorrelationId.parse(value.correlation_id) if value.correlation_id is not None else None
         ),
         causation_id=value.causation_id,
         metadata=value.metadata,
@@ -204,9 +200,7 @@ def diagnostic_to_schema(value: Diagnostic) -> DiagnosticSchema:
         workflow_run_id=value.workflow_run_id,
         task_run_id=value.task_run_id,
         task_attempt_id=value.task_attempt_id,
-        correlation_id=(
-            str(value.correlation_id) if value.correlation_id is not None else None
-        ),
+        correlation_id=(str(value.correlation_id) if value.correlation_id is not None else None),
         source_component=value.source_component,
         decision_context=value.decision_context,
         related_policy=value.related_policy,
@@ -224,9 +218,7 @@ def diagnostic_from_schema(value: DiagnosticSchema) -> Diagnostic:
         task_run_id=value.task_run_id,
         task_attempt_id=value.task_attempt_id,
         correlation_id=(
-            CorrelationId.parse(value.correlation_id)
-            if value.correlation_id is not None
-            else None
+            CorrelationId.parse(value.correlation_id) if value.correlation_id is not None else None
         ),
         source_component=value.source_component,
         decision_context=value.decision_context,
@@ -264,9 +256,7 @@ def runtime_event_from_schema(value: RuntimeEventSchema) -> RuntimeEvent:
         occurred_at=_parse_timestamp(value.occurred_at),
         from_status=value.from_status,
         to_status=value.to_status,
-        task_run_id=(
-            TaskRunId.parse(value.task_run_id) if value.task_run_id is not None else None
-        ),
+        task_run_id=(TaskRunId.parse(value.task_run_id) if value.task_run_id is not None else None),
         attempt_id=(
             TaskAttemptId.parse(value.attempt_id) if value.attempt_id is not None else None
         ),
@@ -320,12 +310,8 @@ def manifest_task_run_to_schema(value: ManifestTaskRun) -> ManifestTaskRunSchema
         task_key=value.task_key,
         status=value.status.value,
         attempts=tuple(manifest_attempt_to_schema(item) for item in value.attempts),
-        external_runs=tuple(
-            external_run_ref_to_schema(item) for item in value.external_runs
-        ),
-        output=(
-            plain_json_value(value.output) if value.output is not None else None
-        ),
+        external_runs=tuple(external_run_ref_to_schema(item) for item in value.external_runs),
+        output=(plain_json_value(value.output) if value.output is not None else None),
         output_digest=value.output_digest,
         output_recorded_at=value.output_recorded_at,
     )
@@ -337,9 +323,7 @@ def manifest_task_run_from_schema(value: ManifestTaskRunSchema) -> ManifestTaskR
         task_key=value.task_key,
         status=TaskRunStatus(value.status),
         attempts=tuple(manifest_attempt_from_schema(item) for item in value.attempts),
-        external_runs=tuple(
-            external_run_ref_from_schema(item) for item in value.external_runs
-        ),
+        external_runs=tuple(external_run_ref_from_schema(item) for item in value.external_runs),
         output=(
             normalize_json_value(value.output, path="manifest_task.output")
             if value.output is not None
