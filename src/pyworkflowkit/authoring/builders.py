@@ -6,11 +6,39 @@ from collections.abc import Mapping, Sequence
 
 from pyworkflowkit.authoring.definitions import TaskDefinition, WorkflowDefinition
 from pyworkflowkit.authoring.io import InputDeclaration, OutputDeclaration
+from pyworkflowkit.authoring.validation import CircularDependencyError
 from pyworkflowkit.authoring.workloads import Workload
 from pyworkflowkit.domain.enums import FailurePolicy
 from pyworkflowkit.policies.retry import RetryPolicy
 from pyworkflowkit.policies.timeout import TimeoutPolicy
 from pyworkflowkit.policies.trigger import TriggerRule
+
+
+def _check_builder_cycles(tasks: Sequence[TaskDefinition]) -> None:
+    known = {t.key for t in tasks}
+    deps = {t.key: [d for d in t.dependencies if d in known] for t in tasks}
+    visited: set[str] = set()
+    rec_stack: list[str] = []
+
+    def dfs(node: str) -> list[str] | None:
+        visited.add(node)
+        rec_stack.append(node)
+        for neighbor in deps.get(node, []):
+            if neighbor not in visited:
+                cycle = dfs(neighbor)
+                if cycle is not None:
+                    return cycle
+            elif neighbor in rec_stack:
+                idx = rec_stack.index(neighbor)
+                return rec_stack[idx:] + [neighbor]
+        rec_stack.pop()
+        return None
+
+    for t in tasks:
+        if t.key not in visited:
+            cycle = dfs(t.key)
+            if cycle is not None:
+                raise CircularDependencyError(cycle)
 
 
 class WorkflowDefinitionBuilder:
@@ -30,6 +58,12 @@ class WorkflowDefinitionBuilder:
         self._metadata = dict(metadata or {})
         self._tasks: list[TaskDefinition] = []
         self._task_keys: set[str] = set()
+
+    def __enter__(self) -> WorkflowDefinitionBuilder:
+        return self
+
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+        pass
 
     def task(
         self,
@@ -65,6 +99,7 @@ class WorkflowDefinitionBuilder:
         )
         self._tasks.append(task)
         self._task_keys.add(task.key)
+        _check_builder_cycles(self._tasks)
         return task
 
     def add(self, task: TaskDefinition) -> TaskDefinition:
@@ -76,7 +111,12 @@ class WorkflowDefinitionBuilder:
             raise ValueError(f"workflow builder already contains task key {task.key!r}")
         self._tasks.append(task)
         self._task_keys.add(task.key)
+        _check_builder_cycles(self._tasks)
         return task
+
+    def add_task(self, task: TaskDefinition) -> TaskDefinition:
+        """Alias for add()."""
+        return self.add(task)
 
     def build(self) -> WorkflowDefinition:
         """Freeze current builder state into one canonical WorkflowDefinition."""
