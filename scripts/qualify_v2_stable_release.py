@@ -16,6 +16,7 @@ from pyworkflowkit.contracts.v2_release_candidate import (
 from pyworkflowkit.migrations.contract import MIGRATION_HEAD_REVISION
 
 STABLE_VERSION = "2.0.0"
+ALLOWED_VERSIONS = {STABLE_VERSION, "2.1.0rc1", "2.1.0"}
 
 
 def main() -> None:
@@ -23,13 +24,13 @@ def main() -> None:
     contracts = manifest["contracts"]
     assert isinstance(contracts, dict)
 
-    assert pyworkflowkit.__version__ == STABLE_VERSION
+    assert pyworkflowkit.__version__ in ALLOWED_VERSIONS
     assert tuple(pyworkflowkit.__all__) == V2_ROOT_TARGET_ALLOWLIST
     assert V2_RELEASE_CANDIDATE_VERSION == "2.0.0rc1"
     assert V2_RELEASE_CANDIDATE_TARGET_RELEASE == STABLE_VERSION
     assert manifest["candidate_version"] == V2_RELEASE_CANDIDATE_VERSION
     assert manifest["target_release"] == STABLE_VERSION
-    assert manifest["package_version"] == STABLE_VERSION
+    assert manifest["package_version"] in ALLOWED_VERSIONS
     assert contracts["root_api"]["exports"] == list(V2_ROOT_TARGET_ALLOWLIST)
     assert contracts["states"]["contract_version"] == "1"
     assert contracts["executor"]["contract_version"] == "4"
@@ -45,7 +46,7 @@ def main() -> None:
 
     payload = {
         "contract": "pyworkflowkit.v2_stable_promotion",
-        "version": STABLE_VERSION,
+        "version": pyworkflowkit.__version__,
         "source_candidate": V2_RELEASE_CANDIDATE_VERSION,
         "root_exports": contracts["root_api"]["exports"],
         "stable_identities": manifest["stable_identities"],

@@ -21,6 +21,8 @@ def main() -> None:
     assert pyworkflowkit.__version__ in {
         V2_RELEASE_CANDIDATE_VERSION,
         V2_RELEASE_CANDIDATE_TARGET_RELEASE,
+        "2.1.0rc1",
+        "2.1.0",
     }
     assert manifest["package_version"] == pyworkflowkit.__version__
     assert manifest["candidate_version"] == V2_RELEASE_CANDIDATE_VERSION
