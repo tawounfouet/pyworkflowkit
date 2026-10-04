@@ -121,7 +121,7 @@ public typing closure of already-stable Protocols.
 The canonical strict consumer fixture is:
 
 ```text
-typing-fixtures/public_consumer.py
+integrations/typing-fixtures/public_consumer.py
 ```
 
 It imports only frozen public facades and proves:
@@ -141,7 +141,7 @@ WorkflowRuntimeProvider -> ControlPlaneProvider compatibility
 A second fixture is intentionally invalid:
 
 ```text
-typing-fixtures/invalid_task_handler.py
+integrations/typing-fixtures/invalid_task_handler.py
 ```
 
 The release gate requires the first fixture to pass and the second fixture to fail.

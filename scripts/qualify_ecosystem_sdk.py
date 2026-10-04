@@ -158,7 +158,7 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
-    template = root / "ecosystem-template"
+    template = root / "integrations" / "ecosystem-template"
 
     with tempfile.TemporaryDirectory(prefix="pyworkflowkit-m52-") as temp:
         workspace = Path(temp)

@@ -747,8 +747,8 @@ PyWorkflowKit
 ├── notebooks/
 │      Explore
 │
-├── ecosystem-template/
-│      Extend
+├── integrations/
+│      Extend & Qualify
 │
 ├── src/pyworkflowkit/
 │      Build / Embed

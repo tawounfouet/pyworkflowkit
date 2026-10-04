@@ -85,7 +85,7 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
-    integrations = root / "reference-integrations"
+    integrations = root / "integrations" / "reference-integrations"
     conformance = integrations / "conformance.py"
 
     with tempfile.TemporaryDirectory(prefix="pyworkflowkit-m50-") as temp:
