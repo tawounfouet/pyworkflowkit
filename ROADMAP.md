@@ -127,8 +127,9 @@ flowchart TD
 | | **LOT-31** | Commande `pwk run` V2, simulation `--dry-run`, contrat JSON | [`03_PLAN_LOT31_CLI_RUN_AND_CONTRACT_FREEZE.md`](docs/plans/03_PLAN_LOT31_CLI_RUN_AND_CONTRACT_FREEZE.md) | ✅ Terminé (PR #112) |
 | **Phase 2** | **LOT-32** | Ergonomie d'Authoring (`task_a >> task_b`), validation statique | [`04_PLAN_LOT32_AUTHORING_ERGONOMICS.md`](docs/plans/04_PLAN_LOT32_AUTHORING_ERGONOMICS.md) | ✅ Terminé (PR #113) |
 | | **LOT-33** | Reprise sélective au point d'échec (`resume_run`) | [`05_PLAN_LOT33_SELECTIVE_RESUME.md`](docs/plans/05_PLAN_LOT33_SELECTIVE_RESUME.md) | ✅ Terminé (PR #114) |
-| **Phase 3** | **LOT-34** | Cycle de vie du Store, purge par lots (`pwk store prune`) | [`06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md`](docs/plans/06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md) | 🚀 En cours |
-| | **LOT-35** | Passerelle OpenTelemetry, propagation W3C `TRACEPARENT` | [`07_PLAN_LOT35_OPENTELEMETRY_TRACING.md`](docs/plans/07_PLAN_LOT35_OPENTELEMETRY_TRACING.md) | ⏳ En attente |
+| **Phase 3** | **LOT-34** | Cycle de vie du Store, purge par lots (`pwk store prune`) | [`06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md`](docs/plans/06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md) | ✅ Terminé (PR #115) |
+| | **LOT-35** | Passerelle OpenTelemetry, propagation W3C `TRACEPARENT` | [`07_PLAN_LOT35_OPENTELEMETRY_TRACING.md`](docs/plans/07_PLAN_LOT35_OPENTELEMETRY_TRACING.md) | 🚀 Prêt à démarrer |
+
 | | **LOT-36** | Automatisation Release, OIDC PyPI, SBOM CycloneDX, Sigstore | [`08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md`](docs/plans/08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md) | ⏳ En attente |
 | **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`), matrice multi-OS | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⏳ En attente |
 | | **LOT-38** | Publication Stable PyWorkflowKit `2.1.0` sur PyPI | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⏳ En attente |
