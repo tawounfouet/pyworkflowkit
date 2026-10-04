@@ -39,7 +39,7 @@ def test_lot22_candidate_identity_remains_frozen_after_stable_promotion() -> Non
     assert V2_RELEASE_CANDIDATE_VERSION == "2.0.0rc1"
     assert V2_RELEASE_CANDIDATE_TARGET_RELEASE == "2.0.0"
     assert V2_PUBLIC_API_TARGET_RELEASE == "2.0.0"
-    assert pyworkflowkit.__version__ in {"2.0.0rc1", "2.0.0", "2.1.0rc1", "2.1.0"}
+    assert pyworkflowkit.__version__ in {"2.0.0rc1", "2.0.0", "2.1.0rc1", "2.1.0", "2.1.1"}
     assert version("pyworkflowkit") == pyworkflowkit.__version__
 
 
