@@ -6,27 +6,22 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ## Unreleased
 
+## 2.1.0 - 2026-10-04
+
+Stable promotion of PyWorkflowKit 2.1.0 from qualified release candidate `2.1.0rc1`.
+Metadata-only version bump — zero functional delta per freeze policy `blocker-fixes-only-without-rc-reset`.
+
 ### Added
 
-- Post-2.0 release-closure and maintenance roadmap recording the exact stable V2 baseline,
-  qualification evidence, version policy, product boundaries, and unresolved publication
-  decisions.
+- **Release notes** [`docs/releases/2.1.0.md`](docs/releases/2.1.0.md) with full RC qualification summary (57/57 CI checks, 1744 tests).
 
 ### Changed
 
-- README roadmap now identifies `2.0.0` as the current stable release and post-2.0
-  maintenance/evolution planning as the active phase.
-- The `2.0.0` qualification report now records the final qualified main SHA, stable tag
-  qualification, GitHub Release publication, and artifact digests.
+- Advanced package version to `2.1.0` (stable).
 
-### Deprecated
+## 2.1.0rc1 - 2026-10-04
 
-### Removed
-
-- One-shot `finalize-v2.0.0.yml` release workflow after successful publication of
-  `v2.0.0`.
-
-### Fixed
+Release candidate 1 for PyWorkflowKit 2.1.0.
 
 - Removed stale README status that still described the 0.9 stabilization line as current
   development.
