@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timedelta
 from threading import RLock
 
@@ -18,7 +18,13 @@ from pyworkflowkit.diagnostics.inspection import RuntimeInspection, RuntimeInspe
 from pyworkflowkit.diagnostics.model import Diagnostic, DiagnosticSeverity
 from pyworkflowkit.diagnostics.recovery import RecoveryAssessment
 from pyworkflowkit.domain.enums import FailurePolicy
-from pyworkflowkit.errors import RuntimeInvariantError
+from pyworkflowkit.errors import (
+    GraphTopologyMismatchError,
+    InvalidRunStateForResumeError,
+    MetadataNotFoundError,
+    RuntimeInvariantError,
+    WorkflowNotFoundError,
+)
 from pyworkflowkit.executors import (
     CancellableExecutor,
     CancellationCapability,
@@ -41,6 +47,7 @@ from pyworkflowkit.planning import ExecutionPlan, TaskPlanEntry, WorkflowPlanner
 from pyworkflowkit.policies.retry import RetryDecision, RetryEvaluator
 from pyworkflowkit.runtime._attempts import next_task_attempt
 from pyworkflowkit.runtime._readiness import descendants_of, evaluate_readiness
+from pyworkflowkit.runtime._resume import classify_tasks_for_resume
 from pyworkflowkit.runtime.context import CorrelationContext
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import (
@@ -171,12 +178,166 @@ class WorkflowRuntime:
 
         self._transition_workflow(run, WorkflowRunStatus.RUNNING)
 
-        outputs: dict[str, object] = {}
+        return self._execute_plan_tasks(
+            run=run,
+            plan=plan,
+            bound_correlation=bound_correlation,
+            outputs={},
+            reused_keys=frozenset(),
+            diagnostics=list(plan.diagnostics),
+        )
+
+    def resume_run(
+        self,
+        original_run_id: WorkflowRunId | str,
+        workflow: WorkflowDefinition | ExecutionPlan,
+        *,
+        correlation: CorrelationContext | None = None,
+        force_recompute_tasks: Sequence[str] | None = None,
+    ) -> WorkflowResult:
+        """Resume execution of a failed, cancelled or timed out workflow run.
+
+        Reuses outputs of successful deterministic tasks where all upstream dependencies
+        were also reused, only executing tasks that need to be recomputed.
+        """
+        if isinstance(original_run_id, str):
+            orig_run_id = WorkflowRunId.parse(original_run_id)
+        elif isinstance(original_run_id, WorkflowRunId):
+            orig_run_id = original_run_id
+        else:
+            raise TypeError("original_run_id must be a WorkflowRunId or str")
+
+        try:
+            parent_run = self._metadata.get_workflow_run(orig_run_id)
+        except MetadataNotFoundError as exc:
+            raise WorkflowNotFoundError(run_id=str(orig_run_id)) from exc
+
+        if parent_run.status not in {
+            WorkflowRunStatus.FAILED,
+            WorkflowRunStatus.CANCELLED,
+            WorkflowRunStatus.TIMED_OUT,
+        }:
+            raise InvalidRunStateForResumeError(
+                run_id=str(orig_run_id),
+                status=parent_run.status.value,
+            )
+
+        plan = self._compile(workflow)
+        self._preflight(plan)
+
+        if plan.definition_fingerprint != parent_run.definition_fingerprint:
+            raise GraphTopologyMismatchError(
+                run_id=str(orig_run_id),
+                expected_fingerprint=parent_run.definition_fingerprint,
+                actual_fingerprint=plan.definition_fingerprint,
+            )
+
+        parent_task_runs = {tr.task_key: tr for tr in self._metadata.list_task_runs(orig_run_id)}
+
+        classification = classify_tasks_for_resume(
+            plan=plan,
+            parent_task_runs=parent_task_runs,
+            metadata=self._metadata,
+            force_recompute_tasks=force_recompute_tasks,
+        )
+
+        run_id = self._identity_factory.new_workflow_run_id()
+        base_correlation = correlation or CorrelationContext(
+            correlation_id=self._identity_factory.new_correlation_id(),
+            causation_id=str(orig_run_id),
+            parent_execution_id=str(orig_run_id),
+        )
+        bound_correlation = _bind_workflow_correlation(
+            base_correlation,
+            run_id=run_id,
+        )
+        created_at = self._now()
+        run = WorkflowRun(
+            run_id=run_id,
+            workflow_name=plan.workflow_name,
+            workflow_version=plan.workflow_version,
+            definition_fingerprint=plan.definition_fingerprint,
+            plan_fingerprint=plan.fingerprint(),
+            correlation=bound_correlation,
+            created_at=created_at,
+            resume_of_run_id=str(orig_run_id),
+        )
+        self._metadata.create_workflow_run(run)
+
         diagnostics: list[Diagnostic] = list(plan.diagnostics)
+
+        for entry in plan.tasks:
+            if entry.key in classification.reused_keys:
+                task_run = TaskRun(
+                    task_run_id=self._identity_factory.new_task_run_id(),
+                    workflow_run_id=run_id,
+                    task_key=entry.key,
+                    created_at=created_at,
+                )
+                self._metadata.create_task_run(task_run)
+                self._transition_task(
+                    task_run,
+                    TaskRunStatus.REUSED,
+                )
+                cached_checkpoint = classification.reused_checkpoints[entry.key]
+                new_checkpoint = TaskOutputCheckpoint(
+                    task_run_id=task_run.task_run_id,
+                    output=cached_checkpoint.output,
+                    recorded_at=created_at,
+                )
+                self._metadata.set_task_output_checkpoint(new_checkpoint)
+                diagnostics.append(
+                    _diagnostic(
+                        "PWK-TASK-REUSED",
+                        f"task {entry.key!r} reused from checkpoint of run {orig_run_id}",
+                        run=run,
+                        task_run=task_run,
+                        severity=DiagnosticSeverity.INFO,
+                        details=(
+                            ("task_key", entry.key),
+                            ("original_run_id", str(orig_run_id)),
+                            ("checkpoint_checksum", cached_checkpoint.digest),
+                        ),
+                    )
+                )
+            else:
+                task_run = TaskRun(
+                    task_run_id=self._identity_factory.new_task_run_id(),
+                    workflow_run_id=run_id,
+                    task_key=entry.key,
+                    created_at=created_at,
+                )
+                self._metadata.create_task_run(task_run)
+
+        self._transition_workflow(run, WorkflowRunStatus.RUNNING)
+
+        return self._execute_plan_tasks(
+            run=run,
+            plan=plan,
+            bound_correlation=bound_correlation,
+            outputs=dict(classification.initial_outputs),
+            reused_keys=classification.reused_keys,
+            diagnostics=diagnostics,
+        )
+
+    def _execute_plan_tasks(
+        self,
+        *,
+        run: WorkflowRun,
+        plan: ExecutionPlan,
+        bound_correlation: CorrelationContext,
+        outputs: dict[str, object],
+        reused_keys: frozenset[str],
+        diagnostics: list[Diagnostic],
+    ) -> WorkflowResult:
+        run_id = run.run_id
         failed_entry: TaskPlanEntry | None = None
         failure: FailureEvidence | None = None
 
         for entry in plan.tasks:
+            if entry.key in reused_keys:
+                continue
+
             persisted_runs = {
                 value.task_key: value for value in self._metadata.list_task_runs(run_id)
             }

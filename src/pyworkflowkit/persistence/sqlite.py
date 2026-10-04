@@ -291,14 +291,32 @@ class SQLiteMetadataStore:
                 transitioned_at,
             )
 
+            db_status = (
+                TaskRunStatus.SUCCEEDED.value
+                if task_run.status is TaskRunStatus.REUSED
+                else task_run.status.value
+            )
+            expected_db_status = (
+                TaskRunStatus.SUCCEEDED.value
+                if expected_status is TaskRunStatus.REUSED
+                else expected_status.value
+            )
+            failure_payload = failure_to_json(task_run.failure)
+            if task_run.status is TaskRunStatus.REUSED:
+                if failure_payload is None:
+                    failure_payload = {"__reused__": True}
+                elif isinstance(failure_payload, dict):
+                    failure_payload = dict(failure_payload)
+                    failure_payload["__reused__"] = True
+
             result = session.execute(
                 update(models.TaskRunRow)
                 .where(
                     models.TaskRunRow.task_run_id == str(task_run.task_run_id),
-                    models.TaskRunRow.status == expected_status.value,
+                    models.TaskRunRow.status == expected_db_status,
                 )
                 .values(
-                    status=task_run.status.value,
+                    status=db_status,
                     started_at=task_run.started_at,
                     ended_at=task_run.ended_at,
                     skip_reason=(
@@ -307,7 +325,7 @@ class SQLiteMetadataStore:
                     block_reason=(
                         task_run.block_reason.value if task_run.block_reason is not None else None
                     ),
-                    failure_json=failure_to_json(task_run.failure),
+                    failure_json=failure_payload,
                 )
             )
             if cast(CursorResult[Any], result).rowcount != 1:
@@ -533,11 +551,17 @@ class SQLiteMetadataStore:
         workflow_run_id: WorkflowRunId,
     ) -> tuple[RuntimeEvent, ...]:
         with self._session_factory() as session:
-            if session.get(models.WorkflowRunRow, str(workflow_run_id)) is None:
+            workflow_row = session.get(models.WorkflowRunRow, str(workflow_run_id))
+            if workflow_row is None:
                 raise MetadataNotFoundError(
                     entity_type="WorkflowRun",
                     entity_id=str(workflow_run_id),
                 )
+
+            is_resume = bool(
+                workflow_row.correlation_json
+                and workflow_row.correlation_json.get("resume_of_run_id")
+            )
 
             transitions = session.scalars(
                 select(models.StateTransitionRow).order_by(models.StateTransitionRow.sequence)
@@ -576,6 +600,7 @@ class SQLiteMetadataStore:
                     from_status=row.from_status,
                     to_status=row.to_status,
                     attempt_number=attempt_number,
+                    is_resume=is_resume,
                 )
                 if event_type is None:
                     continue
@@ -614,9 +639,12 @@ class SQLiteMetadataStore:
                     entity_type="TaskRun",
                     entity_id=str(checkpoint.task_run_id),
                 )
-            if task_row.status != TaskRunStatus.SUCCEEDED.value:
+            if task_row.status not in {
+                TaskRunStatus.SUCCEEDED.value,
+                TaskRunStatus.REUSED.value,
+            }:
                 raise MetadataInvariantError(
-                    reason="TaskOutputCheckpoint requires a SUCCEEDED TaskRun"
+                    reason="TaskOutputCheckpoint requires a SUCCEEDED or REUSED TaskRun"
                 )
             existing = session.get(
                 models.TaskOutputCheckpointRow,

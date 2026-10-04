@@ -52,6 +52,7 @@ class WorkflowRun:
     started_at: datetime | None = None
     ended_at: datetime | None = None
     failure: FailureEvidence | None = None
+    resume_of_run_id: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.run_id, WorkflowRunId):
@@ -67,6 +68,8 @@ class WorkflowRun:
             raise TypeError("correlation must be a CorrelationContext")
         if not isinstance(self._status, WorkflowRunStatus):
             raise TypeError("_status must be a WorkflowRunStatus")
+        if self.resume_of_run_id is not None:
+            _require_text(self.resume_of_run_id, field_name="resume_of_run_id")
         _ensure_aware(self.created_at, field_name="created_at")
         _ensure_aware(self.started_at, field_name="started_at")
         _ensure_aware(self.ended_at, field_name="ended_at")

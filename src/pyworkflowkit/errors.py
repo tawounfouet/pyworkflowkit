@@ -505,6 +505,48 @@ class ResumeError(RecoveryError):
         super().__init__(f"Run '{run_id}' cannot be resumed: {reason}.")
 
 
+class WorkflowNotFoundError(ResumeError):
+    """Raised when the workflow run to resume cannot be found."""
+
+    def __init__(self, *, run_id: str) -> None:
+        super().__init__(run_id=run_id, reason="workflow run not found in metadata store")
+
+
+class InvalidRunStateForResumeError(ResumeError):
+    """Raised when the original workflow run is not in a resumable terminal state."""
+
+    def __init__(self, *, run_id: str, status: str) -> None:
+        self.status = status
+        super().__init__(
+            run_id=run_id,
+            reason=(
+                f"workflow run is in status {status!r}; only terminal failed, cancelled "
+                "or timed out runs can be resumed"
+            ),
+        )
+
+
+class GraphTopologyMismatchError(ResumeError):
+    """Raised when definition does not match the original run's topology/fingerprint."""
+
+    def __init__(
+        self,
+        *,
+        run_id: str,
+        expected_fingerprint: str,
+        actual_fingerprint: str,
+    ) -> None:
+        self.expected_fingerprint = expected_fingerprint
+        self.actual_fingerprint = actual_fingerprint
+        super().__init__(
+            run_id=run_id,
+            reason=(
+                f"graph topology mismatch: expected definition fingerprint "
+                f"{expected_fingerprint!r}, got {actual_fingerprint!r}"
+            ),
+        )
+
+
 class DuplicateReconciliationVerifierError(RecoveryError):
     """Raised when a provider verifier is registered more than once."""
 
@@ -798,11 +840,15 @@ __all__ = [
     "ExecutorWorkerError",
     "ExternalWorkloadError",
     "ExternalWorkloadRetryOwnershipError",
+    "ExecutionHandleNotFoundError",
+    "ExecutorNotFoundError",
     "GraphError",
+    "GraphTopologyMismatchError",
     "HandlerNotFoundError",
     "InvalidExecutionPlanError",
     "InvalidEventSequenceError",
     "InvalidHandlerError",
+    "InvalidRunStateForResumeError",
     "InvalidStateTransitionError",
     "InvalidWorkflowDefinitionError",
     "IntegrationError",
@@ -844,4 +890,5 @@ __all__ = [
     "TerminalStateError",
     "UnitOfWorkStateError",
     "UnknownDependencyError",
+    "WorkflowNotFoundError",
 ]

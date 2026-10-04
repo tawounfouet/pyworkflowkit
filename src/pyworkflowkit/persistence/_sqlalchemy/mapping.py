@@ -175,13 +175,16 @@ def failure_from_json(value: Mapping[str, Any] | None) -> FailureEvidence | None
 
 
 def workflow_to_row(value: WorkflowRun) -> models.WorkflowRunRow:
+    correlation_data = correlation_to_json(value.correlation)
+    if value.resume_of_run_id is not None:
+        correlation_data["resume_of_run_id"] = value.resume_of_run_id
     return models.WorkflowRunRow(
         run_id=str(value.run_id),
         workflow_name=value.workflow_name,
         workflow_version=value.workflow_version,
         definition_fingerprint=value.definition_fingerprint,
         plan_fingerprint=value.plan_fingerprint,
-        correlation_json=correlation_to_json(value.correlation),
+        correlation_json=correlation_data,
         status=value.status.value,
         created_at=value.created_at,
         started_at=value.started_at,
@@ -191,6 +194,7 @@ def workflow_to_row(value: WorkflowRun) -> models.WorkflowRunRow:
 
 
 def workflow_from_row(value: models.WorkflowRunRow) -> WorkflowRun:
+    resume_of_run_id = value.correlation_json.get("resume_of_run_id")
     return WorkflowRun(
         run_id=WorkflowRunId.parse(value.run_id),
         workflow_name=value.workflow_name,
@@ -203,6 +207,7 @@ def workflow_from_row(value: models.WorkflowRunRow) -> WorkflowRun:
         started_at=value.started_at,
         ended_at=value.ended_at,
         failure=failure_from_json(value.failure_json),
+        resume_of_run_id=str(resume_of_run_id) if resume_of_run_id is not None else None,
     )
 
 
@@ -214,42 +219,70 @@ def apply_workflow_row(target: models.WorkflowRunRow, value: WorkflowRun) -> Non
 
 
 def task_run_to_row(value: TaskRun) -> models.TaskRunRow:
+    db_status = value.status.value
+    failure_payload = failure_to_json(value.failure)
+    if value.status is TaskRunStatus.REUSED:
+        db_status = TaskRunStatus.SUCCEEDED.value
+        if failure_payload is None:
+            failure_payload = {"__reused__": True}
+        else:
+            failure_payload["__reused__"] = True
+
     return models.TaskRunRow(
         task_run_id=str(value.task_run_id),
         workflow_run_id=str(value.workflow_run_id),
         task_key=value.task_key,
-        status=value.status.value,
+        status=db_status,
         created_at=value.created_at,
         started_at=value.started_at,
         ended_at=value.ended_at,
         skip_reason=value.skip_reason.value if value.skip_reason is not None else None,
         block_reason=value.block_reason.value if value.block_reason is not None else None,
-        failure_json=failure_to_json(value.failure),
+        failure_json=failure_payload,
     )
 
 
 def task_run_from_row(value: models.TaskRunRow) -> TaskRun:
+    status = TaskRunStatus(value.status)
+    failure_payload = value.failure_json
+    failure = None
+    if failure_payload is not None and failure_payload.get("__reused__"):
+        status = TaskRunStatus.REUSED
+        cleaned_payload = {k: v for k, v in failure_payload.items() if k != "__reused__"}
+        failure = failure_from_json(cleaned_payload if cleaned_payload else None)
+    else:
+        failure = failure_from_json(failure_payload)
+
     return TaskRun(
         task_run_id=TaskRunId.parse(value.task_run_id),
         workflow_run_id=WorkflowRunId.parse(value.workflow_run_id),
         task_key=value.task_key,
         created_at=value.created_at,
-        _status=TaskRunStatus(value.status),
+        _status=status,
         started_at=value.started_at,
         ended_at=value.ended_at,
         skip_reason=SkipReason(value.skip_reason) if value.skip_reason is not None else None,
         block_reason=BlockReason(value.block_reason) if value.block_reason is not None else None,
-        failure=failure_from_json(value.failure_json),
+        failure=failure,
     )
 
 
 def apply_task_run_row(target: models.TaskRunRow, value: TaskRun) -> None:
-    target.status = value.status.value
+    db_status = value.status.value
+    failure_payload = failure_to_json(value.failure)
+    if value.status is TaskRunStatus.REUSED:
+        db_status = TaskRunStatus.SUCCEEDED.value
+        if failure_payload is None:
+            failure_payload = {"__reused__": True}
+        else:
+            failure_payload["__reused__"] = True
+
+    target.status = db_status
     target.started_at = value.started_at
     target.ended_at = value.ended_at
     target.skip_reason = value.skip_reason.value if value.skip_reason is not None else None
     target.block_reason = value.block_reason.value if value.block_reason is not None else None
-    target.failure_json = failure_to_json(value.failure)
+    target.failure_json = failure_payload
 
 
 def attempt_to_row(value: TaskAttempt) -> models.TaskAttemptRow:

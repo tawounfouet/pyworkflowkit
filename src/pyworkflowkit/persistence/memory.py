@@ -417,9 +417,9 @@ class InMemoryMetadataStore:
             raise TypeError("checkpoint must be a TaskOutputCheckpoint")
         with self._lock:
             task_run = self._task(checkpoint.task_run_id)
-            if task_run.status is not TaskRunStatus.SUCCEEDED:
+            if task_run.status not in {TaskRunStatus.SUCCEEDED, TaskRunStatus.REUSED}:
                 raise MetadataInvariantError(
-                    reason="TaskOutputCheckpoint requires a SUCCEEDED TaskRun"
+                    reason="TaskOutputCheckpoint requires a SUCCEEDED or REUSED TaskRun"
                 )
             existing = self._state.output_checkpoints.get(checkpoint.task_run_id)
             if existing is not None and existing != checkpoint:
@@ -513,10 +513,13 @@ class InMemoryMetadataStore:
         task_key: str | None = None
         attempt_number: int | None = None
 
+        is_resume = False
         if record.entity_type is StateEntityType.WORKFLOW_RUN:
             workflow_run_id = WorkflowRunId.parse(record.entity_id)
-            if workflow_run_id not in self._state.workflow_runs:
+            wf_run = self._state.workflow_runs.get(workflow_run_id)
+            if wf_run is None:
                 return None
+            is_resume = wf_run.resume_of_run_id is not None
         elif record.entity_type is StateEntityType.TASK_RUN:
             task_run_id = TaskRunId.parse(record.entity_id)
             task_run = self._state.task_runs.get(task_run_id)
@@ -542,6 +545,7 @@ class InMemoryMetadataStore:
             from_status=record.from_status,
             to_status=record.to_status,
             attempt_number=attempt_number,
+            is_resume=is_resume,
         )
         if event_type is None:
             return None
@@ -686,6 +690,7 @@ def _clone_workflow_run(run: WorkflowRun) -> WorkflowRun:
         started_at=run.started_at,
         ended_at=run.ended_at,
         failure=run.failure,
+        resume_of_run_id=run.resume_of_run_id,
     )
 
 

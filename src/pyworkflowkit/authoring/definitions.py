@@ -53,12 +53,15 @@ class TaskDefinition(Generic[T_Input, T_Output]):
     retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
     timeout_policy: TimeoutPolicy = field(default_factory=TimeoutPolicy)
     trigger_rule: TriggerRule = TriggerRule.ALL_SUCCESS
+    is_deterministic: bool = True
     inputs: tuple[InputDeclaration, ...] = ()
     outputs: tuple[OutputDeclaration, ...] = ()
     metadata: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         require_non_empty_text(self.key, field_name="task key")
+        if not isinstance(self.is_deterministic, bool):
+            raise TypeError("is_deterministic must be a bool")
         if not callable(self.workload) and not isinstance(self.workload, WorkloadDescriptor):
             raise TypeError("workload must be callable or implement WorkloadDescriptor")
 
@@ -173,6 +176,7 @@ class TaskDefinition(Generic[T_Input, T_Output]):
                 "execution_timeout": self.timeout_policy.execution_timeout,
             },
             "trigger_rule": self.trigger_rule.value,
+            "is_deterministic": self.is_deterministic,
             "inputs": [
                 declaration.fingerprint_payload()
                 for declaration in sorted(self.inputs, key=lambda item: item.name)
@@ -332,6 +336,7 @@ class WorkflowDefinition:
         retry_policy: RetryPolicy | None = None,
         timeout_policy: TimeoutPolicy | None = None,
         trigger_rule: TriggerRule = TriggerRule.ALL_SUCCESS,
+        is_deterministic: bool = True,
         inputs: Sequence[InputDeclaration] = (),
         outputs: Sequence[OutputDeclaration] = (),
         metadata: Mapping[str, object] | None = None,
@@ -345,6 +350,7 @@ class WorkflowDefinition:
             retry_policy=retry_policy or RetryPolicy(),
             timeout_policy=timeout_policy or TimeoutPolicy(),
             trigger_rule=trigger_rule,
+            is_deterministic=is_deterministic,
             inputs=tuple(inputs),
             outputs=tuple(outputs),
             metadata=metadata or {},

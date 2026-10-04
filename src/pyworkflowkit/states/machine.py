@@ -86,6 +86,7 @@ _TASK_RUN_TRANSITIONS: dict[TaskRunStatus, frozenset[TaskRunStatus]] = {
             TaskRunStatus.SKIPPED,
             TaskRunStatus.BLOCKED,
             TaskRunStatus.CANCELLED,
+            TaskRunStatus.REUSED,
         }
     ),
     TaskRunStatus.READY: frozenset(
@@ -126,6 +127,7 @@ _TASK_RUN_TRANSITIONS: dict[TaskRunStatus, frozenset[TaskRunStatus]] = {
     TaskRunStatus.SKIPPED: frozenset(),
     TaskRunStatus.CANCELLED: frozenset(),
     TaskRunStatus.TIMED_OUT: frozenset(),
+    TaskRunStatus.REUSED: frozenset(),
 }
 
 _TASK_ATTEMPT_TRANSITIONS: dict[
@@ -278,7 +280,7 @@ class TaskRunStateMachine:
             raise ValueError("block_reason is only valid for BLOCKED")
 
         started_at = task_run.started_at
-        if target is TaskRunStatus.RUNNING and started_at is None:
+        if target in {TaskRunStatus.RUNNING, TaskRunStatus.REUSED} and started_at is None:
             started_at = at
 
         ended_at = at if target in TASK_RUN_TERMINAL_STATUSES else None
