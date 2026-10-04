@@ -31,10 +31,10 @@ CLAUDE.md
 Project: PyWorkflowKit
 Package: pyworkflowkit
 Repository: tawounfouet/pyworkflowkit
-Current stable baseline: 2.0.0
-Upcoming release: 2.1.0
+Current qualified stable tag: 2.1.0
+Current release state: remediation before external publication
 Current CLI contract: CLI Machine Contract v1
-Python versions: 3.11 / 3.12 / 3.13 / 3.14
+Python versions: 3.11 / 3.12 / 3.13
 ```
 
 ---
@@ -118,5 +118,5 @@ inspect
 → check ruff & mypy
 → run broader regression
 → verify coverage >= 90.0%
-→ PR & verify 57/57 CI checks
+→ PR & verify every mandatory CI / Release Qualification check for the exact head SHA
 ```
