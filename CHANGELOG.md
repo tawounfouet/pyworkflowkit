@@ -6,6 +6,31 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ## Unreleased
 
+### Fixed
+
+- Reconciled the README quickstart with the actual `InlineExecutor` handler contract:
+  dependent workloads now consume upstream values through
+  `TaskExecutionContext.dependency_outputs`.
+- Corrected the SQLite README example to use `SQLiteMetadataStore(path=...)`.
+- Reconciled README public-root documentation with the frozen `pyworkflowkit.__all__`
+  surface.
+- Updated `SECURITY.md` from the obsolete 0.5.x support statement to the maintained
+  2.1.x / 2.0.x policy.
+- Corrected 2.1 release evidence to the observed stable-tag baseline:
+  `1742 passed / 28 skipped / 0 failed`, Python 3.11–3.13 on `ubuntu-latest`,
+  with Release Qualification `30/30`.
+- Corrected the documented frozen CLI command set to match `CLI_COMMANDS`.
+- Reopened LOT-38 release-engineering closure until GitHub Release, PyPI publication,
+  and an installed-package smoke test are actually complete.
+
+### Changed
+
+- Release documentation now distinguishes a qualified Git tag from an externally
+  published GitHub/PyPI release.
+- Repository agent instructions no longer hard-code a historical aggregate CI-check
+  count.
+
+
 ## 2.1.0 - 2026-10-04
 
 Stable promotion of PyWorkflowKit 2.1.0 from qualified release candidate `2.1.0rc1`.
@@ -13,7 +38,7 @@ Metadata-only version bump — zero functional delta per freeze policy `blocker-
 
 ### Added
 
-- **Release notes** [`docs/releases/2.1.0.md`](docs/releases/2.1.0.md) with full RC qualification summary (57/57 CI checks, 1744 tests).
+- **Release notes** [`docs/releases/2.1.0.md`](docs/releases/2.1.0.md) with the stable-tag qualification evidence.
 
 ### Changed
 
