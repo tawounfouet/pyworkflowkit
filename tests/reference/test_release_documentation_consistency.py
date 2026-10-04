@@ -60,10 +60,13 @@ def test_current_docs_do_not_reintroduce_obsolete_release_claims() -> None:
     agents = _read("AGENTS.md")
     claude = _read("CLAUDE.md")
 
+    assert "PyWorkflowKit 2.1.1 is the current stable release line" in readme
     assert "PyWorkflowKit 2.0.0 is stable" not in readme
     assert "0.5.x is the current stable release line" not in security
     assert "57/57" not in agents
     assert "57/57" not in claude
+    assert "Current release target: 2.1.1" in agents
+    assert "Current release target: 2.1.1" in claude
     assert "3.14" not in agents
     assert "3.14" not in claude
 
