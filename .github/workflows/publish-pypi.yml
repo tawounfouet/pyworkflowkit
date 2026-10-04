@@ -37,6 +37,34 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate release ref and package version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$GITHUB_REF" in
+            refs/tags/v*) ;;
+            *)
+              echo "Publishing is only allowed from a vX.Y.Z tag; got: $GITHUB_REF" >&2
+              exit 1
+              ;;
+          esac
+
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          print(project["project"]["version"])
+          PY
+          )"
+
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag/package version mismatch: tag=$TAG_VERSION package=$PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
       - name: Build sdist and wheel
         run: uv build
 
@@ -44,11 +72,13 @@ jobs:
         run: |
           uv run --with cyclonedx-bom cyclonedx-py environment -o dist/pyworkflowkit-cyclonedx.json
 
-      - name: Generate SHA256 Checksums
+      - name: Generate and verify SHA256 checksums
+        shell: bash
         run: |
+          set -euo pipefail
           cd dist
-          sha256sum * > SHA256SUMS
-          cd ..
+          sha256sum *.whl *.tar.gz pyworkflowkit-cyclonedx.json > SHA256SUMS
+          sha256sum -c SHA256SUMS
 
       - name: Generate Artifact Attestations (Sigstore)
         uses: actions/attest-build-provenance@v2
