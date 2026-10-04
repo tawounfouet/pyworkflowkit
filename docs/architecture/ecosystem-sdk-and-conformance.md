@@ -155,7 +155,7 @@ This snapshot is intended for integration CI, diagnostics and compatibility auto
 The repository includes:
 
 ~~~text
-ecosystem-template/
+integrations/ecosystem-template/
 ~~~
 
 This is a separately buildable wheel whose integration code imports only

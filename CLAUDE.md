@@ -71,14 +71,14 @@ The live repository is the source of truth.
 
 ---
 
-## 4. Root directories preservation
-
-Do **NOT** delete or move these root directories:
-- `reference-integrations/`
-- `qualification-integrations/`
-- `ecosystem-template/`
-- `typing-fixtures/`
-
+## 4. Integrations directory preservation
+ 
+All standalone integration suites, qualification packages, ecosystem templates, and typing fixtures are unified under `integrations/`:
+- `integrations/reference-integrations/`
+- `integrations/qualification-integrations/`
+- `integrations/ecosystem-template/`
+- `integrations/typing-fixtures/`
+ 
 They are standalone test suites required by CI qualification gates (`scripts/qualify_*.py`).
 
 ---

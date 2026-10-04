@@ -344,8 +344,8 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
-    qualification = root / "qualification-integrations"
-    references = root / "reference-integrations"
+    qualification = root / "integrations" / "qualification-integrations"
+    references = root / "integrations" / "reference-integrations"
 
     with tempfile.TemporaryDirectory(prefix="pyworkflowkit-v0-8-transverse-") as temp:
         workspace = Path(temp)

@@ -124,6 +124,7 @@ Repository-only material must not leak into the wheel:
 .github/
 docs/
 examples/
+integrations/
 tests/
 typing-fixtures/
 ecosystem-template/

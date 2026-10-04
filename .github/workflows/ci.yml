@@ -239,15 +239,15 @@ jobs:
 
       - name: Type-check public consumer
         run: |
-          mypy --strict --python-version "${{ matrix.python-version }}" typing-fixtures/public_consumer.py
-          mypy --strict --python-version "${{ matrix.python-version }}" ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py
-          mypy --strict --python-version "${{ matrix.python-version }}" qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py
-          mypy --strict --python-version "${{ matrix.python-version }}" reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py
+          mypy --strict --python-version "${{ matrix.python-version }}" integrations/typing-fixtures/public_consumer.py
+          mypy --strict --python-version "${{ matrix.python-version }}" integrations/ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py
+          mypy --strict --python-version "${{ matrix.python-version }}" integrations/qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py
+          mypy --strict --python-version "${{ matrix.python-version }}" integrations/reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py
 
       - name: Reject unsupported task handler signature
         shell: bash
         run: |
-          if mypy --strict --python-version "${{ matrix.python-version }}" typing-fixtures/invalid_task_handler.py; then
+          if mypy --strict --python-version "${{ matrix.python-version }}" integrations/typing-fixtures/invalid_task_handler.py; then
             echo "invalid two-argument @task handler unexpectedly passed static typing"
             exit 1
           fi

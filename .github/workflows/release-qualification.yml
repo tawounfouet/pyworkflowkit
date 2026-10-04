@@ -231,8 +231,8 @@ jobs:
 
       - name: Build compatibility fixtures
         run: |
-          python -m build --wheel --outdir /tmp/ecosystem-dist ecosystem-template
-          python -m build --wheel --outdir /tmp/executor-dist qualification-integrations/reference-executor
+          python -m build --wheel --outdir /tmp/ecosystem-dist integrations/ecosystem-template
+          python -m build --wheel --outdir /tmp/executor-dist integrations/qualification-integrations/reference-executor
 
       - name: Install historical compatibility fixtures without replacing core
         run: |
@@ -287,16 +287,16 @@ jobs:
         shell: bash
         run: |
           cd /tmp
-          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/typing-fixtures/public_consumer.py"
-          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py"
-          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py"
-          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/integrations/typing-fixtures/public_consumer.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/integrations/ecosystem-template/src/pyworkflowkit_ecosystem_template/__init__.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/integrations/qualification-integrations/reference-executor/src/pyworkflowkit_qualification_executor/__init__.py"
+          mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/integrations/reference-integrations/reference-event-sink/src/pyworkflowkit_reference_event_sink/__init__.py"
 
       - name: Reject unsupported task handler signature
         shell: bash
         run: |
           cd /tmp
-          if mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/typing-fixtures/invalid_task_handler.py"; then
+          if mypy --strict --python-version "${{ matrix.python-version }}" "$GITHUB_WORKSPACE/integrations/typing-fixtures/invalid_task_handler.py"; then
             echo "invalid two-argument @task handler unexpectedly passed static typing"
             exit 1
           fi

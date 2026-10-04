@@ -76,25 +76,26 @@ Human output renders tables and panels; `--json` emits strictly typed, unadorned
 
 ## 3. Directory layout & Root fixtures
 
-The root contains specific integration directories that must **NOT** be deleted or moved:
+All standalone integration suites, typing fixtures, and ecosystem templates are unified under `integrations/`:
 
 ```text
 pyworkflowkit/
 ├── .github/workflows/          # CI, Release Qualification, and PyPI publish pipelines
 ├── contracts/                  # Frozen machine contracts (evidence baseline)
 ├── docs/                       # Architecture specs, guides, plans, and releases
-├── ecosystem-template/         # Standalone external plugin SDK template (tested by CI)
 ├── examples/                   # Canonical executable examples
+├── integrations/               # Standalone test suites, fixtures & ecosystem plugin template
+│   ├── ecosystem-template/     # Standalone external plugin SDK template (tested by CI)
+│   ├── qualification-integrations/ # Standalone packages for transverse qualification (tested by CI)
+│   ├── reference-integrations/ # Independent provider packages for real entry points (tested by CI)
+│   └── typing-fixtures/        # Static type check fixtures for public consumer validation
 ├── notebooks/                  # Interactive tutorial notebooks
-├── qualification-integrations/ # Standalone packages for transverse qualification (tested by CI)
-├── reference-integrations/     # Independent provider packages for real entry points (tested by CI)
 ├── scripts/                    # Release qualification & verification scripts
 ├── src/pyworkflowkit/          # Core package source code
-├── tests/                      # Architecture, contract, integration, and unit tests
-└── typing-fixtures/            # Static type check fixtures for public consumer validation
+└── tests/                      # Architecture, contract, integration, and unit tests
 ```
 
-> **Important**: `reference-integrations`, `qualification-integrations`, `ecosystem-template`, and `typing-fixtures` are standalone test fixtures. They are explicitly excluded from wheels and source distributions (`FORBIDDEN_WHEEL_PREFIXES`, `FORBIDDEN_SDIST_PREFIXES`), but are required by qualification gates (`scripts/qualify_*.py`) and GitHub Actions workflows.
+> **Important**: All suites under `integrations/` (`reference-integrations`, `qualification-integrations`, `ecosystem-template`, `typing-fixtures`) are standalone test fixtures. They are explicitly excluded from wheels and source distributions (`FORBIDDEN_WHEEL_PREFIXES`, `FORBIDDEN_SDIST_PREFIXES`), but are required by qualification gates (`scripts/qualify_*.py`) and GitHub Actions workflows.
 
 ---
 
