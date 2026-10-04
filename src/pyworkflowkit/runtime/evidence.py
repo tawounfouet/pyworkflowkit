@@ -61,6 +61,7 @@ _TASK_EVENT_BY_STATUS = {
     "TIMED_OUT": RuntimeEventType.TASK_TIMED_OUT,
     "BLOCKED": RuntimeEventType.TASK_BLOCKED,
     "UNKNOWN_OUTCOME": RuntimeEventType.TASK_UNKNOWN_OUTCOME,
+    "REUSED": RuntimeEventType.TASK_RESUMED,
 }
 
 
@@ -70,6 +71,7 @@ def runtime_event_type_for_transition(
     from_status: str | None,
     to_status: str,
     attempt_number: int | None = None,
+    is_resume: bool = False,
 ) -> RuntimeEventType | None:
     """Map persisted transitions to semantic runtime facts.
 
@@ -82,7 +84,7 @@ def runtime_event_type_for_transition(
         if from_status is None:
             return None
         if to_status == "RUNNING":
-            if from_status == "PENDING":
+            if from_status == "PENDING" and not is_resume:
                 return RuntimeEventType.WORKFLOW_STARTED
             return RuntimeEventType.WORKFLOW_RESUMED
         return _WORKFLOW_EVENT_BY_STATUS.get(to_status)

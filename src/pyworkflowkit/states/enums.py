@@ -25,6 +25,7 @@ class TaskRunStatus(StrEnum):
     TIMED_OUT = "TIMED_OUT"
     BLOCKED = "BLOCKED"
     UNKNOWN_OUTCOME = "UNKNOWN_OUTCOME"
+    REUSED = "REUSED"
 
 
 class TaskAttemptStatus(StrEnum):
@@ -74,6 +75,7 @@ TASK_RUN_TERMINAL_STATUSES = frozenset(
         TaskRunStatus.SKIPPED,
         TaskRunStatus.CANCELLED,
         TaskRunStatus.TIMED_OUT,
+        TaskRunStatus.REUSED,
     }
 )
 

@@ -29,11 +29,15 @@ def evaluate_readiness(
     if rule is TriggerRule.ALWAYS:
         allowed = True
     elif rule is TriggerRule.ALL_SUCCESS:
-        allowed = all(status is TaskRunStatus.SUCCEEDED for status in upstream)
+        allowed = all(
+            status in {TaskRunStatus.SUCCEEDED, TaskRunStatus.REUSED} for status in upstream
+        )
     elif rule is TriggerRule.ALL_DONE:
         allowed = True
     elif rule is TriggerRule.ANY_SUCCESS:
-        allowed = any(status is TaskRunStatus.SUCCEEDED for status in upstream)
+        allowed = any(
+            status in {TaskRunStatus.SUCCEEDED, TaskRunStatus.REUSED} for status in upstream
+        )
     elif rule is TriggerRule.ANY_FAILED:
         allowed = any(
             status in {TaskRunStatus.FAILED, TaskRunStatus.TIMED_OUT} for status in upstream
