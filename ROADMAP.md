@@ -1,6 +1,6 @@
 # Roadmap PyWorkflowKit
 
-Ce document définit la trajectoire produit, technique et de livraison de **PyWorkflowKit**. Il formalise les versions supportées, les fonctionnalités livrées dans la version **2.1.0** et les perspectives de la version **2.2.0**.
+Ce document définit la trajectoire produit, technique et de livraison de **PyWorkflowKit**. Il formalise les versions supportées, les fonctionnalités livrées dans la ligne **2.1.x** et les perspectives de la version **2.2.0**.
 
 ---
 
@@ -30,10 +30,11 @@ pyworkflowkit
 
 ## 2. Statut Actuel du Projet
 
-- **Version qualifiée** : `2.1.0` — tag et runtime qualifiés ; GitHub Release et publication PyPI encore en attente de la clôture de remédiation.
-- **Preuve baseline du tag `v2.1.0`** : `1742 passed / 28 skipped / 0 failed` sur Python 3.11, 3.12 et 3.13 sous `ubuntu-latest` ; Release Qualification `30/30` verte.
-- **Phase en cours** : remédiation release-engineering de la ligne 2.1 avant publication publique et transition vers **2.2.0**.
-- **Conception & Plans** : LOT-29 à LOT-37 terminés ; LOT-38 reste ouvert jusqu'à GitHub Release + PyPI + smoke test depuis l'artefact publié.
+- **Tag historique qualifié** : `v2.1.0` — conservé immuable.
+- **Cible de publication** : `2.1.1`, patch de remédiation release-engineering sans changement comportemental du runtime.
+- **Baseline remédiée de `main`** : commit `2bbbc50b9f348bbb6a0c614af1893cc2bc0415fc`, `1748 passed / 28 skipped / 0 failed` sur Python 3.11, 3.12 et 3.13 sous `ubuntu-latest`, CI verte et Release Qualification `30/30`.
+- **Phase en cours** : qualification exacte de `2.1.1` avant tag, GitHub Release, PyPI et fresh-install smoke.
+- **Conception & Plans** : LOT-29 à LOT-37 terminés ; LOT-38 reste ouvert jusqu'à la preuve installée depuis PyPI.
 
 ---
 
@@ -61,7 +62,7 @@ flowchart TD
 
     subgraph P4["Phase 4 : Qualification & Release (Sprint 4)"]
         L37["LOT-37 : Qualification RC (2.1.0rc1)"]
-        L38["LOT-38 : Promotion Stable (2.1.0)"]
+        L38["LOT-38 : Promotion corrective Stable (2.1.1)"]
     end
 
     L31 --> L32
@@ -132,7 +133,7 @@ flowchart TD
 | | **LOT-35** | Passerelle OpenTelemetry, propagation W3C `TRACEPARENT` | [`07_PLAN_LOT35_OPENTELEMETRY_TRACING.md`](docs/plans/07_PLAN_LOT35_OPENTELEMETRY_TRACING.md) | ✅ Terminé (PR #116) |
 | | **LOT-36** | Automatisation Release, OIDC PyPI, SBOM CycloneDX, Sigstore | [`08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md`](docs/plans/08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md) | ✅ Terminé (PR #117) |
 | **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`) et stable tag sous Linux / Python 3.11–3.13 | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ✅ Terminé (PR #120 + qualification tag) |
-| | **LOT-38** | Promotion Stable PyWorkflowKit `2.1.x` : metadata, tag, GitHub Release, PyPI, smoke installé | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⚠️ En remédiation — tag qualifié, publication externe pending |
+| | **LOT-38** | Promotion corrective PyWorkflowKit `2.1.1` : metadata, tag, GitHub Release, PyPI, smoke installé | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⚠️ En cours — baseline remédiée qualifiée, promotion 2.1.1 à finaliser |
 
 ---
 

@@ -25,11 +25,21 @@ def test_release_evidence_matches_package_and_cli_contract() -> None:
     evidence = _evidence()
     pyproject = tomllib.loads(_read("pyproject.toml"))
 
-    assert evidence["qualified_version"] == pyproject["project"]["version"]
+    assert evidence["target_version"] == pyproject["project"]["version"]
+    assert evidence["qualified_version"] == "2.1.0"
+    assert evidence["target_tag"] == "v2.1.1"
+    assert (ROOT / "docs" / "releases" / "2.1.1.md").is_file()
+    assert "## 2.1.1 - 2026-10-04" in _read("CHANGELOG.md")
     cli = evidence["cli_machine_contract"]
     assert isinstance(cli, dict)
     assert cli["version"] == CLI_MACHINE_CONTRACT_VERSION
     assert tuple(cli["commands"]) == CLI_COMMANDS
+
+    baseline = evidence["remediation_baseline"]
+    assert isinstance(baseline, dict)
+    pytest_baseline = baseline["pytest"]
+    assert isinstance(pytest_baseline, dict)
+    assert pytest_baseline == {"passed": 1748, "skipped": 28, "failed": 0}
 
 
 def test_release_docs_preserve_observed_v210_baseline_without_stale_aggregates() -> None:
@@ -37,7 +47,7 @@ def test_release_docs_preserve_observed_v210_baseline_without_stale_aggregates()
     roadmap = _read("ROADMAP.md")
 
     assert "1742 passed / 28 skipped / 0 failed" in release_note
-    assert "1742 passed / 28 skipped / 0 failed" in roadmap
+    assert "1748 passed / 28 skipped / 0 failed" in roadmap
     assert "57/57" not in release_note
     assert "57/57" not in roadmap
     assert "1744 tests" not in release_note
@@ -50,10 +60,13 @@ def test_current_docs_do_not_reintroduce_obsolete_release_claims() -> None:
     agents = _read("AGENTS.md")
     claude = _read("CLAUDE.md")
 
+    assert "PyWorkflowKit 2.1.1 is the current stable release line" in readme
     assert "PyWorkflowKit 2.0.0 is stable" not in readme
     assert "0.5.x is the current stable release line" not in security
     assert "57/57" not in agents
     assert "57/57" not in claude
+    assert "Current release target: 2.1.1" in agents
+    assert "Current release target: 2.1.1" in claude
     assert "3.14" not in agents
     assert "3.14" not in claude
 

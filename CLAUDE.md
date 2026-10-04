@@ -31,8 +31,9 @@ CLAUDE.md
 Project: PyWorkflowKit
 Package: pyworkflowkit
 Repository: tawounfouet/pyworkflowkit
-Current qualified stable tag: 2.1.0
-Current release state: remediation before external publication
+Current qualified historical tag: 2.1.0
+Current release target: 2.1.1
+Current release state: final remediation qualification before external publication
 Current CLI contract: CLI Machine Contract v1
 Python versions: 3.11 / 3.12 / 3.13
 ```

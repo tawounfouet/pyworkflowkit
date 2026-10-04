@@ -16,8 +16,9 @@ Human-maintained specifications, public contracts, tests, and release evidence r
 Project: PyWorkflowKit
 Package: pyworkflowkit
 Repository: tawounfouet/pyworkflowkit
-Current qualified stable tag: 2.1.0
-Current release state: remediation before external publication
+Current qualified historical tag: 2.1.0
+Current release target: 2.1.1
+Current release state: final remediation qualification before external publication
 Python support: 3.11 / 3.12 / 3.13
 Build tool: hatchling
 Package manager: uv

@@ -23,6 +23,7 @@ def main() -> None:
         V2_RELEASE_CANDIDATE_TARGET_RELEASE,
         "2.1.0rc1",
         "2.1.0",
+        "2.1.1",
     }
     assert manifest["package_version"] == pyworkflowkit.__version__
     assert manifest["candidate_version"] == V2_RELEASE_CANDIDATE_VERSION

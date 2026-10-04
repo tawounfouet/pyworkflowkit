@@ -17,11 +17,12 @@ from pyworkflowkit.cli_contract import CLI_COMMANDS
 ROOT = Path(__file__).resolve().parents[1]
 CANDIDATE_VERSION = "2.1.0rc1"
 TARGET_RELEASE = "2.1.0"
+PATCH_RELEASE = "2.1.1"
 
 
 def main() -> None:
     # 1. Version and root API parity
-    assert pyworkflowkit.__version__ in {CANDIDATE_VERSION, TARGET_RELEASE}, (
+    assert pyworkflowkit.__version__ in {CANDIDATE_VERSION, TARGET_RELEASE, PATCH_RELEASE}, (
         f"Unexpected version: {pyworkflowkit.__version__}"
     )
     assert tuple(pyworkflowkit.__all__) == V2_ROOT_TARGET_ALLOWLIST, (

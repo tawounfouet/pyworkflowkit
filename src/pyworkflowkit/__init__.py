@@ -1,4 +1,4 @@
-"""PyWorkflowKit 2.0 stable root API."""
+"""PyWorkflowKit stable V2 root API."""
 
 from importlib.metadata import PackageNotFoundError, version
 

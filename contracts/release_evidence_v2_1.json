@@ -4,12 +4,16 @@
   "qualified_version": "2.1.0",
   "qualified_tag": "v2.1.0",
   "qualified_tag_commit": "f5fc4c8a8f258536c0d49e6f11d27ada406c9a61",
+  "target_version": "2.1.1",
+  "target_tag": "v2.1.1",
+  "release_policy": "preserve-v2.1.0-tag-and-publish-remediation-as-patch",
   "publication": {
     "github_release": "pending",
     "pypi": "pending",
     "fresh_install_smoke": "pending"
   },
-  "qualification": {
+  "remediation_baseline": {
+    "commit": "2bbbc50b9f348bbb6a0c614af1893cc2bc0415fc",
     "operating_systems": [
       "ubuntu-latest"
     ],
@@ -18,16 +22,22 @@
       "3.12",
       "3.13"
     ],
-    "pytest_baseline": {
-      "passed": 1742,
+    "pytest": {
+      "passed": 1748,
       "skipped": 28,
       "failed": 0
     },
     "coverage_percent": 90,
-    "workflows": {
-      "ci_jobs_observed": 24,
-      "release_qualification_jobs": 30,
-      "release_qualification_successful": 30
+    "ci": {
+      "jobs": 24,
+      "successful": 23,
+      "skipped": 1,
+      "failed": 0
+    },
+    "release_qualification": {
+      "jobs": 30,
+      "successful": 30,
+      "failed": 0
     }
   },
   "cli_machine_contract": {
