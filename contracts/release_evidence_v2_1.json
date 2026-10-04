@@ -1,0 +1,47 @@
+{
+  "contract_version": 1,
+  "release_line": "2.1",
+  "qualified_version": "2.1.0",
+  "qualified_tag": "v2.1.0",
+  "qualified_tag_commit": "f5fc4c8a8f258536c0d49e6f11d27ada406c9a61",
+  "publication": {
+    "github_release": "pending",
+    "pypi": "pending",
+    "fresh_install_smoke": "pending"
+  },
+  "qualification": {
+    "operating_systems": [
+      "ubuntu-latest"
+    ],
+    "python_versions": [
+      "3.11",
+      "3.12",
+      "3.13"
+    ],
+    "pytest_baseline": {
+      "passed": 1742,
+      "skipped": 28,
+      "failed": 0
+    },
+    "coverage_percent": 90,
+    "workflows": {
+      "ci_jobs_observed": 24,
+      "release_qualification_jobs": 30,
+      "release_qualification_successful": 30
+    }
+  },
+  "cli_machine_contract": {
+    "version": "1",
+    "commands": [
+      "doctor",
+      "events",
+      "inspect",
+      "manifest",
+      "plan",
+      "plugins",
+      "run",
+      "validate",
+      "version"
+    ]
+  }
+}
