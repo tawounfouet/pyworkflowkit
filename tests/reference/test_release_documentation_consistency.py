@@ -47,7 +47,7 @@ def test_release_docs_preserve_observed_v210_baseline_without_stale_aggregates()
     roadmap = _read("ROADMAP.md")
 
     assert "1742 passed / 28 skipped / 0 failed" in release_note
-    assert "1742 passed / 28 skipped / 0 failed" in roadmap
+    assert "1748 passed / 28 skipped / 0 failed" in roadmap
     assert "57/57" not in release_note
     assert "57/57" not in roadmap
     assert "1744 tests" not in release_note
