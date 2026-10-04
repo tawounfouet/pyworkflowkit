@@ -56,6 +56,32 @@ def render_manifest(payload: Mapping[str, object]) -> None:
     console().print(Panel.fit(table, title="Run Manifest"))
 
 
+def render_prune(payload: Mapping[str, object], *, title: str = "Store Prune Report") -> None:
+    dry_run = bool(payload.get("dry_run", False))
+    panel_title = f"{title} (Dry-Run Simulation)" if dry_run else title
+
+    table = Table.grid(padding=(0, 2))
+    table.add_column(style="bold")
+    table.add_column()
+
+    records = payload.get("estimated_deleted_records") or payload.get("deleted_records") or {}
+    records_map: Mapping[str, object] = records if isinstance(records, Mapping) else {}
+
+    rows = (
+        ("Mode", "DRY RUN (simulation)" if dry_run else "REAL PURGE"),
+        ("Scanned Workflows", _value(payload.get("scanned_workflows"))),
+        ("Eligible Runs", _value(payload.get("eligible_runs_to_prune"))),
+        ("Workflow Runs", _value(records_map.get("workflow_runs", 0))),
+        ("Task Runs", _value(records_map.get("task_runs", 0))),
+        ("Task Attempts", _value(records_map.get("task_attempts", 0))),
+        ("Events", _value(records_map.get("events", 0))),
+        ("Checkpoints", _value(records_map.get("checkpoints", 0))),
+    )
+    for key, value in rows:
+        table.add_row(Text(key), Text(value))
+    console().print(Panel.fit(table, title=panel_title))
+
+
 def render_error(message: str) -> None:
     text = Text()
     text.append("ERROR", style="bold red")
@@ -63,4 +89,4 @@ def render_error(message: str) -> None:
     console(error=True).print(text)
 
 
-__all__ = ["render_error", "render_manifest", "render_run", "render_validation"]
+__all__ = ["render_error", "render_manifest", "render_prune", "render_run", "render_validation"]
