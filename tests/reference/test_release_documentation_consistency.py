@@ -106,3 +106,23 @@ def test_publish_workflow_requires_exact_sha_release_qualification() -> None:
     assert "release-qualification.yml/runs" in publish
     assert 'head_sha="$GITHUB_SHA"' in publish
     assert 'status="success"' in publish
+
+
+def test_publish_workflow_isolates_pypi_distributions_from_release_assets() -> None:
+    publish = _read(".github/workflows/publish-pypi.yml")
+
+    assert "packages-dir: pypi-dist/" in publish
+    assert "packages-dir: dist/" not in publish
+    assert "mkdir -p pypi-dist release-assets" in publish
+    assert "release-assets/pyworkflowkit-cyclonedx.json" in publish
+    assert "tag_name: ${{ steps.release.outputs.tag }}" in publish
+
+
+def test_publish_workflow_supports_immutable_tag_recovery_dispatch() -> None:
+    publish = _read(".github/workflows/publish-pypi.yml")
+
+    assert "release_tag:" in publish
+    assert "Checkout release tag" in publish
+    assert "ref: ${{ steps.release.outputs.tag }}" in publish
+    assert 'RELEASE_SHA="$(git rev-parse HEAD)"' in publish
+    assert 'head_sha="$RELEASE_SHA"' in publish
