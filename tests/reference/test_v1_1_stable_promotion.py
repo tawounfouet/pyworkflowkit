@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_v1_1_stable_promotion_remains_historical_evidence_on_v2_stable() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
 
-    assert project["version"] in {"2.0.0", "2.1.0rc1", "2.1.0"}
+    assert project["version"] in {"2.0.0", "2.1.0rc1", "2.1.0", "2.1.1"}
     assert "Development Status :: 5 - Production/Stable" in project["classifiers"]
     assert (ROOT / "docs" / "releases" / "1.1.0.md").is_file()
 
