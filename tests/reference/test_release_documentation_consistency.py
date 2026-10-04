@@ -25,11 +25,19 @@ def test_release_evidence_matches_package_and_cli_contract() -> None:
     evidence = _evidence()
     pyproject = tomllib.loads(_read("pyproject.toml"))
 
-    assert evidence["qualified_version"] == pyproject["project"]["version"]
+    assert evidence["target_version"] == pyproject["project"]["version"]
+    assert evidence["qualified_version"] == "2.1.0"
+    assert evidence["target_tag"] == "v2.1.1"
     cli = evidence["cli_machine_contract"]
     assert isinstance(cli, dict)
     assert cli["version"] == CLI_MACHINE_CONTRACT_VERSION
     assert tuple(cli["commands"]) == CLI_COMMANDS
+
+    baseline = evidence["remediation_baseline"]
+    assert isinstance(baseline, dict)
+    pytest_baseline = baseline["pytest"]
+    assert isinstance(pytest_baseline, dict)
+    assert pytest_baseline == {"passed": 1748, "skipped": 28, "failed": 0}
 
 
 def test_release_docs_preserve_observed_v210_baseline_without_stale_aggregates() -> None:
