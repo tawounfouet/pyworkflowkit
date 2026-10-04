@@ -4,7 +4,7 @@
 
 PyWorkflowKit is an embedded, resilient Python workflow engine for defining, validating, planning, executing, persisting, inspecting, and evidencing generic dependency graphs of trusted Python workloads without requiring a scheduler, server daemon, worker cluster, or heavy orchestration platform.
 
-> Status: **PyWorkflowKit 2.1.0 is the current qualified stable tag.** Runtime and release-qualification gates are green; GitHub Release and PyPI publication remain pending until the release-remediation gate is closed.
+> Status: **PyWorkflowKit 2.1.1 is the current stable release line.** It preserves the 2.1 runtime contracts while incorporating the post-2.1.0 release-engineering remediation. Public publication is accepted only after exact-tag qualification and trusted-publishing gates pass.
 
 ---
 
