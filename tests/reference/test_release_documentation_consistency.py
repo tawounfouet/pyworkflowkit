@@ -28,6 +28,8 @@ def test_release_evidence_matches_package_and_cli_contract() -> None:
     assert evidence["target_version"] == pyproject["project"]["version"]
     assert evidence["qualified_version"] == "2.1.0"
     assert evidence["target_tag"] == "v2.1.1"
+    assert (ROOT / "docs" / "releases" / "2.1.1.md").is_file()
+    assert "## 2.1.1 - 2026-10-04" in _read("CHANGELOG.md")
     cli = evidence["cli_machine_contract"]
     assert isinstance(cli, dict)
     assert cli["version"] == CLI_MACHINE_CONTRACT_VERSION
