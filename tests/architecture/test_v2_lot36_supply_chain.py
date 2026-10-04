@@ -16,6 +16,10 @@ def test_license_file_exists_and_contains_apache_2_0() -> None:
     assert "Version 2.0, January 2004" in content
     assert "Copyright 2026 Thomas AWOUNFOUET / Webtech Engineering" in content
 
+    from pyworkflowkit.contracts.distribution import REQUIRED_SDIST_PATHS
+
+    assert "LICENSE" in REQUIRED_SDIST_PATHS
+
 
 def test_pyproject_toml_has_explicit_spdx_license_and_classifier() -> None:
     pyproject_file = REPO_ROOT / "pyproject.toml"
