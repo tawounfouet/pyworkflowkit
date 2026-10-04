@@ -16,7 +16,7 @@ from pyworkflowkit.contracts.v2_release_candidate import (
 from pyworkflowkit.migrations.contract import MIGRATION_HEAD_REVISION
 
 STABLE_VERSION = "2.0.0"
-ALLOWED_VERSIONS = {STABLE_VERSION, "2.1.0rc1", "2.1.0"}
+ALLOWED_VERSIONS = {STABLE_VERSION, "2.1.0rc1", "2.1.0", "2.1.1"}
 
 
 def main() -> None:
