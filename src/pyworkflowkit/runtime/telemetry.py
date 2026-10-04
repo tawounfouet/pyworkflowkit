@@ -239,7 +239,7 @@ class OpenTelemetryBridge:
             )
 
             TraceContextTextMapPropagator().inject(carrier)
-        except Exception:
+        except Exception:  # nosec B110 - fallback if propagator fails
             pass
 
         if "traceparent" in carrier and "TRACEPARENT" not in carrier:
@@ -278,7 +278,7 @@ class OpenTelemetryBridge:
             span = trace.get_current_span()
             if span and span.is_recording():
                 self._record_span_error(span, exc, attributes=attributes)
-        except Exception:
+        except Exception:  # nosec B110 - telemetry must never disrupt execution
             pass
 
     def record_failure(
@@ -303,7 +303,7 @@ class OpenTelemetryBridge:
                     attrs.update(attributes)
                 span.set_attributes(attrs)
                 span.set_status(Status(StatusCode.ERROR, resolved_msg))
-        except Exception:
+        except Exception:  # nosec B110 - telemetry must never disrupt execution
             pass
 
     @staticmethod
@@ -317,7 +317,7 @@ class OpenTelemetryBridge:
 
             span.record_exception(exc, attributes=dict(attributes) if attributes else None)
             span.set_status(Status(StatusCode.ERROR, str(exc)))
-        except Exception:
+        except Exception:  # nosec B110 - telemetry must never disrupt execution
             pass
 
     @staticmethod
@@ -328,7 +328,7 @@ class OpenTelemetryBridge:
             if hasattr(span, "status") and span.status.status_code == StatusCode.ERROR:
                 return
             span.set_status(Status(StatusCode.OK))
-        except Exception:
+        except Exception:  # nosec B110 - telemetry must never disrupt execution
             pass
 
 
