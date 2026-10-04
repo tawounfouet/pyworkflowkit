@@ -47,6 +47,12 @@ if TYPE_CHECKING:
         TaskReconciliation,
     )
     from pyworkflowkit.runtime.results import CancellationResult, TaskOutcome, WorkflowResult
+    from pyworkflowkit.runtime.telemetry import (
+        NoOpTelemetryBridge,
+        OpenTelemetryBridge,
+        TelemetryBridge,
+        get_telemetry_bridge,
+    )
     from pyworkflowkit.runtime.workflow import WorkflowRuntime
 
 _LAZY_EXPORTS = {
@@ -61,6 +67,8 @@ _LAZY_EXPORTS = {
         "pyworkflowkit.runtime.reconciliation",
         "ExternalRunVerifierRegistry",
     ),
+    "NoOpTelemetryBridge": ("pyworkflowkit.runtime.telemetry", "NoOpTelemetryBridge"),
+    "OpenTelemetryBridge": ("pyworkflowkit.runtime.telemetry", "OpenTelemetryBridge"),
     "ReconciliationDisposition": (
         "pyworkflowkit.runtime.reconciliation",
         "ReconciliationDisposition",
@@ -74,12 +82,14 @@ _LAZY_EXPORTS = {
         "ReconciliationService",
     ),
     "TaskOutcome": ("pyworkflowkit.runtime.results", "TaskOutcome"),
-    "WorkflowResult": ("pyworkflowkit.runtime.results", "WorkflowResult"),
     "TaskReconciliation": (
         "pyworkflowkit.runtime.reconciliation",
         "TaskReconciliation",
     ),
+    "TelemetryBridge": ("pyworkflowkit.runtime.telemetry", "TelemetryBridge"),
+    "WorkflowResult": ("pyworkflowkit.runtime.results", "WorkflowResult"),
     "WorkflowRuntime": ("pyworkflowkit.runtime.workflow", "WorkflowRuntime"),
+    "get_telemetry_bridge": ("pyworkflowkit.runtime.telemetry", "get_telemetry_bridge"),
 }
 
 
@@ -97,17 +107,19 @@ __all__ = [
     "Clock",
     "CorrelationContext",
     "CorrelationId",
-    "ExternalRunRef",
     "ExternalRunObservation",
+    "ExternalRunRef",
     "ExternalRunStatus",
     "ExternalRunVerifier",
     "ExternalRunVerifierRegistry",
+    "NoOpTelemetryBridge",
+    "OpenTelemetryBridge",
     "ReconciliationDisposition",
     "ReconciliationReport",
     "ReconciliationService",
+    "RetryWaiter",
     "RuntimeEvent",
     "RuntimeEventType",
-    "RetryWaiter",
     "RuntimeIdentityFactory",
     "SystemClock",
     "SystemRetryWaiter",
@@ -118,10 +130,12 @@ __all__ = [
     "TaskReconciliation",
     "TaskRun",
     "TaskRunId",
+    "TelemetryBridge",
     "UuidRuntimeIdentityFactory",
     "WorkflowExecutionReference",
     "WorkflowResult",
     "WorkflowRun",
     "WorkflowRunId",
     "WorkflowRuntime",
+    "get_telemetry_bridge",
 ]
