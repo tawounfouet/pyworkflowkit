@@ -63,7 +63,7 @@ def test_readme_primary_quickstart_is_executable() -> None:
     section = readme.split("### 1. Functional DAG Authoring with the `>>` Operator", maxsplit=1)[1]
     code = section.split("```python", maxsplit=1)[1].split("```", maxsplit=1)[0]
 
-    namespace: dict[str, object] = {}
+    namespace: dict[str, object] = {"__name__": "__readme_quickstart__"}
     exec(compile(code, "README.md::quickstart", "exec"), namespace)
 
     result = namespace["result"]
