@@ -60,9 +60,7 @@ def test_current_docs_do_not_reintroduce_obsolete_release_claims() -> None:
 
 def test_readme_primary_quickstart_is_executable() -> None:
     readme = _read("README.md")
-    section = readme.split(
-        "### 1. Functional DAG Authoring with the `>>` Operator", maxsplit=1
-    )[1]
+    section = readme.split("### 1. Functional DAG Authoring with the `>>` Operator", maxsplit=1)[1]
     code = section.split("```python", maxsplit=1)[1].split("```", maxsplit=1)[0]
 
     namespace: dict[str, object] = {}
