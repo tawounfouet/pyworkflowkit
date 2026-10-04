@@ -4,7 +4,7 @@
 
 PyWorkflowKit is an embedded, resilient Python workflow engine for defining, validating, planning, executing, persisting, inspecting, and evidencing generic dependency graphs of trusted Python workloads without requiring a scheduler, server daemon, worker cluster, or heavy orchestration platform.
 
-> Status: **PyWorkflowKit 2.0.0 is stable.** V2 execution engine, authoring ergonomics (`>>` operator), CLI v1 contract, selective resume, store pruning, and OpenTelemetry tracing are release-qualified.
+> Status: **PyWorkflowKit 2.1.0 is the current qualified stable tag.** Runtime and release-qualification gates are green; GitHub Release and PyPI publication remain pending until the release-remediation gate is closed.
 
 ---
 
@@ -36,16 +36,21 @@ MetadataStore (InMemory, SQLite, PostgreSQL)
 WorkflowResult, Manifest & Telemetry Spans
 ```
 
-The package root promotes the primary authoring and execution primitives:
+The package root intentionally exposes a narrow, frozen V2 surface:
 
-- `WorkflowDefinition`, `TaskDefinition`;
-- `WorkflowRuntime`;
-- `WorkflowRunId`, `CorrelationId`;
-- `WorkflowResult`, `TaskResult`;
-- `task`, `workflow` (declarative decorators);
-- `executors` namespace (`InlineExecutor`, `SubprocessExecutor`, `ThreadExecutor`, `AsyncExecutor`, `ProcessExecutor`);
-- `persistence` namespace (`InMemoryMetadataStore`, `SQLiteMetadataStore`, `PostgreSQLMetadataStore`);
-- `telemetry` namespace (`TelemetryBridge`, `get_telemetry_bridge`).
+- `ExecutionPlan`;
+- `PyWorkflowKitError`;
+- `RetryPolicy`, `TimeoutPolicy`;
+- `TaskDefinition`, `WorkflowDefinition`;
+- `TaskAttempt`, `TaskAttemptId`;
+- `TaskRun`, `TaskRunId`;
+- `WorkflowRun`, `WorkflowRunId`;
+- `WorkflowResult`, `WorkflowRuntime`;
+- `__version__`.
+
+Advanced capabilities remain available from their dedicated namespaces, notably
+`pyworkflowkit.executors`, `pyworkflowkit.persistence`, `pyworkflowkit.authoring`,
+and `pyworkflowkit.runtime`.
 
 ---
 
@@ -75,7 +80,7 @@ pip install "pyworkflowkit[dev,security]"
 
 ```python
 from pyworkflowkit import TaskDefinition, WorkflowDefinition, WorkflowRuntime
-from pyworkflowkit.executors import InlineExecutor
+from pyworkflowkit.executors import InlineExecutor, TaskExecutionContext
 from pyworkflowkit.persistence import InMemoryMetadataStore
 
 
@@ -83,11 +88,15 @@ def extract_data() -> dict[str, int]:
     return {"raw_count": 100}
 
 
-def transform_data(payload: dict[str, int]) -> dict[str, int]:
-    return {"processed_count": payload["raw_count"] * 2}
+def transform_data(context: TaskExecutionContext) -> dict[str, int]:
+    payload = context.dependency_outputs["extract"]
+    assert isinstance(payload, dict)
+    return {"processed_count": int(payload["raw_count"]) * 2}
 
 
-def load_data(payload: dict[str, int]) -> str:
+def load_data(context: TaskExecutionContext) -> str:
+    payload = context.dependency_outputs["transform"]
+    assert isinstance(payload, dict)
     return f"Loaded {payload['processed_count']} records"
 
 
@@ -132,7 +141,7 @@ workflow = WorkflowDefinition(name="maintenance", tasks=(backup_task,))
 
 # Automatically propagates W3C TRACEPARENT / TRACESTATE to the subprocess
 runtime = WorkflowRuntime(
-    metadata=SQLiteMetadataStore(database_path="runtime.db"),
+    metadata=SQLiteMetadataStore(path="runtime.db"),
     executor=SubprocessExecutor(max_workers=2),
 )
 result = runtime.run(workflow)
