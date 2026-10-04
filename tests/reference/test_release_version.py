@@ -7,7 +7,7 @@ from typer.testing import CliRunner
 import pyworkflowkit
 from pyworkflowkit.cli import app
 
-EXPECTED_VERSION = "2.0.0"
+EXPECTED_VERSION = "2.1.0rc1"
 
 
 def test_package_metadata_and_public_version_match_current_release() -> None:

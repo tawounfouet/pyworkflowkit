@@ -130,8 +130,8 @@ flowchart TD
 | **Phase 3** | **LOT-34** | Cycle de vie du Store, purge par lots (`pwk store prune`) | [`06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md`](docs/plans/06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md) | ✅ Terminé (PR #115) |
 | | **LOT-35** | Passerelle OpenTelemetry, propagation W3C `TRACEPARENT` | [`07_PLAN_LOT35_OPENTELEMETRY_TRACING.md`](docs/plans/07_PLAN_LOT35_OPENTELEMETRY_TRACING.md) | ✅ Terminé (PR #116) |
 | | **LOT-36** | Automatisation Release, OIDC PyPI, SBOM CycloneDX, Sigstore | [`08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md`](docs/plans/08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md) | ✅ Terminé (PR #117) |
-| **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`), matrice multi-OS | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | 🚀 Prêt à démarrer |
-| | **LOT-38** | Publication Stable PyWorkflowKit `2.1.0` sur PyPI | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⏳ En attente |
+| **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`), matrice multi-OS | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ✅ Terminé |
+| | **LOT-38** | Publication Stable PyWorkflowKit `2.1.0` sur PyPI | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | 🚀 Prêt à démarrer |
 
 ---
 
