@@ -16,9 +16,9 @@ Human-maintained specifications, public contracts, tests, and release evidence r
 Project: PyWorkflowKit
 Package: pyworkflowkit
 Repository: tawounfouet/pyworkflowkit
-Current stable baseline: 2.0.0
-Upcoming target: 2.1.0
-Python support: 3.11 / 3.12 / 3.13 / 3.14
+Current qualified stable tag: 2.1.0
+Current release state: remediation before external publication
+Python support: 3.11 / 3.12 / 3.13
 Build tool: hatchling
 Package manager: uv
 ```
@@ -155,5 +155,5 @@ uv run python scripts/qualify_distribution.py --dist-dir dist
    - Security scan clean (`bandit`, `# nosec` only with explicit justification)
 4. **Pull Request & CI**:
    - Create PR with clear summary and validation evidence.
-   - Wait for all GitHub Actions checks (57/57) to pass.
+   - Require every mandatory GitHub Actions check for the PR head SHA to pass; never hard-code a historical aggregate check count.
    - Squash & merge to `main`.
