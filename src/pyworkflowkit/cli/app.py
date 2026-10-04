@@ -16,6 +16,7 @@ from pyworkflowkit.cli.commands.legacy import (
     plugins_command,
 )
 from pyworkflowkit.cli.commands.plan import plan_command
+from pyworkflowkit.cli.commands.prune import prune_command
 from pyworkflowkit.cli.commands.run import run_command
 from pyworkflowkit.cli.commands.validate import validate_command
 from pyworkflowkit.cli.commands.version import version_command
@@ -28,6 +29,13 @@ app = typer.Typer(
     no_args_is_help=True,
     pretty_exceptions_enable=False,
 )
+
+store_app = typer.Typer(
+    name="store",
+    help="Manage and prune metadata store lifecycle and retention.",
+    no_args_is_help=True,
+)
+store_app.command("prune")(prune_command)
 
 
 @app.callback(invoke_without_command=True)
@@ -77,4 +85,7 @@ app.command("events")(events_command)
 app.command("manifest")(manifest_command)
 app.command("plugins")(plugins_command)
 
-__all__ = ["app"]
+# Register sub-apps
+app.add_typer(store_app)
+
+__all__ = ["app", "store_app"]

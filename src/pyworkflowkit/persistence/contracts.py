@@ -8,6 +8,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
+from pyworkflowkit.persistence.retention import (
+    DeletedRecordsSummary,
+    PruneReport,
+    RetentionPolicy,
+)
 from pyworkflowkit.runtime.entities import TaskAttempt, TaskRun, WorkflowRun
 from pyworkflowkit.runtime.evidence import RuntimeEvent, TaskOutputCheckpoint
 from pyworkflowkit.runtime.identity import TaskAttemptId, TaskRunId, WorkflowRunId
@@ -249,6 +254,16 @@ class MetadataStore(Protocol):
     def get_manifest_reference(self, run_id: WorkflowRunId) -> ManifestReference:
         """Load a manifest reference or raise MetadataNotFoundError."""
 
+    def prune_runs(
+        self,
+        policy: RetentionPolicy,
+        *,
+        dry_run: bool = False,
+        batch_size: int = 500,
+        now: datetime | None = None,
+    ) -> PruneReport:
+        """Purge historical runs according to the retention policy."""
+
 
 def v2_metadata_store_contract_snapshot() -> dict[str, object]:
     return {
@@ -259,9 +274,12 @@ def v2_metadata_store_contract_snapshot() -> dict[str, object]:
 
 
 __all__ = [
+    "DeletedRecordsSummary",
     "ManifestReference",
     "MetadataStore",
     "MetadataStoreMetadata",
+    "PruneReport",
+    "RetentionPolicy",
     "StateEntityType",
     "StateTransitionRecord",
     "V2_METADATA_STORE_CONTRACT_VERSION",

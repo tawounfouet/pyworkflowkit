@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from threading import RLock
 
 from pyworkflowkit.errors import (
@@ -14,9 +14,12 @@ from pyworkflowkit.errors import (
 )
 from pyworkflowkit.persistence.contracts import (
     V2_METADATA_STORE_CONTRACT_VERSION,
+    DeletedRecordsSummary,
     ManifestReference,
     MetadataStore,
     MetadataStoreMetadata,
+    PruneReport,
+    RetentionPolicy,
     StateEntityType,
     StateTransitionRecord,
 )
@@ -476,6 +479,151 @@ class InMemoryMetadataStore:
                     entity_type="ManifestReference",
                     entity_id=str(run_id),
                 ) from exc
+
+    def prune_runs(
+        self,
+        policy: RetentionPolicy,
+        *,
+        dry_run: bool = False,
+        batch_size: int = 500,
+        now: datetime | None = None,
+    ) -> PruneReport:
+        if not isinstance(policy, RetentionPolicy):
+            raise TypeError("policy must be a RetentionPolicy")
+        if batch_size < 1:
+            raise ValueError("batch_size must be >= 1")
+
+        reference_now = now or datetime.now(UTC)
+        if reference_now.tzinfo is None:
+            reference_now = reference_now.replace(tzinfo=UTC)
+
+        with self._lock:
+            runs_by_workflow: dict[str, list[WorkflowRun]] = {}
+            for run in self._state.workflow_runs.values():
+                if policy.workflow_names and run.workflow_name not in policy.workflow_names:
+                    continue
+                runs_by_workflow.setdefault(run.workflow_name, []).append(run)
+
+            scanned_workflows = len(runs_by_workflow)
+            eligible_run_ids: list[WorkflowRunId] = []
+
+            for _workflow_name, runs in runs_by_workflow.items():
+                sorted_runs = sorted(
+                    runs,
+                    key=lambda r: (r.created_at, str(r.run_id)),
+                    reverse=True,
+                )
+
+                for rank, run in enumerate(sorted_runs, start=1):
+                    if run.status not in WORKFLOW_TERMINAL_STATUSES:
+                        continue
+                    if run.status not in policy.prune_states:
+                        continue
+
+                    cutoff_days = (
+                        policy.retain_failed_runs_days
+                        if run.status == WorkflowRunStatus.FAILED
+                        and policy.retain_failed_runs_days is not None
+                        else policy.retention_days
+                    )
+                    age_eligible = False
+                    if cutoff_days is not None:
+                        cutoff_date = reference_now - timedelta(days=cutoff_days)
+                        age_eligible = run.created_at < cutoff_date
+
+                    quota_eligible = False
+                    if policy.max_runs_per_workflow is not None:
+                        quota_eligible = rank > policy.max_runs_per_workflow
+
+                    if age_eligible or quota_eligible:
+                        eligible_run_ids.append(run.run_id)
+
+            eligible_set = set(eligible_run_ids)
+            str_eligible_set = {str(rid) for rid in eligible_set}
+
+            target_task_runs = [
+                tr for tr in self._state.task_runs.values() if tr.workflow_run_id in eligible_set
+            ]
+            target_task_run_ids = {tr.task_run_id for tr in target_task_runs}
+            str_target_task_run_ids = {str(tid) for tid in target_task_run_ids}
+
+            target_attempts = [
+                ta
+                for ta in self._state.task_attempts.values()
+                if ta.task_run_id in target_task_run_ids
+            ]
+            target_attempt_ids = {ta.attempt_id for ta in target_attempts}
+            str_target_attempt_ids = {str(aid) for aid in target_attempt_ids}
+
+            target_external_refs = [
+                k for k in self._state.external_refs if k[0] in target_attempt_ids
+            ]
+
+            target_checkpoints = [
+                k for k in self._state.output_checkpoints if k in target_task_run_ids
+            ]
+
+            target_manifests = [k for k in self._state.manifests if k in eligible_set]
+
+            target_transitions = [
+                t
+                for t in self._state.transitions
+                if (
+                    t.entity_type == StateEntityType.WORKFLOW_RUN
+                    and t.entity_id in str_eligible_set
+                )
+                or (
+                    t.entity_type == StateEntityType.TASK_RUN
+                    and t.entity_id in str_target_task_run_ids
+                )
+                or (
+                    t.entity_type == StateEntityType.TASK_ATTEMPT
+                    and t.entity_id in str_target_attempt_ids
+                )
+            ]
+
+            summary = DeletedRecordsSummary(
+                workflow_runs=len(eligible_run_ids),
+                task_runs=len(target_task_runs),
+                task_attempts=len(target_attempts),
+                events=len(target_transitions),
+                checkpoints=len(target_checkpoints),
+                external_refs=len(target_external_refs),
+                manifests=len(target_manifests),
+            )
+
+            if not dry_run:
+                for cp_id in target_checkpoints:
+                    self._state.output_checkpoints.pop(cp_id, None)
+
+                for ref_key in target_external_refs:
+                    self._state.external_refs.pop(ref_key, None)
+
+                transition_sequences_to_remove = {t.sequence for t in target_transitions}
+                self._state.transitions = [
+                    t
+                    for t in self._state.transitions
+                    if t.sequence not in transition_sequences_to_remove
+                ]
+
+                for att_id in target_attempt_ids:
+                    self._state.task_attempts.pop(att_id, None)
+
+                for tr_id in target_task_run_ids:
+                    self._state.task_runs.pop(tr_id, None)
+
+                for m_id in target_manifests:
+                    self._state.manifests.pop(m_id, None)
+
+                for r_id in eligible_run_ids:
+                    self._state.workflow_runs.pop(r_id, None)
+
+            return PruneReport(
+                dry_run=dry_run,
+                scanned_workflows=scanned_workflows,
+                eligible_runs_to_prune=len(eligible_run_ids),
+                deleted_records=summary,
+            )
 
     def _workflow(self, run_id: WorkflowRunId) -> WorkflowRun:
         try:

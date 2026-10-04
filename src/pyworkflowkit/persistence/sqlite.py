@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Self, cast
 
-from sqlalchemy import URL, Engine, create_engine, event, func, select, update
+from sqlalchemy import URL, Engine, create_engine, delete, event, func, or_, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -38,8 +38,11 @@ from pyworkflowkit.persistence._sqlalchemy.mapping import (
 )
 from pyworkflowkit.persistence.contracts import (
     V2_METADATA_STORE_CONTRACT_VERSION,
+    DeletedRecordsSummary,
     ManifestReference,
     MetadataStoreMetadata,
+    PruneReport,
+    RetentionPolicy,
     StateEntityType,
     StateTransitionRecord,
 )
@@ -719,6 +722,282 @@ class SQLiteMetadataStore:
                     entity_id=str(run_id),
                 )
             return manifest_from_row(row)
+
+    def prune_runs(
+        self,
+        policy: RetentionPolicy,
+        *,
+        dry_run: bool = False,
+        batch_size: int = 500,
+        now: datetime | None = None,
+    ) -> PruneReport:
+        if not isinstance(policy, RetentionPolicy):
+            raise TypeError("policy must be a RetentionPolicy")
+        if batch_size < 1:
+            raise ValueError("batch_size must be >= 1")
+
+        reference_now = now or datetime.now(UTC)
+        if reference_now.tzinfo is None:
+            reference_now = reference_now.replace(tzinfo=UTC)
+
+        with self._session_factory() as session:
+            stmt = select(models.WorkflowRunRow.workflow_name).distinct()
+            if policy.workflow_names:
+                stmt = stmt.where(models.WorkflowRunRow.workflow_name.in_(policy.workflow_names))
+            workflow_names = sorted(list(session.scalars(stmt).all()))
+            scanned_workflows = len(workflow_names)
+
+            eligible_run_ids: list[str] = []
+
+            for wf_name in workflow_names:
+                wf_runs = session.scalars(
+                    select(models.WorkflowRunRow)
+                    .where(models.WorkflowRunRow.workflow_name == wf_name)
+                    .order_by(
+                        models.WorkflowRunRow.created_at.desc(),
+                        models.WorkflowRunRow.run_id.asc(),
+                    )
+                ).all()
+
+                for rank, run_row in enumerate(wf_runs, start=1):
+                    if run_row.status not in {s.value for s in WORKFLOW_TERMINAL_STATUSES}:
+                        continue
+                    if run_row.status not in {s.value for s in policy.prune_states}:
+                        continue
+
+                    is_failed = run_row.status == WorkflowRunStatus.FAILED.value
+                    cutoff_days = (
+                        policy.retain_failed_runs_days
+                        if is_failed and policy.retain_failed_runs_days is not None
+                        else policy.retention_days
+                    )
+                    age_eligible = False
+                    if cutoff_days is not None:
+                        cutoff_date = reference_now - timedelta(days=cutoff_days)
+                        created_dt = run_row.created_at
+                        if created_dt.tzinfo is None:
+                            created_dt = created_dt.replace(tzinfo=UTC)
+                        age_eligible = created_dt < cutoff_date
+
+                    quota_eligible = False
+                    if policy.max_runs_per_workflow is not None:
+                        quota_eligible = rank > policy.max_runs_per_workflow
+
+                    if age_eligible or quota_eligible:
+                        eligible_run_ids.append(run_row.run_id)
+
+            if not eligible_run_ids:
+                return PruneReport(
+                    dry_run=dry_run,
+                    scanned_workflows=scanned_workflows,
+                    eligible_runs_to_prune=0,
+                    deleted_records=DeletedRecordsSummary(),
+                )
+
+            if dry_run:
+                task_run_ids = list(
+                    session.scalars(
+                        select(models.TaskRunRow.task_run_id).where(
+                            models.TaskRunRow.workflow_run_id.in_(eligible_run_ids)
+                        )
+                    ).all()
+                )
+
+                attempt_ids: list[str] = []
+                if task_run_ids:
+                    attempt_ids = list(
+                        session.scalars(
+                            select(models.TaskAttemptRow.attempt_id).where(
+                                models.TaskAttemptRow.task_run_id.in_(task_run_ids)
+                            )
+                        ).all()
+                    )
+
+                checkpoint_count = 0
+                if task_run_ids:
+                    checkpoint_count = (
+                        session.scalar(
+                            select(func.count())
+                            .select_from(models.TaskOutputCheckpointRow)
+                            .where(models.TaskOutputCheckpointRow.task_run_id.in_(task_run_ids))
+                        )
+                        or 0
+                    )
+
+                external_refs_count = 0
+                if attempt_ids:
+                    external_refs_count = (
+                        session.scalar(
+                            select(func.count())
+                            .select_from(models.ExternalRunRefRow)
+                            .where(models.ExternalRunRefRow.attempt_id.in_(attempt_ids))
+                        )
+                        or 0
+                    )
+
+                manifest_count = (
+                    session.scalar(
+                        select(func.count())
+                        .select_from(models.ManifestReferenceRow)
+                        .where(models.ManifestReferenceRow.workflow_run_id.in_(eligible_run_ids))
+                    )
+                    or 0
+                )
+
+                wf_type = StateEntityType.WORKFLOW_RUN.value
+                task_type = StateEntityType.TASK_RUN.value
+                att_type = StateEntityType.TASK_ATTEMPT.value
+
+                trans_conds = [
+                    (models.StateTransitionRow.entity_type == wf_type)
+                    & models.StateTransitionRow.entity_id.in_(eligible_run_ids)
+                ]
+                if task_run_ids:
+                    trans_conds.append(
+                        (models.StateTransitionRow.entity_type == task_type)
+                        & models.StateTransitionRow.entity_id.in_(task_run_ids)
+                    )
+                if attempt_ids:
+                    trans_conds.append(
+                        (models.StateTransitionRow.entity_type == att_type)
+                        & models.StateTransitionRow.entity_id.in_(attempt_ids)
+                    )
+
+                transitions_count = (
+                    session.scalar(
+                        select(func.count())
+                        .select_from(models.StateTransitionRow)
+                        .where(or_(*trans_conds))
+                    )
+                    or 0
+                )
+
+                summary = DeletedRecordsSummary(
+                    workflow_runs=len(eligible_run_ids),
+                    task_runs=len(task_run_ids),
+                    task_attempts=len(attempt_ids),
+                    events=int(transitions_count),
+                    checkpoints=int(checkpoint_count),
+                    external_refs=int(external_refs_count),
+                    manifests=int(manifest_count),
+                )
+                return PruneReport(
+                    dry_run=True,
+                    scanned_workflows=scanned_workflows,
+                    eligible_runs_to_prune=len(eligible_run_ids),
+                    deleted_records=summary,
+                )
+
+        total_summary = DeletedRecordsSummary()
+
+        for i in range(0, len(eligible_run_ids), batch_size):
+            batch_run_ids = eligible_run_ids[i : i + batch_size]
+            with self._session_factory() as session, session.begin():
+                task_run_ids = list(
+                    session.scalars(
+                        select(models.TaskRunRow.task_run_id).where(
+                            models.TaskRunRow.workflow_run_id.in_(batch_run_ids)
+                        )
+                    ).all()
+                )
+
+                attempt_ids = []
+                if task_run_ids:
+                    attempt_ids = list(
+                        session.scalars(
+                            select(models.TaskAttemptRow.attempt_id).where(
+                                models.TaskAttemptRow.task_run_id.in_(task_run_ids)
+                            )
+                        ).all()
+                    )
+
+                del_cp = 0
+                if task_run_ids:
+                    res_cp = session.execute(
+                        delete(models.TaskOutputCheckpointRow).where(
+                            models.TaskOutputCheckpointRow.task_run_id.in_(task_run_ids)
+                        )
+                    )
+                    del_cp = int(cast(CursorResult[Any], res_cp).rowcount or 0)
+
+                wf_type = StateEntityType.WORKFLOW_RUN.value
+                task_type = StateEntityType.TASK_RUN.value
+                att_type = StateEntityType.TASK_ATTEMPT.value
+
+                trans_conds = [
+                    (models.StateTransitionRow.entity_type == wf_type)
+                    & models.StateTransitionRow.entity_id.in_(batch_run_ids)
+                ]
+                if task_run_ids:
+                    trans_conds.append(
+                        (models.StateTransitionRow.entity_type == task_type)
+                        & models.StateTransitionRow.entity_id.in_(task_run_ids)
+                    )
+                if attempt_ids:
+                    trans_conds.append(
+                        (models.StateTransitionRow.entity_type == att_type)
+                        & models.StateTransitionRow.entity_id.in_(attempt_ids)
+                    )
+                res_trans = session.execute(
+                    delete(models.StateTransitionRow).where(or_(*trans_conds))
+                )
+                del_trans = int(cast(CursorResult[Any], res_trans).rowcount or 0)
+
+                del_ext = 0
+                if attempt_ids:
+                    res_ext = session.execute(
+                        delete(models.ExternalRunRefRow).where(
+                            models.ExternalRunRefRow.attempt_id.in_(attempt_ids)
+                        )
+                    )
+                    del_ext = int(cast(CursorResult[Any], res_ext).rowcount or 0)
+
+                    del_att = 0
+                    if task_run_ids:
+                        res_att = session.execute(
+                            delete(models.TaskAttemptRow).where(
+                                models.TaskAttemptRow.task_run_id.in_(task_run_ids)
+                            )
+                        )
+                        del_att = int(cast(CursorResult[Any], res_att).rowcount or 0)
+
+                    res_tr = session.execute(
+                        delete(models.TaskRunRow).where(
+                            models.TaskRunRow.workflow_run_id.in_(batch_run_ids)
+                        )
+                    )
+                    del_tr = int(cast(CursorResult[Any], res_tr).rowcount or 0)
+
+                    res_m = session.execute(
+                        delete(models.ManifestReferenceRow).where(
+                            models.ManifestReferenceRow.workflow_run_id.in_(batch_run_ids)
+                        )
+                    )
+                    del_m = int(cast(CursorResult[Any], res_m).rowcount or 0)
+
+                    res_wf = session.execute(
+                        delete(models.WorkflowRunRow).where(
+                            models.WorkflowRunRow.run_id.in_(batch_run_ids)
+                        )
+                    )
+                    del_wf = int(cast(CursorResult[Any], res_wf).rowcount or 0)
+
+                    total_summary = DeletedRecordsSummary(
+                        workflow_runs=total_summary.workflow_runs + del_wf,
+                        task_runs=total_summary.task_runs + del_tr,
+                        task_attempts=total_summary.task_attempts + del_att,
+                        events=total_summary.events + del_trans,
+                        checkpoints=total_summary.checkpoints + del_cp,
+                        external_refs=total_summary.external_refs + del_ext,
+                        manifests=total_summary.manifests + del_m,
+                    )
+
+        return PruneReport(
+            dry_run=False,
+            scanned_workflows=scanned_workflows,
+            eligible_runs_to_prune=len(eligible_run_ids),
+            deleted_records=total_summary,
+        )
 
     def close(self) -> None:
         self.engine.dispose()

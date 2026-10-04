@@ -3,6 +3,7 @@
 from pyworkflowkit.cli_rendering.formatting import (
     render_error,
     render_manifest,
+    render_prune,
     render_run,
     render_validation,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "render_manifest",
     "render_plan",
     "render_plugins",
+    "render_prune",
     "render_run",
     "render_validation",
 ]

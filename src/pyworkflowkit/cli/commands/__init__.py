@@ -8,6 +8,7 @@ from pyworkflowkit.cli.commands.legacy import (
     plugins_command,
 )
 from pyworkflowkit.cli.commands.plan import plan_command
+from pyworkflowkit.cli.commands.prune import prune_command
 from pyworkflowkit.cli.commands.run import run_command
 from pyworkflowkit.cli.commands.validate import validate_command
 from pyworkflowkit.cli.commands.version import version_command
@@ -19,6 +20,7 @@ __all__ = [
     "manifest_command",
     "plan_command",
     "plugins_command",
+    "prune_command",
     "run_command",
     "validate_command",
     "version_command",
