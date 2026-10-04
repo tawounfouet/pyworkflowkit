@@ -86,3 +86,12 @@ def test_release_workflows_do_not_use_mutable_major_action_refs_or_latest_uv() -
     assert "uses: softprops/action-gh-release@v" not in workflows
     assert "uses: pypa/gh-action-pypi-publish@release/" not in workflows
     assert 'version: "latest"' not in publish
+
+
+def test_publish_workflow_requires_exact_sha_release_qualification() -> None:
+    publish = _read(".github/workflows/publish-pypi.yml")
+
+    assert "actions: read" in publish
+    assert "release-qualification.yml/runs" in publish
+    assert 'head_sha="$GITHUB_SHA"' in publish
+    assert 'status="success"' in publish
