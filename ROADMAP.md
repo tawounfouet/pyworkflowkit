@@ -13,7 +13,7 @@ pyworkflowkit
 ├── 2.0.x (Baseline Stable & LTS)
 │   └── Correctifs de bugs, patchs de sécurité, zéro changement d'API.
 │
-├── 2.1.x (Feature Release — En Cours)
+├── 2.1.x (Feature Release — Remédiation de publication)
 │   └── Évolutions additives 100% rétro-compatibles :
 │       • CLI moderne et modulaire (standardisée sur pytransformkit)
 │       • Syntaxe d'authoring fluide (opérateur >>)
@@ -30,9 +30,10 @@ pyworkflowkit
 
 ## 2. Statut Actuel du Projet
 
-- **Version Stable** : `2.1.0` (publiée et validée, 57/57 CI checks verts, 1744 tests).
-- **Phase en cours** : Clôture de la ligne 2.1 — transition vers la conception de **2.2.0** (approche déclarative).
-- **Conception & Plans** : Tous les lots 2.1 (LOT-29 à LOT-38) sont 100% terminés.
+- **Version qualifiée** : `2.1.0` — tag et runtime qualifiés ; GitHub Release et publication PyPI encore en attente de la clôture de remédiation.
+- **Preuve baseline du tag `v2.1.0`** : `1742 passed / 28 skipped / 0 failed` sur Python 3.11, 3.12 et 3.13 sous `ubuntu-latest` ; Release Qualification `30/30` verte.
+- **Phase en cours** : remédiation release-engineering de la ligne 2.1 avant publication publique et transition vers **2.2.0**.
+- **Conception & Plans** : LOT-29 à LOT-37 terminés ; LOT-38 reste ouvert jusqu'à GitHub Release + PyPI + smoke test depuis l'artefact publié.
 
 ---
 
@@ -111,10 +112,10 @@ flowchart TD
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Phase 4 : Qualification & Release (Sprint 4)                           │
 │                                                                        │
-│   [LOT-37 : Qualification Release Candidate 2.1.0rc1 (Multi-OS CI)]    │
+│   [LOT-37 : Qualification Release Candidate 2.1.0rc1 (Linux, Python 3.11–3.13)]    │
 │                  │                                                     │
 │                  ▼                                                     │
-│   [LOT-38 : Promotion Stable PyWorkflowKit 2.1.0 (Publication PyPI)]   │
+│   [LOT-38 : Promotion Stable PyWorkflowKit 2.1.x (GitHub Release + PyPI)]   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -130,8 +131,8 @@ flowchart TD
 | **Phase 3** | **LOT-34** | Cycle de vie du Store, purge par lots (`pwk store prune`) | [`06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md`](docs/plans/06_PLAN_LOT34_STORE_LIFECYCLE_PRUNING.md) | ✅ Terminé (PR #115) |
 | | **LOT-35** | Passerelle OpenTelemetry, propagation W3C `TRACEPARENT` | [`07_PLAN_LOT35_OPENTELEMETRY_TRACING.md`](docs/plans/07_PLAN_LOT35_OPENTELEMETRY_TRACING.md) | ✅ Terminé (PR #116) |
 | | **LOT-36** | Automatisation Release, OIDC PyPI, SBOM CycloneDX, Sigstore | [`08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md`](docs/plans/08_PLAN_LOT36_RELEASE_AUTOMATION_AND_SUPPLY_CHAIN.md) | ✅ Terminé (PR #117) |
-| **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`), matrice multi-OS | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ✅ Terminé (PR #120) |
-| | **LOT-38** | Promotion Stable PyWorkflowKit `2.1.0` (version bump, tag `v2.1.0`, PyPI) | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ✅ Terminé (PR #121) |
+| **Phase 4** | **LOT-37** | Qualification Release Candidate (`2.1.0rc1`) et stable tag sous Linux / Python 3.11–3.13 | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ✅ Terminé (PR #120 + qualification tag) |
+| | **LOT-38** | Promotion Stable PyWorkflowKit `2.1.x` : metadata, tag, GitHub Release, PyPI, smoke installé | [`09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md`](docs/plans/09_PLAN_LOT37_LOT38_QUALIFICATION_AND_RELEASE.md) | ⚠️ En remédiation — tag qualifié, publication externe pending |
 
 ---
 
