@@ -131,7 +131,6 @@ def test_retention_policy_validations() -> None:
         RetentionPolicy(prune_states=["INVALID_STRING"])  # type: ignore[list-item]
 
 
-
 def test_deleted_records_summary_and_prune_report() -> None:
     summary = DeletedRecordsSummary(
         workflow_runs=2,

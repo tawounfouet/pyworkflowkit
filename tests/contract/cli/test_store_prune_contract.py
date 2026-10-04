@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -18,6 +19,10 @@ from pyworkflowkit.states import WorkflowRunStatus
 runner = CliRunner()
 
 
+def _strip_ansi(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", text)
+
+
 def _populate_test_store(db_path: Path) -> None:
     workflow = WorkflowDefinition(
         name="test-contract-flow",
@@ -30,13 +35,14 @@ def _populate_test_store(db_path: Path) -> None:
 
 
 def test_store_prune_help_succeeds() -> None:
-    res = runner.invoke(app, ["store", "prune", "--help"])
+    res = runner.invoke(app, ["store", "prune", "--help"], color=False)
     assert res.exit_code == int(ExitCode.SUCCESS)
-    assert "--retention-days" in res.stdout
-    assert "--max-runs-per-workflow" in res.stdout
-    assert "--dry-run" in res.stdout
-    assert "--json" in res.stdout
-    assert "--db" in res.stdout
+    plain = _strip_ansi(res.stdout)
+    assert "--retention-days" in plain
+    assert "--max-runs-per-workflow" in plain
+    assert "--dry-run" in plain
+    assert "--json" in plain
+    assert "--db" in plain
 
 
 def test_store_prune_dry_run_json_contract(tmp_path: Path) -> None:
@@ -88,11 +94,13 @@ def test_store_prune_human_render(tmp_path: Path) -> None:
     res = runner.invoke(
         app,
         ["store", "prune", "--db", str(db_path), "--dry-run"],
+        color=False,
     )
     assert res.exit_code == int(ExitCode.SUCCESS), res.stdout
-    assert "Store Prune Report" in res.stdout
-    assert "Mode" in res.stdout
-    assert "Eligible Runs" in res.stdout
+    plain = _strip_ansi(res.stdout)
+    assert "Store Prune Report" in plain
+    assert "Mode" in plain
+    assert "Eligible Runs" in plain
 
 
 def test_store_prune_invalid_retention_days_json(tmp_path: Path) -> None:
@@ -135,16 +143,20 @@ def test_store_prune_invalid_options_human_render(tmp_path: Path) -> None:
     res = runner.invoke(
         app,
         ["store", "prune", "--db", str(db_path), "--state", "NON_EXISTENT"],
+        color=False,
     )
     assert res.exit_code == int(ExitCode.USER_ERROR)
-    assert "ERROR" in res.stderr or "ERROR" in res.stdout
+    plain = _strip_ansi(res.stderr + res.stdout)
+    assert "ERROR" in plain
 
     res2 = runner.invoke(
         app,
         ["store", "prune", "--db", str(db_path), "--retention-days", "0"],
+        color=False,
     )
     assert res2.exit_code == int(ExitCode.USER_ERROR)
-    assert "ERROR" in res2.stderr or "ERROR" in res2.stdout
+    plain2 = _strip_ansi(res2.stderr + res2.stdout)
+    assert "ERROR" in plain2
 
 
 def test_store_prune_store_error_handling(tmp_path: Path) -> None:
@@ -168,6 +180,8 @@ def test_store_prune_store_error_handling(tmp_path: Path) -> None:
         res_human = runner.invoke(
             app,
             ["store", "prune", "--db", str(db_path)],
+            color=False,
         )
         assert res_human.exit_code == int(ExitCode.STORE_ERROR)
-        assert "ERROR" in res_human.stderr or "ERROR" in res_human.stdout
+        plain_err = _strip_ansi(res_human.stderr + res_human.stdout)
+        assert "ERROR" in plain_err
