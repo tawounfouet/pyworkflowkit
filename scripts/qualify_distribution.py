@@ -182,6 +182,7 @@ def _qualify_sdist(sdist: Path, *, expected_version: str) -> dict[str, object]:
     allowed_root_files = {
         ".gitignore",
         "CHANGELOG.md",
+        "LICENSE",
         "PKG-INFO",
         "README.md",
         "SECURITY.md",

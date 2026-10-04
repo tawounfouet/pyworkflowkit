@@ -1,0 +1,68 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    name: Build distributions and publish to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write     # OIDC required for PyPI Trusted Publishing
+      contents: write     # Required to upload SBOM and checksums to GitHub Release
+      attestations: write # Required for Sigstore artifact build provenance
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyworkflowkit
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          uv run --with cyclonedx-bom cyclonedx-py environment -o dist/pyworkflowkit-cyclonedx.json
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+          cd ..
+
+      - name: Generate Artifact Attestations (Sigstore)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*"
+
+      - name: Attach artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/*
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
