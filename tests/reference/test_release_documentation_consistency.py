@@ -70,3 +70,19 @@ def test_readme_primary_quickstart_is_executable() -> None:
 
     result = namespace["result"]
     assert result.status is WorkflowRunStatus.SUCCEEDED
+
+
+def test_release_workflows_do_not_use_mutable_major_action_refs_or_latest_uv() -> None:
+    publish = _read(".github/workflows/publish-pypi.yml")
+    qualification = _read(".github/workflows/release-qualification.yml")
+    workflows = publish + qualification
+
+    assert "uses: actions/checkout@v" not in workflows
+    assert "uses: actions/setup-python@v" not in workflows
+    assert "uses: actions/upload-artifact@v" not in workflows
+    assert "uses: actions/download-artifact@v" not in workflows
+    assert "uses: actions/attest-build-provenance@v" not in workflows
+    assert "uses: astral-sh/setup-uv@v" not in workflows
+    assert "uses: softprops/action-gh-release@v" not in workflows
+    assert "uses: pypa/gh-action-pypi-publish@release/" not in workflows
+    assert 'version: "latest"' not in publish
