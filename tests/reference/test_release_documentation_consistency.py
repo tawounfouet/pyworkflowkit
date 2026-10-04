@@ -104,7 +104,8 @@ def test_publish_workflow_requires_exact_sha_release_qualification() -> None:
 
     assert "actions: read" in publish
     assert "release-qualification.yml/runs" in publish
-    assert 'head_sha="$GITHUB_SHA"' in publish
+    assert 'RELEASE_SHA="$(git rev-parse HEAD)"' in publish
+    assert 'head_sha="$RELEASE_SHA"' in publish
     assert 'status="success"' in publish
 
 
