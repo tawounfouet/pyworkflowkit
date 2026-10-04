@@ -15,6 +15,7 @@ jobs:
     permissions:
       id-token: write     # OIDC required for PyPI Trusted Publishing
       contents: write     # Required to upload SBOM and checksums to GitHub Release
+      actions: read       # Required to verify qualification for the exact release SHA
       attestations: write # Required for Sigstore artifact build provenance
 
     environment:
@@ -62,6 +63,19 @@ jobs:
 
           if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
             echo "Tag/package version mismatch: tag=$TAG_VERSION package=$PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Require successful Release Qualification for exact SHA
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SUCCESSFUL_RUNS="$(gh api -X GET             "repos/$GITHUB_REPOSITORY/actions/workflows/release-qualification.yml/runs"             -f head_sha="$GITHUB_SHA"             -f status="success"             -f per_page=100             --jq '.workflow_runs | length')"
+
+          if [ "$SUCCESSFUL_RUNS" -lt 1 ]; then
+            echo "No successful Release Qualification found for SHA $GITHUB_SHA" >&2
             exit 1
           fi
 
