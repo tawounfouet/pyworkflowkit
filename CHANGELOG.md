@@ -36,6 +36,25 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 - No runtime security behavior changes. LOT-24 is documentation and release-engineering
   closure only.
 
+## 2.1.0rc1 - 2026-10-04
+
+Release candidate 1 for PyWorkflowKit 2.1.0.
+
+### Added
+
+- **OpenTelemetry Distributed Tracing (LOT-35)**: Standard W3C TraceContext propagation across workflow runs, task attempts, and external workloads with strict optional dependency isolation (`pyworkflowkit[otel]`).
+- **Supply Chain Security & OIDC Publishing (LOT-36)**: GitHub Actions OIDC Trusted Publishing to PyPI, CycloneDX JSON SBOM generation, Sigstore cryptographic provenance signing, and automated packaging qualification.
+- **Modular CLI Architecture (LOT-31)**: Typer/Rich CLI engine with `run`, `plan`, `inspect`, `manifest`, `doctor`, `validate`, and `prune` commands, supported by frozen machine contract `contracts/cli_contract_v1.json`.
+- **Flow Authoring Operators (LOT-32)**: Fluent `>>` and `<<` operators for intuitive task dependency composition with built-in DAG cycle detection.
+- **Selective Resumption & Recovery (LOT-33)**: Selective rerun capability (`resume_run` / `pwk run --resume-from`) allowing failed pipelines to resume while retaining valid upstream outputs.
+- **Transactional Store Pruning (LOT-34)**: Flexible metadata store retention policies with atomic cascading purge on SQLite and PostgreSQL.
+- **Repository Consolidation**: Unified integration suites, qualification packages, ecosystem templates, and typing fixtures under `integrations/`.
+
+### Changed
+
+- Advanced package version to `2.1.0rc1`.
+- Upgraded developer experience documentation with root `AGENTS.md` and `CLAUDE.md`.
+
 ## 2.0.0 - 2026-10-03
 
 Stable PyWorkflowKit 2.0 release promoted from the fully qualified `2.0.0rc1` candidate.

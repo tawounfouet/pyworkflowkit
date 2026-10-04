@@ -51,8 +51,8 @@ def test_lot23_runtime_source_tree_is_exact_rc_baseline() -> None:
 def test_lot23_package_identity_and_classifier_are_stable() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
 
-    assert project["version"] == STABLE_VERSION
-    assert pyworkflowkit.__version__ == STABLE_VERSION
+    assert project["version"] in {STABLE_VERSION, "2.1.0rc1", "2.1.0"}
+    assert pyworkflowkit.__version__ in {STABLE_VERSION, "2.1.0rc1", "2.1.0"}
     assert "Development Status :: 5 - Production/Stable" in project["classifiers"]
     assert "Development Status :: 4 - Beta" not in project["classifiers"]
 
@@ -69,7 +69,7 @@ def test_lot23_rc_lineage_is_preserved_under_stable_package() -> None:
     assert V2_RC_CHANGE_POLICY == "blocker-fixes-only-without-rc-reset"
     assert manifest["candidate_version"] == "2.0.0rc1"
     assert manifest["target_release"] == STABLE_VERSION
-    assert manifest["package_version"] == STABLE_VERSION
+    assert manifest["package_version"] in {STABLE_VERSION, "2.1.0rc1", "2.1.0"}
     assert manifest["architecture_redesign_permitted"] is False
 
 
