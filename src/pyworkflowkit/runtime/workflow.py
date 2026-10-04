@@ -72,6 +72,7 @@ from pyworkflowkit.runtime.services import (
     SystemRetryWaiter,
     UuidRuntimeIdentityFactory,
 )
+from pyworkflowkit.runtime.telemetry import TelemetryBridge, get_telemetry_bridge
 from pyworkflowkit.states import (
     SkipReason,
     TaskAttemptStateMachine,
@@ -98,6 +99,7 @@ class WorkflowRuntime:
         identity_factory: RuntimeIdentityFactory | None = None,
         retry_evaluator: RetryEvaluator | None = None,
         retry_waiter: RetryWaiter | None = None,
+        telemetry: TelemetryBridge | None = None,
     ) -> None:
         if executor is not None and not isinstance(executor, Executor):
             raise TypeError("executor must satisfy the V2 Executor Protocol")
@@ -107,6 +109,8 @@ class WorkflowRuntime:
             raise TypeError("executor or executor_registry must be provided")
         if not isinstance(metadata, MetadataStore):
             raise TypeError("metadata must satisfy the V2 MetadataStore Protocol")
+        if telemetry is not None and not isinstance(telemetry, TelemetryBridge):
+            raise TypeError("telemetry must satisfy TelemetryBridge protocol")
 
         self._executors = executor_registry or ExecutorRegistry()
         if executor is not None:
@@ -120,6 +124,7 @@ class WorkflowRuntime:
         self._identity_factory = identity_factory or UuidRuntimeIdentityFactory()
         self._retry_evaluator = retry_evaluator or RetryEvaluator()
         self._retry_waiter = retry_waiter or SystemRetryWaiter()
+        self._telemetry = telemetry or get_telemetry_bridge()
         if not isinstance(self._retry_evaluator, RetryEvaluator):
             raise TypeError("retry_evaluator must be a RetryEvaluator")
         if not isinstance(self._retry_waiter, RetryWaiter):
@@ -135,6 +140,10 @@ class WorkflowRuntime:
         )
         self._active_requests: dict[TaskAttemptId, TaskExecutionRequest] = {}
         self._active_requests_lock = RLock()
+
+    @property
+    def telemetry(self) -> TelemetryBridge:
+        return self._telemetry
 
     def run(
         self,
@@ -153,39 +162,55 @@ class WorkflowRuntime:
             ),
             run_id=run_id,
         )
-        created_at = self._now()
-        run = WorkflowRun(
-            run_id=run_id,
-            workflow_name=plan.workflow_name,
-            workflow_version=plan.workflow_version,
-            definition_fingerprint=plan.definition_fingerprint,
-            plan_fingerprint=plan.fingerprint(),
-            correlation=bound_correlation,
-            created_at=created_at,
-        )
-        self._metadata.create_workflow_run(run)
 
-        task_runs: dict[str, TaskRun] = {}
-        for entry in plan.tasks:
-            task_run = TaskRun(
-                task_run_id=self._identity_factory.new_task_run_id(),
-                workflow_run_id=run_id,
-                task_key=entry.key,
+        with self._telemetry.start_workflow_span(
+            workflow_name=plan.workflow_name,
+            run_id=str(run_id),
+            correlation=bound_correlation,
+            workflow_version=plan.workflow_version,
+        ):
+            if bound_correlation.traceparent is None:
+                carrier: dict[str, str] = {}
+                self._telemetry.inject_w3c_context(carrier, correlation=bound_correlation)
+                if "TRACEPARENT" in carrier:
+                    bound_correlation = bound_correlation.with_w3c_trace(
+                        traceparent=carrier["TRACEPARENT"],
+                        tracestate=carrier.get("TRACESTATE"),
+                    )
+
+            created_at = self._now()
+            run = WorkflowRun(
+                run_id=run_id,
+                workflow_name=plan.workflow_name,
+                workflow_version=plan.workflow_version,
+                definition_fingerprint=plan.definition_fingerprint,
+                plan_fingerprint=plan.fingerprint(),
+                correlation=bound_correlation,
                 created_at=created_at,
             )
-            self._metadata.create_task_run(task_run)
-            task_runs[entry.key] = task_run
+            self._metadata.create_workflow_run(run)
 
-        self._transition_workflow(run, WorkflowRunStatus.RUNNING)
+            task_runs: dict[str, TaskRun] = {}
+            for entry in plan.tasks:
+                task_run = TaskRun(
+                    task_run_id=self._identity_factory.new_task_run_id(),
+                    workflow_run_id=run_id,
+                    task_key=entry.key,
+                    created_at=created_at,
+                )
+                self._metadata.create_task_run(task_run)
+                task_runs[entry.key] = task_run
 
-        return self._execute_plan_tasks(
-            run=run,
-            plan=plan,
-            bound_correlation=bound_correlation,
-            outputs={},
-            reused_keys=frozenset(),
-            diagnostics=list(plan.diagnostics),
-        )
+            self._transition_workflow(run, WorkflowRunStatus.RUNNING)
+
+            return self._execute_plan_tasks(
+                run=run,
+                plan=plan,
+                bound_correlation=bound_correlation,
+                outputs={},
+                reused_keys=frozenset(),
+                diagnostics=list(plan.diagnostics),
+            )
 
     def resume_run(
         self,
@@ -251,74 +276,89 @@ class WorkflowRuntime:
             base_correlation,
             run_id=run_id,
         )
-        created_at = self._now()
-        run = WorkflowRun(
-            run_id=run_id,
+        with self._telemetry.start_workflow_span(
             workflow_name=plan.workflow_name,
-            workflow_version=plan.workflow_version,
-            definition_fingerprint=plan.definition_fingerprint,
-            plan_fingerprint=plan.fingerprint(),
+            run_id=str(run_id),
             correlation=bound_correlation,
-            created_at=created_at,
-            resume_of_run_id=str(orig_run_id),
-        )
-        self._metadata.create_workflow_run(run)
-
-        diagnostics: list[Diagnostic] = list(plan.diagnostics)
-
-        for entry in plan.tasks:
-            if entry.key in classification.reused_keys:
-                task_run = TaskRun(
-                    task_run_id=self._identity_factory.new_task_run_id(),
-                    workflow_run_id=run_id,
-                    task_key=entry.key,
-                    created_at=created_at,
-                )
-                self._metadata.create_task_run(task_run)
-                self._transition_task(
-                    task_run,
-                    TaskRunStatus.REUSED,
-                )
-                cached_checkpoint = classification.reused_checkpoints[entry.key]
-                new_checkpoint = TaskOutputCheckpoint(
-                    task_run_id=task_run.task_run_id,
-                    output=cached_checkpoint.output,
-                    recorded_at=created_at,
-                )
-                self._metadata.set_task_output_checkpoint(new_checkpoint)
-                diagnostics.append(
-                    _diagnostic(
-                        "PWK-TASK-REUSED",
-                        f"task {entry.key!r} reused from checkpoint of run {orig_run_id}",
-                        run=run,
-                        task_run=task_run,
-                        severity=DiagnosticSeverity.INFO,
-                        details=(
-                            ("task_key", entry.key),
-                            ("original_run_id", str(orig_run_id)),
-                            ("checkpoint_checksum", cached_checkpoint.digest),
-                        ),
+            workflow_version=plan.workflow_version,
+        ):
+            if bound_correlation.traceparent is None:
+                carrier: dict[str, str] = {}
+                self._telemetry.inject_w3c_context(carrier, correlation=bound_correlation)
+                if "TRACEPARENT" in carrier:
+                    bound_correlation = bound_correlation.with_w3c_trace(
+                        traceparent=carrier["TRACEPARENT"],
+                        tracestate=carrier.get("TRACESTATE"),
                     )
-                )
-            else:
-                task_run = TaskRun(
-                    task_run_id=self._identity_factory.new_task_run_id(),
-                    workflow_run_id=run_id,
-                    task_key=entry.key,
-                    created_at=created_at,
-                )
-                self._metadata.create_task_run(task_run)
 
-        self._transition_workflow(run, WorkflowRunStatus.RUNNING)
+            created_at = self._now()
+            run = WorkflowRun(
+                run_id=run_id,
+                workflow_name=plan.workflow_name,
+                workflow_version=plan.workflow_version,
+                definition_fingerprint=plan.definition_fingerprint,
+                plan_fingerprint=plan.fingerprint(),
+                correlation=bound_correlation,
+                created_at=created_at,
+                resume_of_run_id=str(orig_run_id),
+            )
+            self._metadata.create_workflow_run(run)
 
-        return self._execute_plan_tasks(
-            run=run,
-            plan=plan,
-            bound_correlation=bound_correlation,
-            outputs=dict(classification.initial_outputs),
-            reused_keys=classification.reused_keys,
-            diagnostics=diagnostics,
-        )
+            diagnostics: list[Diagnostic] = list(plan.diagnostics)
+
+            for entry in plan.tasks:
+                if entry.key in classification.reused_keys:
+                    task_run = TaskRun(
+                        task_run_id=self._identity_factory.new_task_run_id(),
+                        workflow_run_id=run_id,
+                        task_key=entry.key,
+                        created_at=created_at,
+                    )
+                    self._metadata.create_task_run(task_run)
+                    self._transition_task(
+                        task_run,
+                        TaskRunStatus.REUSED,
+                    )
+                    cached_checkpoint = classification.reused_checkpoints[entry.key]
+                    new_checkpoint = TaskOutputCheckpoint(
+                        task_run_id=task_run.task_run_id,
+                        output=cached_checkpoint.output,
+                        recorded_at=created_at,
+                    )
+                    self._metadata.set_task_output_checkpoint(new_checkpoint)
+                    diagnostics.append(
+                        _diagnostic(
+                            "PWK-TASK-REUSED",
+                            f"task {entry.key!r} reused from checkpoint of run {orig_run_id}",
+                            run=run,
+                            task_run=task_run,
+                            severity=DiagnosticSeverity.INFO,
+                            details=(
+                                ("task_key", entry.key),
+                                ("original_run_id", str(orig_run_id)),
+                                ("checkpoint_checksum", cached_checkpoint.digest),
+                            ),
+                        )
+                    )
+                else:
+                    task_run = TaskRun(
+                        task_run_id=self._identity_factory.new_task_run_id(),
+                        workflow_run_id=run_id,
+                        task_key=entry.key,
+                        created_at=created_at,
+                    )
+                    self._metadata.create_task_run(task_run)
+
+            self._transition_workflow(run, WorkflowRunStatus.RUNNING)
+
+            return self._execute_plan_tasks(
+                run=run,
+                plan=plan,
+                bound_correlation=bound_correlation,
+                outputs=dict(classification.initial_outputs),
+                reused_keys=classification.reused_keys,
+                diagnostics=diagnostics,
+            )
 
     def _execute_plan_tasks(
         self,
@@ -373,212 +413,244 @@ class WorkflowRuntime:
             self._transition_task(current, TaskRunStatus.READY)
             self._transition_task(current, TaskRunStatus.RUNNING)
 
-            while True:
-                attempt = next_task_attempt(
-                    current,
-                    self._metadata.list_task_attempts(current.task_run_id),
-                    attempt_id=self._identity_factory.new_task_attempt_id(),
-                    created_at=self._now(),
-                )
-                self._metadata.append_task_attempt(attempt)
-                self._transition_attempt(attempt, TaskAttemptStatus.STARTING)
-                self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
-
-                context = TaskExecutionContext(
-                    workflow_run_id=run_id,
-                    task_run_id=current.task_run_id,
-                    attempt_id=attempt.attempt_id,
-                    attempt_number=attempt.attempt_number,
-                    correlation=_bind_task_correlation(
-                        bound_correlation,
-                        task_run=current,
-                        attempt_id=attempt.attempt_id,
-                    ),
-                    dependency_outputs={
-                        key: outputs[key] for key in entry.dependencies if key in outputs
-                    },
-                    workload_parameters=_workload_parameters(entry),
-                )
-                request = TaskExecutionRequest(
-                    task_key=entry.key,
-                    workload=entry.task.workload,
-                    executor_key=entry.executor_requirement.executor_key,
-                    context=context,
-                    deadline_at=self._execution_deadline(entry),
-                )
-                self._remember_active_request(request)
-                try:
-                    result = self._execute(request)
-                finally:
-                    self._forget_active_request(attempt.attempt_id)
-
-                attempt = self._metadata.get_task_attempt(attempt.attempt_id)
-                current = self._metadata.get_task_run(current.task_run_id)
-                run = self._metadata.get_workflow_run(run_id)
-                diagnostics.extend(result.diagnostics)
-                self._persist_external_run_refs(
-                    attempt_id=attempt.attempt_id,
-                    result=result,
-                )
-
-                if attempt.status is TaskAttemptStatus.CANCELLED:
-                    if current.status is not TaskRunStatus.CANCELLED:
-                        self._transition_task(current, TaskRunStatus.CANCELLED)
-                    self._cancel_not_started_tasks(run_id)
-                    if run.status in {
-                        WorkflowRunStatus.RUNNING,
-                        WorkflowRunStatus.CANCELLATION_REQUESTED,
-                    }:
-                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
-                    return self._build_result(
-                        run_id=run_id,
-                        outputs=outputs,
-                        diagnostics=tuple(diagnostics),
+            with self._telemetry.start_task_span(
+                task_key=entry.key,
+                task_run_id=str(current.task_run_id),
+                workflow_run_id=str(run_id),
+            ):
+                while True:
+                    attempt = next_task_attempt(
+                        current,
+                        self._metadata.list_task_attempts(current.task_run_id),
+                        attempt_id=self._identity_factory.new_task_attempt_id(),
+                        created_at=self._now(),
                     )
+                    self._metadata.append_task_attempt(attempt)
+                    self._transition_attempt(attempt, TaskAttemptStatus.STARTING)
+                    self._transition_attempt(attempt, TaskAttemptStatus.RUNNING)
 
-                if result.succeeded:
-                    self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
-                    self._transition_task(current, TaskRunStatus.SUCCEEDED)
-                    outputs[entry.key] = result.output
-                    checkpoint_diagnostic = self._persist_output_checkpoint(
-                        task_run=current,
-                        output=result.output,
-                        run=run,
+                    context = TaskExecutionContext(
+                        workflow_run_id=run_id,
+                        task_run_id=current.task_run_id,
                         attempt_id=attempt.attempt_id,
+                        attempt_number=attempt.attempt_number,
+                        correlation=_bind_task_correlation(
+                            bound_correlation,
+                            task_run=current,
+                            attempt_id=attempt.attempt_id,
+                        ),
+                        dependency_outputs={
+                            key: outputs[key] for key in entry.dependencies if key in outputs
+                        },
+                        workload_parameters=_workload_parameters(entry),
                     )
-                    if checkpoint_diagnostic is not None:
-                        diagnostics.append(checkpoint_diagnostic)
+                    request = TaskExecutionRequest(
+                        task_key=entry.key,
+                        workload=entry.task.workload,
+                        executor_key=entry.executor_requirement.executor_key,
+                        context=context,
+                        deadline_at=self._execution_deadline(entry),
+                    )
+                    self._remember_active_request(request)
+                    with self._telemetry.start_attempt_span(
+                        attempt_number=attempt.attempt_number,
+                        attempt_id=str(attempt.attempt_id),
+                        executor_type=entry.executor_requirement.executor_key,
+                    ):
+                        try:
+                            result = self._execute(request)
+                        finally:
+                            self._forget_active_request(attempt.attempt_id)
 
+                        if not result.succeeded and result.failure is not None:
+                            self._telemetry.record_failure(
+                                error_code=result.failure.error_code,
+                                message=result.failure.message_summary,
+                            )
+
+                    attempt = self._metadata.get_task_attempt(attempt.attempt_id)
+                    current = self._metadata.get_task_run(current.task_run_id)
                     run = self._metadata.get_workflow_run(run_id)
-                    if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                    diagnostics.extend(result.diagnostics)
+                    self._persist_external_run_refs(
+                        attempt_id=attempt.attempt_id,
+                        result=result,
+                    )
+
+                    if attempt.status is TaskAttemptStatus.CANCELLED:
+                        if current.status is not TaskRunStatus.CANCELLED:
+                            self._transition_task(current, TaskRunStatus.CANCELLED)
                         self._cancel_not_started_tasks(run_id)
-                        self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                        if run.status in {
+                            WorkflowRunStatus.RUNNING,
+                            WorkflowRunStatus.CANCELLATION_REQUESTED,
+                        }:
+                            self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                        self._telemetry.record_failure(
+                            error_code="PWK-ATTEMPT-CANCELLED",
+                            message="task attempt was cancelled",
+                        )
                         return self._build_result(
                             run_id=run_id,
                             outputs=outputs,
                             diagnostics=tuple(diagnostics),
                         )
-                    break
 
-                failure = result.failure
-                if failure is None:  # pragma: no cover - TaskExecutionResult invariant guard
-                    raise RuntimeInvariantError(
-                        reason="failed TaskExecutionResult is missing FailureEvidence"
-                    )
+                    if result.succeeded:
+                        self._transition_attempt(attempt, TaskAttemptStatus.SUCCEEDED)
+                        self._transition_task(current, TaskRunStatus.SUCCEEDED)
+                        outputs[entry.key] = result.output
+                        checkpoint_diagnostic = self._persist_output_checkpoint(
+                            task_run=current,
+                            output=result.output,
+                            run=run,
+                            attempt_id=attempt.attempt_id,
+                        )
+                        if checkpoint_diagnostic is not None:
+                            diagnostics.append(checkpoint_diagnostic)
 
-                evaluation = self._retry_evaluator.evaluate(
-                    policy=entry.retry_policy,
-                    failure=failure,
-                    attempt_number=attempt.attempt_number,
-                    elapsed_seconds=self._task_elapsed_seconds(current),
-                )
-                diagnostics.append(
-                    _retry_diagnostic(
-                        evaluation=evaluation,
-                        run=run,
-                        task_run=current,
-                        attempt_id=attempt.attempt_id,
-                    )
-                )
+                        run = self._metadata.get_workflow_run(run_id)
+                        if run.status is WorkflowRunStatus.CANCELLATION_REQUESTED:
+                            self._cancel_not_started_tasks(run_id)
+                            self._transition_workflow(run, WorkflowRunStatus.CANCELLED)
+                            return self._build_result(
+                                run_id=run_id,
+                                outputs=outputs,
+                                diagnostics=tuple(diagnostics),
+                            )
+                        break
 
-                if evaluation.decision in {
-                    RetryDecision.RECONCILE,
-                    RetryDecision.ESCALATE,
-                }:
-                    uncertain_attempt_status = (
-                        TaskAttemptStatus.REQUIRES_RECONCILIATION
-                        if evaluation.decision is RetryDecision.RECONCILE
-                        else TaskAttemptStatus.UNKNOWN_OUTCOME
-                    )
-                    self._transition_attempt(
-                        attempt,
-                        uncertain_attempt_status,
+                    failure = result.failure
+                    if failure is None:  # pragma: no cover - TaskExecutionResult invariant guard
+                        raise RuntimeInvariantError(
+                            reason="failed TaskExecutionResult is missing FailureEvidence"
+                        )
+
+                    evaluation = self._retry_evaluator.evaluate(
+                        policy=entry.retry_policy,
                         failure=failure,
+                        attempt_number=attempt.attempt_number,
+                        elapsed_seconds=self._task_elapsed_seconds(current),
                     )
-                    self._transition_task(
-                        current,
-                        TaskRunStatus.UNKNOWN_OUTCOME,
-                        failure=failure,
-                    )
-                    self._transition_workflow(
-                        run,
-                        WorkflowRunStatus.UNKNOWN_OUTCOME,
-                        failure=failure,
-                    )
-                    return self._build_result(
-                        run_id=run_id,
-                        outputs=outputs,
-                        diagnostics=tuple(diagnostics),
-                    )
-
-                attempt_terminal_status = (
-                    TaskAttemptStatus.TIMED_OUT
-                    if failure.category is FailureCategory.TIMEOUT
-                    else TaskAttemptStatus.CANCELLED
-                    if failure.category is FailureCategory.CANCELLED
-                    else TaskAttemptStatus.FAILED
-                )
-                self._transition_attempt(
-                    attempt,
-                    attempt_terminal_status,
-                    failure=failure,
-                )
-
-                if evaluation.decision is RetryDecision.RETRY:
                     diagnostics.append(
-                        _diagnostic(
-                            "PWK-RETRY-SCHEDULED",
-                            "new TaskAttempt scheduled by RetryPolicy",
+                        _retry_diagnostic(
+                            evaluation=evaluation,
                             run=run,
                             task_run=current,
                             attempt_id=attempt.attempt_id,
+                        )
+                    )
+
+                    if evaluation.decision in {
+                        RetryDecision.RECONCILE,
+                        RetryDecision.ESCALATE,
+                    }:
+                        uncertain_attempt_status = (
+                            TaskAttemptStatus.REQUIRES_RECONCILIATION
+                            if evaluation.decision is RetryDecision.RECONCILE
+                            else TaskAttemptStatus.UNKNOWN_OUTCOME
+                        )
+                        self._transition_attempt(
+                            attempt,
+                            uncertain_attempt_status,
+                            failure=failure,
+                        )
+                        self._transition_task(
+                            current,
+                            TaskRunStatus.UNKNOWN_OUTCOME,
+                            failure=failure,
+                        )
+                        self._transition_workflow(
+                            run,
+                            WorkflowRunStatus.UNKNOWN_OUTCOME,
+                            failure=failure,
+                        )
+                        self._telemetry.record_failure(
+                            error_code=failure.error_code,
+                            message=failure.message_summary,
+                        )
+                        return self._build_result(
+                            run_id=run_id,
+                            outputs=outputs,
+                            diagnostics=tuple(diagnostics),
+                        )
+
+                    attempt_terminal_status = (
+                        TaskAttemptStatus.TIMED_OUT
+                        if failure.category is FailureCategory.TIMEOUT
+                        else TaskAttemptStatus.CANCELLED
+                        if failure.category is FailureCategory.CANCELLED
+                        else TaskAttemptStatus.FAILED
+                    )
+                    self._transition_attempt(
+                        attempt,
+                        attempt_terminal_status,
+                        failure=failure,
+                    )
+
+                    if evaluation.decision is RetryDecision.RETRY:
+                        diagnostics.append(
+                            _diagnostic(
+                                "PWK-RETRY-SCHEDULED",
+                                "new TaskAttempt scheduled by RetryPolicy",
+                                run=run,
+                                task_run=current,
+                                attempt_id=attempt.attempt_id,
+                                details=(
+                                    ("attempt_number", str(attempt.attempt_number)),
+                                    ("next_attempt_number", str(attempt.attempt_number + 1)),
+                                    ("delay_seconds", _format_seconds(evaluation.delay_seconds)),
+                                    ("reason", evaluation.reason),
+                                ),
+                            )
+                        )
+                        if evaluation.delay_seconds:
+                            self._retry_waiter.wait(evaluation.delay_seconds)
+                        continue
+
+                    task_terminal_status = (
+                        TaskRunStatus.TIMED_OUT
+                        if failure.category is FailureCategory.TIMEOUT
+                        else TaskRunStatus.CANCELLED
+                        if failure.category is FailureCategory.CANCELLED
+                        else TaskRunStatus.FAILED
+                    )
+                    self._transition_task(
+                        current,
+                        task_terminal_status,
+                        failure=failure,
+                    )
+                    diagnostics.append(
+                        _diagnostic(
+                            "PWK-RUNTIME-TASK-FAILED",
+                            "task execution failed",
+                            run=run,
+                            task_run=current,
+                            attempt_id=attempt.attempt_id,
+                            severity=DiagnosticSeverity.ERROR,
                             details=(
-                                ("attempt_number", str(attempt.attempt_number)),
-                                ("next_attempt_number", str(attempt.attempt_number + 1)),
-                                ("delay_seconds", _format_seconds(evaluation.delay_seconds)),
-                                ("reason", evaluation.reason),
+                                ("task_key", entry.key),
+                                ("error_code", failure.error_code),
+                                ("retry_decision", evaluation.decision.value),
+                                ("retry_reason", evaluation.reason),
                             ),
                         )
                     )
-                    if evaluation.delay_seconds:
-                        self._retry_waiter.wait(evaluation.delay_seconds)
-                    continue
-
-                task_terminal_status = (
-                    TaskRunStatus.TIMED_OUT
-                    if failure.category is FailureCategory.TIMEOUT
-                    else TaskRunStatus.CANCELLED
-                    if failure.category is FailureCategory.CANCELLED
-                    else TaskRunStatus.FAILED
-                )
-                self._transition_task(
-                    current,
-                    task_terminal_status,
-                    failure=failure,
-                )
-                diagnostics.append(
-                    _diagnostic(
-                        "PWK-RUNTIME-TASK-FAILED",
-                        "task execution failed",
-                        run=run,
-                        task_run=current,
-                        attempt_id=attempt.attempt_id,
-                        severity=DiagnosticSeverity.ERROR,
-                        details=(
-                            ("task_key", entry.key),
-                            ("error_code", failure.error_code),
-                            ("retry_decision", evaluation.decision.value),
-                            ("retry_reason", evaluation.reason),
-                        ),
+                    failed_entry = entry
+                    self._telemetry.record_failure(
+                        error_code=failure.error_code,
+                        message=failure.message_summary,
                     )
-                )
-                failed_entry = entry
-                break
+                    break
 
             if failed_entry is not None:
                 break
 
         if failed_entry is not None:
+            self._telemetry.record_failure(
+                error_code=failure.error_code if failure else "PWK-WORKFLOW-FAILED",
+                message=failure.message_summary if failure else "workflow execution failed",
+            )
             if plan.failure_policy is not FailurePolicy.FAIL_FAST:
                 raise RuntimeInvariantError(
                     reason=f"unsupported failure policy {plan.failure_policy.value}"
@@ -1214,6 +1286,9 @@ def _bind_workflow_correlation(
         transformation_execution_id=correlation.transformation_execution_id,
         trace_id=correlation.trace_id,
         span_id=correlation.span_id,
+        traceparent=correlation.traceparent,
+        tracestate=correlation.tracestate,
+        baggage=correlation.baggage,
     )
 
 
@@ -1234,6 +1309,9 @@ def _bind_task_correlation(
         transformation_execution_id=correlation.transformation_execution_id,
         trace_id=correlation.trace_id,
         span_id=correlation.span_id,
+        traceparent=correlation.traceparent,
+        tracestate=correlation.tracestate,
+        baggage=correlation.baggage,
     )
 
 

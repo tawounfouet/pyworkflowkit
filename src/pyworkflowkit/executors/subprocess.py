@@ -37,6 +37,7 @@ from pyworkflowkit.executors.contracts import (
     TaskExecutionResult,
 )
 from pyworkflowkit.runtime.identity import TaskAttemptId
+from pyworkflowkit.runtime.telemetry import TelemetryBridge, get_telemetry_bridge
 
 _SUBPROCESS_EXECUTOR_ID = "subprocess"
 
@@ -249,6 +250,7 @@ class SubprocessExecutor:
         max_workers: int = 4,
         terminate_grace_seconds: float = 0.2,
         security_policy: SubprocessSecurityPolicy | None = None,
+        telemetry: TelemetryBridge | None = None,
     ) -> None:
         if isinstance(max_workers, bool) or not isinstance(max_workers, int):
             raise TypeError("max_workers must be an integer")
@@ -266,6 +268,8 @@ class SubprocessExecutor:
             SubprocessSecurityPolicy,
         ):
             raise TypeError("security_policy must be a SubprocessSecurityPolicy or None")
+        if telemetry is not None and not isinstance(telemetry, TelemetryBridge):
+            raise TypeError("telemetry must satisfy TelemetryBridge protocol")
 
         self._bindings: dict[str, PythonHandler] = {}
         for key, handler in (bindings or {}).items():
@@ -274,6 +278,7 @@ class SubprocessExecutor:
         self._max_workers = max_workers
         self._terminate_grace_seconds = float(terminate_grace_seconds)
         self._security_policy = security_policy or SubprocessSecurityPolicy()
+        self._telemetry = telemetry or get_telemetry_bridge()
         self._active: dict[TaskAttemptId, _ActiveSubprocess] = {}
         self._completed: set[TaskAttemptId] = set()
         self._shutdown = False
@@ -374,12 +379,22 @@ class SubprocessExecutor:
                     summary="subprocess executor capacity is saturated",
                 )
 
+        child_env = self._security_policy.environment_for(command)
+        if (
+            self._security_policy.allowed_env_keys is None
+            or "TRACEPARENT" in self._security_policy.allowed_env_keys
+        ):
+            self._telemetry.inject_w3c_context(
+                child_env,
+                correlation=request.context.correlation,
+            )
+
         try:
             process = Popen(  # nosec B603 - validated argv with shell=False
                 command.argv,
                 shell=False,
                 cwd=command.cwd,
-                env=self._security_policy.environment_for(command),
+                env=child_env,
                 stdin=PIPE if command.stdin is not None else DEVNULL,
                 stdout=PIPE,
                 stderr=PIPE,

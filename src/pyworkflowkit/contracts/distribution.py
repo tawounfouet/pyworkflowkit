@@ -40,6 +40,7 @@ RUNTIME_DEPENDENCY_RANGES: tuple[str, ...] = (
 
 OPTIONAL_EXTRA_NAMES: tuple[str, ...] = (
     "dev",
+    "otel",
     "postgres",
     "security",
 )

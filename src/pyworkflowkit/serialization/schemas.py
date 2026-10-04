@@ -55,6 +55,9 @@ class CorrelationContextSchema(StrictBoundarySchema):
     transformation_execution_id: str | None = None
     trace_id: str | None = None
     span_id: str | None = None
+    traceparent: str | None = None
+    tracestate: str | None = None
+    baggage: dict[str, str] | None = None
 
     @field_validator(
         "correlation_id",
@@ -67,6 +70,8 @@ class CorrelationContextSchema(StrictBoundarySchema):
         "transformation_execution_id",
         "trace_id",
         "span_id",
+        "traceparent",
+        "tracestate",
     )
     @classmethod
     def validate_optional_text(cls, value: str | None) -> str | None:

@@ -20,6 +20,7 @@ from pyworkflowkit.executors.contracts import (
     TaskExecutionRequest,
     TaskExecutionResult,
 )
+from pyworkflowkit.runtime.telemetry import get_telemetry_bridge
 
 LocalHandler = Callable[..., object]
 
@@ -103,6 +104,7 @@ class InlineExecutor:
         try:
             raw = handler() if arity == 0 else handler(context)
         except Exception as exc:
+            get_telemetry_bridge().record_exception(exc)
             return _failure_result(
                 request,
                 error_code=type(exc).__name__,

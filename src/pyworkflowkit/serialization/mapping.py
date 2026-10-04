@@ -45,7 +45,11 @@ def schema_for_value(value: BoundaryValue) -> StrictBoundarySchema:
             transformation_execution_id=value.transformation_execution_id,
             trace_id=value.trace_id,
             span_id=value.span_id,
+            traceparent=value.traceparent,
+            tracestate=value.tracestate,
+            baggage=dict(value.baggage) if value.baggage else None,
         )
+
     if isinstance(value, WorkflowExecutionReference):
         return WorkflowExecutionReferenceSchema(
             workflow_run_id=str(value.workflow_run_id),
@@ -116,7 +120,11 @@ def value_from_schema(schema: StrictBoundarySchema) -> BoundaryValue:
             transformation_execution_id=schema.transformation_execution_id,
             trace_id=schema.trace_id,
             span_id=schema.span_id,
+            traceparent=schema.traceparent,
+            tracestate=schema.tracestate,
+            baggage=dict(schema.baggage or {}),
         )
+
     if isinstance(schema, WorkflowExecutionReferenceSchema):
         return WorkflowExecutionReference(
             workflow_run_id=WorkflowRunId.parse(schema.workflow_run_id),
