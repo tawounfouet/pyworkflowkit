@@ -1,6 +1,6 @@
 # Security Policy
 
-PyWorkflowKit 0.5.x is the current stable release line for the pre-1.0 project.
+PyWorkflowKit 2.1.x is the current supported stable release line. The 2.1.0 runtime tag is qualified; public GitHub Release/PyPI publication is tracked separately by release engineering.
 
 ## Security model
 
@@ -26,7 +26,7 @@ SubprocessExecutor
 
 ## Subprocess boundary
 
-0.5.0 includes `SubprocessSecurityPolicy`.
+The V2 runtime includes `SubprocessSecurityPolicy`.
 
 The default policy:
 
@@ -99,6 +99,13 @@ the maintainer's GitHub profile before publishing sensitive details.
 
 ## Supported versions
 
-The 0.5.x line is the current supported stable release line. Pre-1.0 semantic stability
-does not imply a frozen 1.0 public-core contract; that broader compatibility freeze
-remains a later roadmap objective.
+| Release line | Support status |
+| --- | --- |
+| 2.1.x | Current supported stable line |
+| 2.0.x | Maintenance and security fixes |
+| 1.x | Unsupported |
+| 0.x | Unsupported |
+
+Security support applies to the documented public contracts and maintained runtime
+surfaces. Plugins, user workloads, external executables, and hosting infrastructure keep
+their own security responsibilities and must not be treated as sandboxed by PyWorkflowKit.
