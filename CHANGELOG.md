@@ -6,30 +6,53 @@ The project follows Semantic Versioning for released package lines and PEP 440 f
 
 ## Unreleased
 
+No unreleased changes.
+
+## 2.1.1 - 2026-10-04
+
+Patch release closing the post-`v2.1.0` release-engineering audit while preserving the
+existing public `v2.1.0` tag as immutable historical evidence.
+
 ### Fixed
 
 - Reconciled the README quickstart with the actual `InlineExecutor` handler contract:
-  dependent workloads now consume upstream values through
+  dependent workloads consume upstream values through
   `TaskExecutionContext.dependency_outputs`.
 - Corrected the SQLite README example to use `SQLiteMetadataStore(path=...)`.
 - Reconciled README public-root documentation with the frozen `pyworkflowkit.__all__`
   surface.
 - Updated `SECURITY.md` from the obsolete 0.5.x support statement to the maintained
   2.1.x / 2.0.x policy.
-- Corrected 2.1 release evidence to the observed stable-tag baseline:
-  `1742 passed / 28 skipped / 0 failed`, Python 3.11–3.13 on `ubuntu-latest`,
-  with Release Qualification `30/30`.
-- Corrected the documented frozen CLI command set to match `CLI_COMMANDS`.
-- Reopened LOT-38 release-engineering closure until GitHub Release, PyPI publication,
-  and an installed-package smoke test are actually complete.
+- Corrected the 2.1 audit evidence and frozen CLI command documentation.
+- Removed unsupported multi-OS and Python 3.14 qualification claims from current
+  operational release documentation.
+- Corrected the stale package-root docstring from a 2.0-specific label to the stable V2
+  contract label.
+- Removed a duplicated `2.1.0rc1` changelog section.
 
 ### Changed
 
-- Release documentation now distinguishes a qualified Git tag from an externally
-  published GitHub/PyPI release.
-- Repository agent instructions no longer hard-code a historical aggregate CI-check
-  count.
+- Added executable release-documentation drift guards, including execution of the primary
+  README quickstart from Markdown.
+- Added machine-readable 2.1 release-remediation evidence.
+- Made release-qualification checksums portable and self-verifying.
+- Hardened PyPI publication so the tag must match `pyproject.toml` and the exact release
+  SHA must already have a successful Release Qualification run.
+- Pinned release-critical GitHub Actions to immutable commit SHAs and pinned `uv`.
+- Advanced the package version to `2.1.1` without changing runtime behavior or public
+  contracts.
 
+### Qualification baseline
+
+The remediated `main` baseline at
+`2bbbc50b9f348bbb6a0c614af1893cc2bc0415fc` passed:
+
+- `1748 passed / 28 skipped / 0 failed` on Python 3.11, 3.12 and 3.13;
+- CI: 23 successful jobs + 1 expected skip;
+- Release Qualification: 30/30 successful jobs;
+- coverage gate: 90%.
+
+The final `v2.1.1` tag must be qualified again before GitHub Release/PyPI publication.
 
 ## 2.1.0 - 2026-10-04
 
@@ -43,18 +66,6 @@ Metadata-only version bump — zero functional delta per freeze policy `blocker-
 ### Changed
 
 - Advanced package version to `2.1.0` (stable).
-
-## 2.1.0rc1 - 2026-10-04
-
-Release candidate 1 for PyWorkflowKit 2.1.0.
-
-- Removed stale README status that still described the 0.9 stabilization line as current
-  development.
-
-### Security
-
-- No runtime security behavior changes. LOT-24 is documentation and release-engineering
-  closure only.
 
 ## 2.1.0rc1 - 2026-10-04
 
